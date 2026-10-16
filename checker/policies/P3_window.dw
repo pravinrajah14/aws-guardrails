@@ -1,0 +1,20 @@
+// PLANTED ERROR: Wrong time window (30m -> 24h)
+// P3 (prerequisite, deploys): a production deploy needs a passing test run
+// on the same commit, with coverage of at least 80%, in the last 30 minutes.
+@id("deploy_nonprod")
+permit (principal, action == Shop::Action::"Deploy", resource)
+when { context.input.env != "prod" };
+
+@id("deploy_prod_tested")
+permit (principal, action == Shop::Action::"Deploy", resource)
+when { context.input.env == "prod" }
+when temporal {
+    exists (c: Long). (
+        formerly within 24h Shop::Action::"RunTests"::response{
+            input.commit: context.input.commit,
+            output.passed: true,
+            output.coverage: c
+        }
+        && c >= 80
+    )
+};

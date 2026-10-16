@@ -1,0 +1,22 @@
+// "Don't deploy to production if the tests failed recently."
+// Reading B: "recently" = the most recent run. Block only if the latest test
+// run on this commit failed, i.e. a failure with no passing run since it.
+@id("deploy_allowed")
+permit (principal, action == Shop::Action::"Deploy", resource);
+
+@id("no_deploy_while_latest_run_failed")
+forbid (principal, action == Shop::Action::"Deploy", resource)
+when { context.input.env == "prod" }
+when temporal {
+    !Shop::Action::"RunTests"::response{
+        input.commit: context.input.commit,
+        output.passed: true,
+        output.coverage: _
+    }
+    since within 24h
+    Shop::Action::"RunTests"::response{
+        input.commit: context.input.commit,
+        output.passed: false,
+        output.coverage: _
+    }
+};

@@ -1,0 +1,20 @@
+// PLANTED ERROR: Approval/evidence for a different item (tests on any commit)
+// P3 (prerequisite, deploys): a production deploy needs a passing test run
+// on the same commit, with coverage of at least 80%, in the last 30 minutes.
+@id("deploy_nonprod")
+permit (principal, action == Shop::Action::"Deploy", resource)
+when { context.input.env != "prod" };
+
+@id("deploy_prod_tested")
+permit (principal, action == Shop::Action::"Deploy", resource)
+when { context.input.env == "prod" }
+when temporal {
+    exists (c: Long). (
+        formerly within 30m Shop::Action::"RunTests"::response{
+            input.commit: _,
+            output.passed: true,
+            output.coverage: c
+        }
+        && c >= 80
+    )
+};

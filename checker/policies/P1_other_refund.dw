@@ -1,0 +1,18 @@
+// PLANTED ERROR: Approval that belongs to a different refund (order not pinned)
+// P1 (prerequisite): refunds of $500 or more need a manager's approval
+// for this same refund (same order, same amount) within the last hour.
+@id("refund_small")
+permit (principal, action == Shop::Action::"IssueRefund", resource)
+when { context.input.amount < 500 };
+
+@id("refund_large_approved")
+permit (principal, action == Shop::Action::"IssueRefund", resource)
+when { context.input.amount >= 500 }
+when temporal {
+    formerly within 1h Shop::Action::"RequestApproval"::response{
+        input.order_id: _,
+        input.amount: context.input.amount,
+        output.approved: true,
+        output.approver_role: "manager"
+    }
+};

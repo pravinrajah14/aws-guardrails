@@ -1,0 +1,131 @@
+namespace Shop {
+  type IssueRefundInput = {
+    order_id: String,
+    customer: String,
+    amount: Long
+  };
+
+  type IssueRefundOutput = {
+    refund_id: String
+  };
+
+  type RequestApprovalInput = {
+    order_id: String,
+    amount: Long
+  };
+
+  type RequestApprovalOutput = {
+    approved: Bool,
+    approver_role: String
+  };
+
+  type RunTestsInput = {
+    commit: String
+  };
+
+  type RunTestsOutput = {
+    passed: Bool,
+    coverage: Long
+  };
+
+  type DeployInput = {
+    commit: String,
+    env: String
+  };
+
+  type DeployOutput = {
+    ok: Bool
+  };
+
+  type ContentFilterFinding = {
+    severityScore: decimal
+  };
+
+  type PromptAttackFinding = {
+    severityScore: decimal
+  };
+
+  type SensitiveInfoFinding = {
+    confidenceScore: decimal
+  };
+
+  type SystemContext = {
+    now: datetime
+  };
+
+  entity Gateway;
+
+  entity IamEntity = {
+    id: String
+  };
+
+  entity OAuthUser = {
+    id: String
+  } tags String;
+
+  entity UnauthenticatedUser;
+
+  action "Mcp" appliesTo {
+    principal: [OAuthUser, IamEntity, UnauthenticatedUser],
+    resource: [Gateway],
+    context: {
+      system: SystemContext
+    }
+  };
+
+  action "CallTool" in [Action::"Mcp"] appliesTo {
+    principal: [OAuthUser, IamEntity, UnauthenticatedUser],
+    resource: [Gateway],
+    context: {
+      system: SystemContext
+    }
+  };
+
+  action "IssueRefund" in [Action::"CallTool"] appliesTo {
+    principal: [IamEntity, OAuthUser, UnauthenticatedUser],
+    resource: [Gateway],
+    context: {
+      input: IssueRefundInput,
+      output?: IssueRefundOutput,
+      system: SystemContext
+    }
+  };
+
+  action "RequestApproval" in [Action::"CallTool"] appliesTo {
+    principal: [IamEntity, OAuthUser, UnauthenticatedUser],
+    resource: [Gateway],
+    context: {
+      input: RequestApprovalInput,
+      output?: RequestApprovalOutput,
+      system: SystemContext
+    }
+  };
+
+  action "RunTests" in [Action::"CallTool"] appliesTo {
+    principal: [IamEntity, OAuthUser, UnauthenticatedUser],
+    resource: [Gateway],
+    context: {
+      input: RunTestsInput,
+      output?: RunTestsOutput,
+      system: SystemContext
+    }
+  };
+
+  action "Deploy" in [Action::"CallTool"] appliesTo {
+    principal: [IamEntity, OAuthUser, UnauthenticatedUser],
+    resource: [Gateway],
+    context: {
+      input: DeployInput,
+      output?: DeployOutput,
+      system: SystemContext
+    }
+  };
+
+  action "UnknownTool" in [Action::"CallTool"] appliesTo {
+    principal: [OAuthUser, IamEntity, UnauthenticatedUser],
+    resource: [Gateway],
+    context: {
+      system: SystemContext
+    }
+  };
+}
