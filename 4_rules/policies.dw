@@ -1,0 +1,130 @@
+// Jack's 10 rules, hand-translated from plain English -> form -> Dogwood.
+// STATUS: written from the syntax in dogwood-docs/guide and dogwood-docs/examples.
+// Design choice: Cedar is default-deny and multiple `permit`s combine as OR, so a
+// permit-per-rule would WIDEN access. Instead: one baseline permit per action,
+// and every rule is a `forbid` (forbid overrides permit).
+
+// ---------------------------------------------------------------- baseline
+@id("base_refund")         permit (principal, action == Ops::Action::"Refund", resource);
+@id("base_approve_refund") permit (principal, action == Ops::Action::"ApproveRefund", resource);
+@id("base_deploy")         permit (principal, action == Ops::Action::"Deploy", resource);
+@id("base_run_tests")      permit (principal, action == Ops::Action::"RunTests", resource);
+@id("base_approve_deploy") permit (principal, action == Ops::Action::"ApproveDeploy", resource);
+@id("base_rollback")       permit (principal, action == Ops::Action::"Rollback", resource);
+
+// ---------------------------------------------------------------- LIMIT rules
+// R1  "A single refund may not exceed $500."
+@id("r1_refund_max_500")
+forbid (principal, action == Ops::Action::"Refund", resource)
+when { context.input.amount > 500 };
+
+// R2  "Refunds are only allowed for orders placed within the last 30 days."
+//     (boundary: day 30 is allowed, day 31 is blocked)
+@id("r2_refund_order_age_30d")
+forbid (principal, action == Ops::Action::"Refund", resource)
+when { context.input.order_age_days > 30 };
+
+// R3  "Production deploys are only allowed for payments, search and web."
+@id("r3_prod_deploy_allowlist")
+forbid (principal, action == Ops::Action::"Deploy", resource)
+when {
+    context.input.env == "prod"
+    && !(["payments", "search", "web"].contains(context.input.service))
+};
+
+// ---------------------------------------------------------------- APPROVAL rules
+// R4  "A refund over $100 needs a manager's approval for that same order and
+//      that same amount, granted within the last hour."
+@id("r4_refund_over_100_needs_approval")
+forbid (principal, action == Ops::Action::"Refund", resource)
+when { context.input.amount > 100 }
+unless temporal {
+    formerly within 1h Ops::Action::"ApproveRefund"::response{
+        input.order_id: context.input.order_id,
+        input.amount: context.input.amount,
+        output.approved: true,
+        output.approver_role: "manager"
+    }
+};
+
+// R5  "A production deploy needs an approval for that same service, version and
+//      environment, granted within the last 2 hours."
+@id("r5_prod_deploy_needs_approval")
+forbid (principal, action == Ops::Action::"Deploy", resource)
+when { context.input.env == "prod" }
+unless temporal {
+    formerly within 2h Ops::Action::"ApproveDeploy"::response{
+        input.service: context.input.service,
+        input.version: context.input.version,
+        input.env: context.input.env,
+        output.approved: true
+    }
+};
+
+// ---------------------------------------------------------------- SEQUENCE rules
+// R6  "A version may only go to production if its tests passed within the last 24 hours."
+@id("r6_prod_deploy_needs_passing_tests")
+forbid (principal, action == Ops::Action::"Deploy", resource)
+when { context.input.env == "prod" }
+unless temporal {
+    formerly within 24h Ops::Action::"RunTests"::response{
+        input.service: context.input.service,
+        input.version: context.input.version,
+        output.passed: true
+    }
+};
+
+// R10 "After a failed production deploy of a service, block further production
+//      deploys of that service until a rollback has completed."
+@id("r10_no_redeploy_after_failure_until_rollback")
+forbid (principal, action == Ops::Action::"Deploy", resource)
+when { context.input.env == "prod" }
+when temporal {
+    !Ops::Action::"Rollback"::response{
+        input.service: context.input.service,
+        input.env: "prod",
+        output.status: "completed"
+    }
+    since within 24h
+    Ops::Action::"Deploy"::response{
+        input.service: context.input.service,
+        input.env: "prod",
+        output.status: "failed"
+    }
+};
+
+// ---------------------------------------------------------------- CAP rules
+// R7  "No customer may receive more than 2 refunds in 24 hours."
+//     Counts REQUESTS (incl. this one), so denied attempts use up the allowance.
+@id("r7_max_2_refunds_per_customer_24h")
+forbid (principal, action == Ops::Action::"Refund", resource)
+when temporal {
+    (count for (t: Timepoint). where (
+        formerly within 24h (
+            Ops::Action::"Refund"::request{ input.customer_id: context.input.customer_id } && tp(t)
+        )
+    )) > 2
+};
+
+// R8  "No more than $1,000 may be refunded in a single day."
+//     APPROXIMATION: Dogwood windows slide; "a day" is read as the last 24h.
+//     Sums REQUEST amounts (incl. this one) so parallel calls cannot slip past.
+@id("r8_refund_total_1000_per_24h")
+forbid (principal, action == Ops::Action::"Refund", resource)
+when temporal {
+    (sum a for (a: Long), (t: Timepoint). where (
+        formerly within 24h (Ops::Action::"Refund"::request{ input.amount: a } && tp(t))
+    )) > 1000
+};
+
+// R9  "Never refund the same order twice."
+//     APPROXIMATION: history is capped at 24h by default, so this only catches a
+//     repeat within the last 24h (see max_window in the event schema).
+@id("r9_no_double_refund_24h")
+forbid (principal, action == Ops::Action::"Refund", resource)
+when temporal {
+    formerly within 24h Ops::Action::"Refund"::response{
+        input.order_id: context.input.order_id,
+        output.status: "completed"
+    }
+};
