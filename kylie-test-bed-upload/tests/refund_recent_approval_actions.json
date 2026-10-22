@@ -1,10 +1,41 @@
 {
-  "format": "kylie-store-actions/v1 (draft: agree with the team)",
+  "format": "kylie-store-actions/v1",
   "rule": "Only refund if a manager approved it recently (recently = 1 hour)",
-  "notes": "Sample lists to smoke-test the scorer. Camillia's lists replace these.",
+  "notes": "Camillia's scripted action lists. Right answers come from the English sentence.",
   "cases": [
     {
+      "id": "approved_just_now",
+      "why": "Approved seconds ago is as recent as it gets.",
+      "events": [
+        {
+          "at": "0s",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "item arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "10s",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "ALLOW"
+        }
+      ]
+    },
+    {
       "id": "approved_30m_ago",
+      "why": "30 minutes is inside 1 hour.",
       "events": [
         {
           "at": "0m",
@@ -13,7 +44,7 @@
           "input": {
             "order_id": "A100",
             "amount": 40,
-            "reason": "blender arrived damaged"
+            "reason": "item arrived damaged"
           },
           "output": {
             "approved": true,
@@ -34,6 +65,7 @@
     },
     {
       "id": "approved_59m_ago",
+      "why": "Just inside the hour.",
       "events": [
         {
           "at": "0m",
@@ -42,7 +74,7 @@
           "input": {
             "order_id": "A100",
             "amount": 40,
-            "reason": "blender arrived damaged"
+            "reason": "item arrived damaged"
           },
           "output": {
             "approved": true,
@@ -62,7 +94,8 @@
       ]
     },
     {
-      "id": "approved_61m_ago",
+      "id": "approved_exactly_60m_ago",
+      "why": "BOUNDARY: exactly 1 hour. Our reading: 'within 1 hour' includes 60:00. If Dogwood says DENY, that is a finding to discuss, not a typo.",
       "events": [
         {
           "at": "0m",
@@ -71,7 +104,37 @@
           "input": {
             "order_id": "A100",
             "amount": 40,
-            "reason": "blender arrived damaged"
+            "reason": "item arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "60m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "ALLOW"
+        }
+      ]
+    },
+    {
+      "id": "approved_61m_ago",
+      "why": "One minute too old.",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "item arrived damaged"
           },
           "output": {
             "approved": true,
@@ -92,6 +155,7 @@
     },
     {
       "id": "approved_3h_ago",
+      "why": "Clearly stale.",
       "events": [
         {
           "at": "0m",
@@ -100,7 +164,7 @@
           "input": {
             "order_id": "A100",
             "amount": 40,
-            "reason": "blender arrived damaged"
+            "reason": "item arrived damaged"
           },
           "output": {
             "approved": true,
@@ -120,7 +184,83 @@
       ]
     },
     {
+      "id": "approved_23h_ago",
+      "why": "Stale under 1h but fine under 24h. Ties to Part 3.",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "item arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "23h",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "stale_then_fresh_approval",
+      "why": "Old approval does not matter once a fresh one exists.",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "item arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "2h",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "item arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "150m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "ALLOW"
+        }
+      ]
+    },
+    {
       "id": "never_approved",
+      "why": "No approval at all.",
       "events": [
         {
           "at": "0m",
@@ -135,6 +275,7 @@
     },
     {
       "id": "manager_said_no",
+      "why": "A 'no' is not an approval.",
       "events": [
         {
           "at": "0m",
@@ -143,7 +284,7 @@
           "input": {
             "order_id": "A100",
             "amount": 40,
-            "reason": "blender arrived damaged"
+            "reason": "item arrived damaged"
           },
           "output": {
             "approved": false,
@@ -164,6 +305,7 @@
     },
     {
       "id": "approved_other_order",
+      "why": "Approval was for order A200, refund is for A100.",
       "events": [
         {
           "at": "0m",
@@ -171,13 +313,13 @@
           "kind": "response",
           "input": {
             "order_id": "A200",
-            "amount": 40,
-            "reason": "blender arrived damaged"
+            "amount": 320,
+            "reason": "item arrived damaged"
           },
           "output": {
             "approved": true,
             "approver": "manager.jordan",
-            "approved_amount": 40
+            "approved_amount": 320
           }
         },
         {
@@ -192,7 +334,8 @@
       ]
     },
     {
-      "id": "approved_smaller_amount",
+      "id": "two_orders_approved_refund_each",
+      "why": "Each order is matched to its own approval.",
       "events": [
         {
           "at": "0m",
@@ -201,7 +344,61 @@
           "input": {
             "order_id": "A100",
             "amount": 40,
-            "reason": "blender arrived damaged"
+            "reason": "item arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "5m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A200",
+            "amount": 320,
+            "reason": "item arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 320
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "ALLOW"
+        },
+        {
+          "at": "11m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A200",
+            "amount": 320
+          },
+          "expect": "ALLOW"
+        }
+      ]
+    },
+    {
+      "id": "approved_smaller_amount",
+      "why": "Manager approved $20, so $40 is not covered but $20 is.",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "item arrived damaged"
           },
           "output": {
             "approved": true,
@@ -230,7 +427,63 @@
       ]
     },
     {
+      "id": "approved_larger_order_full_amount",
+      "why": "Bigger order, exact approved amount: no cap in THIS rule.",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A200",
+            "amount": 320,
+            "reason": "item arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 320
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A200",
+            "amount": 320
+          },
+          "expect": "ALLOW"
+        }
+      ]
+    },
+    {
+      "id": "approval_request_errored",
+      "why": "The approval tool failed, so no approval exists.",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "error",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "item arrived damaged"
+          }
+        },
+        {
+          "at": "5m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY"
+        }
+      ]
+    },
+    {
       "id": "lookup_always_allowed",
+      "why": "Looking up an order is read-only.",
       "events": [
         {
           "at": "0m",
@@ -239,6 +492,38 @@
             "order_id": "A100"
           },
           "expect": "ALLOW"
+        }
+      ]
+    },
+    {
+      "id": "asking_for_approval_always_allowed",
+      "why": "The agent must be able to ASK, or it can never get approval.",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged"
+          },
+          "expect": "ALLOW"
+        }
+      ]
+    },
+    {
+      "id": "deploy_blocked_by_default",
+      "why": "This rule file never permits deploys, and the store denies by default.",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "deploy_service",
+          "input": {
+            "service": "checkout",
+            "version": "1.5.0",
+            "env": "prod"
+          },
+          "expect": "DENY"
         }
       ]
     }
