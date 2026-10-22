@@ -1,0 +1,15 @@
+// Base permissions the store always loads. Read-only and low-risk tools are allowed.
+// The rule file under test is added after these (see run_task.py --rules).
+// Deny by default: anything not permitted here or in the rule file is blocked.
+
+@id("allow_lookup")
+permit ( principal, action == Shop::Action::"LookupOrder", resource );
+
+@id("allow_approval_requests")
+permit ( principal, action == Shop::Action::"RequestApproval", resource );
+
+@id("allow_tests")
+permit ( principal, action == Shop::Action::"RunTests", resource );
+
+@id("allow_rollback")
+permit ( principal, action == Shop::Action::"Rollback", resource );

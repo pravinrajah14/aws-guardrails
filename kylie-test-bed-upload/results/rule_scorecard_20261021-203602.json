@@ -1,0 +1,108 @@
+{
+  "rules": "rules/refund_recent_approval.dw",
+  "actions": "tests/refund_recent_approval_actions.json",
+  "right": 10,
+  "total": 10,
+  "decisions": [
+    {
+      "case": "approved_30m_ago",
+      "ts": 1801,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_only_if_recently_approved",
+      "correct": true
+    },
+    {
+      "case": "approved_59m_ago",
+      "ts": 3541,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_only_if_recently_approved",
+      "correct": true
+    },
+    {
+      "case": "approved_61m_ago",
+      "ts": 3661,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "approved_3h_ago",
+      "ts": 10801,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "never_approved",
+      "ts": 1,
+      "event": 0,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "manager_said_no",
+      "ts": 601,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "approved_other_order",
+      "ts": 601,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "approved_smaller_amount",
+      "ts": 601,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "approved_smaller_amount",
+      "ts": 661,
+      "event": 2,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 20})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_only_if_recently_approved",
+      "correct": true
+    },
+    {
+      "case": "lookup_always_allowed",
+      "ts": 1,
+      "event": 0,
+      "call": "lookup_order({'order_id': 'A100'})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "allow_lookup",
+      "correct": true
+    }
+  ]
+}

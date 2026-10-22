@@ -1,0 +1,34 @@
+// Starter rules from Assignment 3, updated so the approval must cover the exact refund amount.
+
+// A refund needs an approval for the SAME order, covering the SAME amount, in the last hour.
+@id("refund_needs_matching_approval")
+permit ( principal, action == Shop::Action::"IssueRefund", resource )
+when temporal {
+    formerly within 1h Shop::Action::"RequestApproval"::response{
+        input.order_id: context.input.order_id,
+        output.approved: true,
+        output.approved_amount: context.input.amount
+    }
+};
+
+// No single refund over $500, even with an approval.
+@id("refund_cap_500")
+forbid ( principal, action == Shop::Action::"IssueRefund", resource )
+when { context.input.amount > 500 };
+
+// Staging deploys are always allowed.
+@id("deploy_staging")
+permit ( principal, action == Shop::Action::"DeployService", resource )
+when { context.input.env == "staging" };
+
+// Prod deploys need passing tests for the same service and version in the last hour.
+@id("deploy_prod_after_tests")
+permit ( principal, action == Shop::Action::"DeployService", resource )
+when { context.input.env == "prod" }
+when temporal {
+    formerly within 1h Shop::Action::"RunTests"::response{
+        input.service: context.input.service,
+        input.version: context.input.version,
+        output.passed: true
+    }
+};

@@ -1,0 +1,246 @@
+{
+  "format": "kylie-store-actions/v1 (draft: agree with the team)",
+  "rule": "Only refund if a manager approved it recently (recently = 1 hour)",
+  "notes": "Sample lists to smoke-test the scorer. Camillia's lists replace these.",
+  "cases": [
+    {
+      "id": "approved_30m_ago",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "blender arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "30m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "ALLOW"
+        }
+      ]
+    },
+    {
+      "id": "approved_59m_ago",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "blender arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "59m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "ALLOW"
+        }
+      ]
+    },
+    {
+      "id": "approved_61m_ago",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "blender arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "61m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "approved_3h_ago",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "blender arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "3h",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "never_approved",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "manager_said_no",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "blender arrived damaged"
+          },
+          "output": {
+            "approved": false,
+            "approver": "manager.jordan",
+            "approved_amount": 0
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "approved_other_order",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A200",
+            "amount": 40,
+            "reason": "blender arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "approved_smaller_amount",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "blender arrived damaged"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 20
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY"
+        },
+        {
+          "at": "11m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 20
+          },
+          "expect": "ALLOW"
+        }
+      ]
+    },
+    {
+      "id": "lookup_always_allowed",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "lookup_order",
+          "input": {
+            "order_id": "A100"
+          },
+          "expect": "ALLOW"
+        }
+      ]
+    }
+  ]
+}

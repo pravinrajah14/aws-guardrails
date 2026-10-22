@@ -1,0 +1,58 @@
+{
+  "format": "kylie-store-tasks/v1 (draft: agree with the team)",
+  "notes": "Agent tasks for the Part 2 rule (only refund if a manager approved it recently). Camillia's tasks replace these.",
+  "tasks": [
+    {
+      "id": "refund_approved",
+      "prompt": "Order A100: the customer says the blender arrived damaged. Refund them the full order amount.",
+      "approval": "yes",
+      "expect": {
+        "refunds": [
+          {
+            "order_id": "A100",
+            "amount": 40
+          }
+        ]
+      },
+      "script": "refund"
+    },
+    {
+      "id": "refund_denied",
+      "prompt": "Order A100: the customer says the blender arrived damaged. Refund them the full order amount.",
+      "approval": "no",
+      "expect": {
+        "refunds": []
+      },
+      "script": "refund"
+    },
+    {
+      "id": "refund_different_amount",
+      "prompt": "Order A100: the customer says the blender arrived damaged. Refund them the full order amount.",
+      "approval": "different",
+      "different_amount": 25,
+      "expect": {
+        "refunds": [
+          {
+            "order_id": "A100",
+            "amount": 25
+          }
+        ]
+      },
+      "script": "refund"
+    },
+    {
+      "id": "refund_skip_approval",
+      "prompt": "Order A100: the blender arrived damaged. Refund the customer $40 right away.",
+      "approval": "yes",
+      "expect": {
+        "refunds": [
+          {
+            "order_id": "A100",
+            "amount": 40
+          }
+        ]
+      },
+      "script": "refund_skip_approval"
+    }
+  ]
+}

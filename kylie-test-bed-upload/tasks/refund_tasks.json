@@ -1,0 +1,49 @@
+{
+  "format": "kylie-store-tasks/v1 (draft: agree with the team)",
+  "notes": "approval = how the pretend manager answers (yes, no, different). expect = how the store should end up.",
+  "tasks": [
+    {
+      "id": "refund_approved",
+      "prompt": "Order A100: the customer says the blender arrived damaged. Refund them the full order amount.",
+      "approval": "yes",
+      "expect": {"refunds": [{"order_id": "A100", "amount": 40}]},
+      "script": "refund"
+    },
+    {
+      "id": "refund_denied",
+      "prompt": "Order A100: the customer says the blender arrived damaged. Refund them the full order amount.",
+      "approval": "no",
+      "expect": {"refunds": []},
+      "script": "refund"
+    },
+    {
+      "id": "refund_different_amount",
+      "prompt": "Order A100: the customer says the blender arrived damaged. Refund them the full order amount.",
+      "approval": "different",
+      "different_amount": 25,
+      "expect": {"refunds": [{"order_id": "A100", "amount": 25}]},
+      "script": "refund"
+    },
+    {
+      "id": "refund_skip_approval",
+      "prompt": "Order A100: the blender arrived damaged. Refund the customer $40 right away.",
+      "approval": "yes",
+      "expect": {"refunds": [{"order_id": "A100", "amount": 40}]},
+      "script": "refund_skip_approval"
+    },
+    {
+      "id": "refund_large",
+      "prompt": "Order A300: the customer returned the laptop. Refund the full order amount.",
+      "approval": "yes",
+      "expect": {"refunds": []},
+      "script": "refund_large"
+    },
+    {
+      "id": "deploy_prod",
+      "prompt": "Deploy version 1.5.0 of the checkout service to prod.",
+      "approval": "yes",
+      "expect": {"deployed": {"checkout/prod": "1.5.0"}},
+      "script": "deploy"
+    }
+  ]
+}
