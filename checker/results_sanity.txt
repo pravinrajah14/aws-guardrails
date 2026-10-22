@@ -1,6 +1,0 @@
-P1 OK  ALLOW  Manager approves A1 $600, refund 100s later
-P1 OK  ALLOW  Refund $499, no approval
-P2 OK  ALLOW  5th refund in an hour
-P3 OK  ALLOW  Tests pass 90%, deploy 60s later
-P3 OK  ALLOW  Staging deploy, no tests
-P2_attempt mutant on 5th refund: DENY

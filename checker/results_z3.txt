@@ -1,5 +1,0 @@
-window        intended=DENY  buggy=ALLOW [confirmed by Dogwood]  t=0s approval A1 $500 granted by manager ; t=20s approval A1 $500 granted by manager ; t=3631s refund A1 $500
-boundary      intended=DENY  buggy=ALLOW [confirmed by Dogwood]  t=0s approval A1 $1 granted by manager ; t=20s approval A3 $501 granted by manager ; t=3631s refund A2 $500
-attempt       intended=DENY  buggy=ALLOW [confirmed by Dogwood]  t=0s approval A2 $500 declined by manager ; t=20s approval A1 $501 granted by manager ; t=31s refund A2 $500
-person        intended=DENY  buggy=ALLOW [confirmed by Dogwood]  t=0s approval A2 $500 granted by support ; t=20s approval A1 $501 granted by manager ; t=31s refund A2 $500
-other_refund  intended=DENY  buggy=ALLOW [confirmed by Dogwood]  t=0s approval A1 $501 granted by manager ; t=20s approval A3 $500 granted by manager ; t=3611s refund A2 $500

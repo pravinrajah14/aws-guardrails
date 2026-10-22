@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Guardrail rule form",
+  "description": "One manager rule, filled in as a form. convert.py turns it into a Dogwood policy. Action and field names come from the action schema (4_rules/schema.cedarschema, a copy of Kylie's testbed schema).",
+  "type": "object",
+  "required": ["id", "kind", "action"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "Becomes the Dogwood @id. Shown to the agent when the rule blocks it." },
+    "sentence": { "type": "string", "description": "The manager's original plain-English rule. Copied into a comment." },
+    "action": { "type": "string", "description": "The tool call this rule guards, e.g. IssueRefund." },
+    "kind": { "enum": ["limit", "allowlist", "requires_prior"] },
+    "only_when": { "$ref": "#/$defs/condition", "description": "Optional. The rule only applies when this holds (e.g. amount > 100)." },
+
+    "field":   { "type": "string", "description": "limit/allowlist: the input field being checked." },
+    "max":     { "type": "integer", "description": "limit: the largest allowed value." },
+    "allowed": { "type": "array", "items": { "type": ["string", "integer"] }, "minItems": 1, "description": "allowlist: the only allowed values." },
+
+    "requires": {
+      "type": "object",
+      "description": "requires_prior: an earlier call that must have happened first. Becomes a permit (Kylie style); only one per action.",
+      "required": ["action", "within"],
+      "additionalProperties": false,
+      "properties": {
+        "action": { "type": "string", "description": "The earlier action, e.g. RequestApproval." },
+        "within": { "type": "string", "pattern": "^[0-9]+(s|m|h)$", "description": "How long ago counts as recent, e.g. 1h. There is no default: 'recently' must be a number." },
+        "same":   { "type": "array", "items": { "type": "string" }, "description": "Input fields that must match between the earlier call and this one (e.g. order_id, amount)." },
+        "output": { "type": "object", "description": "Result fields the earlier call must have returned (e.g. approved: true)." }
+      }
+    }
+  },
+  "$defs": {
+    "condition": {
+      "type": "object",
+      "required": ["field", "op", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "field": { "type": "string" },
+        "op":    { "enum": [">", ">=", "<", "<=", "==", "!="] },
+        "value": { "type": ["string", "integer", "boolean"] }
+      }
+    }
+  }
+}

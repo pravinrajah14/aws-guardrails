@@ -1,0 +1,8 @@
+{
+  "id": "refund_max_500",
+  "sentence": "A single refund may not exceed $500.",
+  "action": "IssueRefund",
+  "kind": "limit",
+  "field": "amount",
+  "max": 500
+}

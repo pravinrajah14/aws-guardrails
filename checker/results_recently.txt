@@ -1,4 +1,0 @@
-recently/reading_A_window.dw on recently/trace_fail_then_pass.log: @1800 (time point 2): DENY  [rules: 1]
-recently/reading_A_window.dw on recently/trace_fail_2h_ago.log: @7200 (time point 1): ALLOW  [rules: 0]
-recently/reading_B_latest.dw on recently/trace_fail_then_pass.log: @1800 (time point 2): ALLOW  [rules: 0]
-recently/reading_B_latest.dw on recently/trace_fail_2h_ago.log: @7200 (time point 1): DENY  [rules: 1]
