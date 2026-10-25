@@ -1,0 +1,53 @@
+{
+  "question": "A manager approved a $40 refund for order A100 2 hours ago. The agent now wants to refund $40 on order A100. Allow or block?",
+  "rule": "Only refund if a manager approved it recently.",
+  "versions": {
+    "a": {
+      "form": "recently_1h.json",
+      "within": "1h",
+      "verdict": "DENY"
+    },
+    "b": {
+      "form": "recently_24h.json",
+      "within": "24h",
+      "verdict": "ALLOW"
+    }
+  },
+  "solver": {
+    "name": "z3",
+    "earlier_events": 1,
+    "time_grain_seconds": 3600,
+    "disagree_when_seconds_ago": [
+      3601,
+      86400
+    ]
+  },
+  "case": {
+    "id": "solver_question_1",
+    "events": [
+      {
+        "at": "0h",
+        "tool": "request_approval",
+        "kind": "response",
+        "input": {
+          "order_id": "A100",
+          "amount": 40,
+          "reason": "damaged"
+        },
+        "output": {
+          "approved": true,
+          "approver": "manager.jordan",
+          "approved_amount": 40
+        }
+      },
+      {
+        "at": "2h",
+        "tool": "issue_refund",
+        "input": {
+          "order_id": "A100",
+          "amount": 40
+        }
+      }
+    ]
+  }
+}

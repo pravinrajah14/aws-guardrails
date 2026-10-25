@@ -1,0 +1,218 @@
+{
+  "rules": "/home/claude/aws-guardrails/question/out/answer_allow/updated_rule.dw",
+  "actions": "/home/claude/aws-guardrails/question/out/answer_allow/actions_with_answer.json",
+  "right": 16,
+  "total": 21,
+  "decisions": [
+    {
+      "case": "approved_just_now",
+      "ts": 11,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": true
+    },
+    {
+      "case": "approved_30m_ago",
+      "ts": 1801,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": true
+    },
+    {
+      "case": "approved_59m_ago",
+      "ts": 3541,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": true
+    },
+    {
+      "case": "approved_exactly_60m_ago",
+      "ts": 3601,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": true
+    },
+    {
+      "case": "approved_61m_ago",
+      "ts": 3661,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": false
+    },
+    {
+      "case": "approved_3h_ago",
+      "ts": 10801,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": false
+    },
+    {
+      "case": "approved_23h_ago",
+      "ts": 82801,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": false
+    },
+    {
+      "case": "stale_then_fresh_approval",
+      "ts": 9001,
+      "event": 2,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": true
+    },
+    {
+      "case": "never_approved",
+      "ts": 1,
+      "event": 0,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "manager_said_no",
+      "ts": 601,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "approved_other_order",
+      "ts": 601,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "two_orders_approved_refund_each",
+      "ts": 601,
+      "event": 2,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": true
+    },
+    {
+      "case": "two_orders_approved_refund_each",
+      "ts": 661,
+      "event": 3,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 320})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": true
+    },
+    {
+      "case": "approved_smaller_amount",
+      "ts": 601,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": false
+    },
+    {
+      "case": "approved_smaller_amount",
+      "ts": 661,
+      "event": 2,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 20})",
+      "expect": "ALLOW",
+      "got": "DENY",
+      "rules": "",
+      "correct": false
+    },
+    {
+      "case": "approved_larger_order_full_amount",
+      "ts": 601,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 320})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": true
+    },
+    {
+      "case": "approval_request_errored",
+      "ts": 301,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "lookup_always_allowed",
+      "ts": 1,
+      "event": 0,
+      "call": "lookup_order({'order_id': 'A100'})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "allow_lookup",
+      "correct": true
+    },
+    {
+      "case": "asking_for_approval_always_allowed",
+      "ts": 1,
+      "event": 0,
+      "call": "request_approval({'order_id': 'A100', 'amount': 40, 'reason': 'damaged'})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "allow_approval_requests",
+      "correct": true
+    },
+    {
+      "case": "deploy_blocked_by_default",
+      "ts": 1,
+      "event": 0,
+      "call": "deploy_service({'service': 'checkout', 'version': '1.5.0', 'env': 'prod'})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "solver_question_1",
+      "ts": 7201,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": true
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "refund_needs_manager_approval",
+  "sentence": "Only refund if a manager approved it recently.",
+  "action": "IssueRefund",
+  "kind": "requires_prior",
+  "requires": {
+    "action": "RequestApproval",
+    "within": "1h",
+    "same": [
+      "order_id",
+      "amount"
+    ],
+    "output": {
+      "approved": true
+    }
+  }
+}

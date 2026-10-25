@@ -1,0 +1,10 @@
+Question: A manager approved a $40 refund for order A100 2 hours ago. The agent now wants to refund $40 on order A100. Allow or block?
+Answer: block -> keep recently_1h.json (recently = 1h), drop recently_24h.json
+Rescored with Part 2 action lists plus the answered question: 19 of 21 correct
+  wrong: approved_smaller_amount issue_refund({'order_id': 'A100', 'amount': 40}) expected DENY, got ALLOW
+  wrong: approved_smaller_amount issue_refund({'order_id': 'A100', 'amount': 20}) expected ALLOW, got DENY
+Cases whose right answer depends on how 'recently' is read:
+  approved_61m_ago: expected DENY, updated rule says DENY
+  approved_3h_ago: expected DENY, updated rule says DENY
+  approved_23h_ago: expected DENY, updated rule says DENY
+  solver_question_1: expected DENY, updated rule says DENY
