@@ -1,0 +1,9 @@
+{
+  "id": "prod_deploy_allowlist",
+  "sentence": "Production deploys are only allowed for payments, search and web.",
+  "action": "DeployService",
+  "kind": "allowlist",
+  "field": "service",
+  "allowed": ["payments", "search", "web"],
+  "only_when": { "field": "env", "op": "==", "value": "prod" }
+}

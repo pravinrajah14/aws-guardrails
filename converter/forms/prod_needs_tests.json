@@ -1,0 +1,13 @@
+{
+  "id": "prod_deploy_needs_passing_tests",
+  "sentence": "A version may only go to production if its tests passed within the last 24 hours.",
+  "action": "DeployService",
+  "kind": "requires_prior",
+  "only_when": { "field": "env", "op": "==", "value": "prod" },
+  "requires": {
+    "action": "RunTests",
+    "within": "24h",
+    "same": ["service", "version"],
+    "output": { "passed": true }
+  }
+}

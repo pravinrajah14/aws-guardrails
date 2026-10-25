@@ -1,0 +1,54 @@
+// Copied verbatim from kylie-test-bed/policies/schema.cedarschema (origin/kylie/test-bed)
+// so 4_rules, the converter, and Kylie's store all share one schema. Do not edit here;
+// change Kylie's copy and re-copy.
+// Action schema for the testbed's mock tools.
+// Each tool's arguments live under context.input; its result lives under context.output.
+namespace Shop {
+  type LookupOrderInput = { order_id: String };
+  type LookupOrderOutput = { total: Long, status: String };
+
+  type RequestApprovalInput = { order_id: String, amount: Long, reason: String };
+  type RequestApprovalOutput = { approved: Bool, approver: String };
+
+  type IssueRefundInput = { order_id: String, amount: Long };
+  type IssueRefundOutput = { refund_id: String, amount: Long };
+
+  type RunTestsInput = { service: String, version: String };
+  type RunTestsOutput = { passed: Bool };
+
+  type DeployServiceInput = { service: String, version: String, env: String };
+  type DeployServiceOutput = { deployed: Bool };
+
+  type RollbackInput = { service: String, env: String };
+  type RollbackOutput = { version: String };
+
+  type SystemContext = { now: datetime };
+
+  entity Gateway;
+  entity OAuthUser = { id: String } tags String;
+
+  action "LookupOrder" appliesTo {
+    principal: [OAuthUser], resource: [Gateway],
+    context: { input: LookupOrderInput, output?: LookupOrderOutput, system: SystemContext }
+  };
+  action "RequestApproval" appliesTo {
+    principal: [OAuthUser], resource: [Gateway],
+    context: { input: RequestApprovalInput, output?: RequestApprovalOutput, system: SystemContext }
+  };
+  action "IssueRefund" appliesTo {
+    principal: [OAuthUser], resource: [Gateway],
+    context: { input: IssueRefundInput, output?: IssueRefundOutput, system: SystemContext }
+  };
+  action "RunTests" appliesTo {
+    principal: [OAuthUser], resource: [Gateway],
+    context: { input: RunTestsInput, output?: RunTestsOutput, system: SystemContext }
+  };
+  action "DeployService" appliesTo {
+    principal: [OAuthUser], resource: [Gateway],
+    context: { input: DeployServiceInput, output?: DeployServiceOutput, system: SystemContext }
+  };
+  action "Rollback" appliesTo {
+    principal: [OAuthUser], resource: [Gateway],
+    context: { input: RollbackInput, output?: RollbackOutput, system: SystemContext }
+  };
+}

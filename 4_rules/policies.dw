@@ -1,0 +1,142 @@
+// Jack's 10 rules, hand-translated from plain English -> form -> Dogwood.
+// FORMAT: matches Kylie's testbed (kylie-test-bed/policies/policy.dw): namespace Shop,
+// her tool/action names (IssueRefund, RequestApproval, DeployService, ...) and fields.
+// STYLE (also Kylie's): deny by default. A "needs X first" rule is a `permit`, so the
+// gate can tell the agent which rule would allow the action. Hard limits are `forbid`
+// (forbid beats any permit). Careful: permits on the same action combine as OR.
+//
+// RULES THAT DO NOT FIT KYLIE'S TOOLS (kept as comments at the bottom):
+//   R2 needs order_age_days on IssueRefund; R5 needs an ApproveDeploy tool;
+//   R7 needs customer_id on IssueRefund.
+
+// ---------------------------------------------------------------- baseline
+// Read-only and low-risk tools no rule restricts are always allowed.
+@id("allow_lookup")
+permit (principal, action == Shop::Action::"LookupOrder", resource);
+
+@id("allow_approval_requests")
+permit (principal, action == Shop::Action::"RequestApproval", resource);
+
+@id("allow_tests")
+permit (principal, action == Shop::Action::"RunTests", resource);
+
+@id("allow_rollback")
+permit (principal, action == Shop::Action::"Rollback", resource);
+
+// ---------------------------------------------------------------- APPROVAL rules
+// R4  "A refund over $100 needs a manager's approval for that same order and
+//      that same amount, granted within the last hour."
+//     Two permits (OR): small refunds need nothing; larger ones need the approval.
+//     No approver-role check: Kylie's RequestApproval only returns an approver name,
+//     and the tool is "ask a human manager", so every approval is a manager's.
+@id("r4_refund_up_to_100")
+permit (principal, action == Shop::Action::"IssueRefund", resource)
+when { context.input.amount <= 100 };
+
+@id("r4_refund_over_100_needs_approval")
+permit (principal, action == Shop::Action::"IssueRefund", resource)
+when { context.input.amount > 100 }
+when temporal {
+    formerly within 1h Shop::Action::"RequestApproval"::response{
+        input.order_id: context.input.order_id,
+        input.amount: context.input.amount,
+        output.approved: true
+    }
+};
+
+// ---------------------------------------------------------------- SEQUENCE rules
+// R6  "A version may only go to production if its tests passed within the last 24 hours."
+//     Staging is always allowed (as in Kylie's deploy_staging); prod needs passing tests.
+@id("r6_deploy_staging")
+permit (principal, action == Shop::Action::"DeployService", resource)
+when { context.input.env != "prod" };
+
+@id("r6_prod_deploy_needs_passing_tests")
+permit (principal, action == Shop::Action::"DeployService", resource)
+when { context.input.env == "prod" }
+when temporal {
+    formerly within 24h Shop::Action::"RunTests"::response{
+        input.service: context.input.service,
+        input.version: context.input.version,
+        output.passed: true
+    }
+};
+
+// R10 "After a failed production deploy of a service, block further production
+//      deploys of that service until a rollback has completed."
+//     Kylie's gate records a failed tool call as an `error` event, and a finished
+//     rollback as a `response` event.
+@id("r10_no_redeploy_after_failure_until_rollback")
+forbid (principal, action == Shop::Action::"DeployService", resource)
+when { context.input.env == "prod" }
+when temporal {
+    !Shop::Action::"Rollback"::response{
+        input.service: context.input.service,
+        input.env: "prod"
+    }
+    since within 24h
+    Shop::Action::"DeployService"::error{
+        input.service: context.input.service,
+        input.env: "prod"
+    }
+};
+
+// ---------------------------------------------------------------- LIMIT rules
+// R1  "A single refund may not exceed $500."
+@id("r1_refund_max_500")
+forbid (principal, action == Shop::Action::"IssueRefund", resource)
+when { context.input.amount > 500 };
+
+// R3  "Production deploys are only allowed for payments, search and web."
+//     NOTE: Kylie's mock world only has a "checkout" service, so this blocks her
+//     prod deploy task. That is the rule working as written.
+@id("r3_prod_deploy_allowlist")
+forbid (principal, action == Shop::Action::"DeployService", resource)
+when {
+    context.input.env == "prod"
+    && !(["payments", "search", "web"].contains(context.input.service))
+};
+
+// ---------------------------------------------------------------- CAP rules
+// R8  "No more than $1,000 may be refunded in a single day."
+//     APPROXIMATION: Dogwood windows slide; "a day" is read as the last 24h.
+//     Sums REQUEST amounts (incl. this one) so parallel calls cannot slip past.
+@id("r8_refund_total_1000_per_24h")
+forbid (principal, action == Shop::Action::"IssueRefund", resource)
+when temporal {
+    (sum a for (a: Long), (t: Timepoint). where (
+        formerly within 24h (Shop::Action::"IssueRefund"::request{ input.amount: a } && tp(t))
+    )) > 1000
+};
+
+// R9  "Never refund the same order twice."
+//     A `response` event means the refund went through (failures are `error` events).
+//     APPROXIMATION: history is capped at 24h by default, so this only catches a
+//     repeat within the last 24h.
+@id("r9_no_double_refund_24h")
+forbid (principal, action == Shop::Action::"IssueRefund", resource)
+when temporal {
+    formerly within 24h Shop::Action::"IssueRefund"::response{
+        input.order_id: context.input.order_id
+    }
+};
+
+// ---------------------------------------------------------------- DO NOT FIT (yet)
+// Each needs a change to Kylie's tools/schema first; left here so nothing is lost.
+//
+// R2  "Refunds are only allowed for orders placed within the last 30 days."
+//     Needs IssueRefund input `order_age_days: Long`. Would be:
+//     forbid (principal, action == Shop::Action::"IssueRefund", resource)
+//     when { context.input.order_age_days > 30 };
+//
+// R5  "A production deploy needs an approval for that same service, version and
+//      environment, granted within the last 2 hours."
+//     Needs a `RequestDeployApproval` tool (input service/version/env, output approved).
+//     As a permit it would also have to be merged with R6 into ONE prod-deploy permit
+//     (two permits would OR, letting either one alone through).
+//
+// R7  "No customer may receive more than 2 refunds in 24 hours."
+//     Needs IssueRefund input `customer_id: String`. Would be:
+//     forbid ... when temporal { (count for (t: Timepoint). where (formerly within 24h (
+//         Shop::Action::"IssueRefund"::request{ input.customer_id: context.input.customer_id }
+//         && tp(t)))) > 2 };
