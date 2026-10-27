@@ -1,0 +1,2 @@
+[    0.02s] #001 session_start  task 'refund_approved' with model qwen2.5:3b
+[    0.02s] #002 store_setup    rules=rules/refund_recent_approval.dw approval=yes

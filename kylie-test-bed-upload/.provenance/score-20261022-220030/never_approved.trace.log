@@ -1,0 +1,1 @@
+@1 scope(principal: Shop::OAuthUser::"support-agent", resource: Shop::Gateway::"testbed") request_context(input: { amount: 40, order_id: "A100" }) Shop::Action::"IssueRefund"::request(input: { amount: 40, order_id: "A100" }, callerPrincipal: Shop::OAuthUser::"support-agent", callerResource: Shop::Gateway::"testbed", requestId: "never_approved-0")

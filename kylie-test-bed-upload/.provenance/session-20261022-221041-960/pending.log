@@ -1,0 +1,1 @@
+@1 scope(principal: Shop::OAuthUser::"support-agent", resource: Shop::Gateway::"testbed") request_context(input: { env: "prod", service: "checkout", version: "1.5.0" }) Shop::Action::"DeployService"::request(input: { env: "prod", service: "checkout", version: "1.5.0" }, callerPrincipal: Shop::OAuthUser::"support-agent", callerResource: Shop::Gateway::"testbed", requestId: "r1")
