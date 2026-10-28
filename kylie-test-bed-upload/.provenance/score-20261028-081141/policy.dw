@@ -1,0 +1,31 @@
+// ===== base permissions: policies/base.dw
+// Base permissions the store always loads. Read-only and low-risk tools are allowed.
+// The rule file under test is added after these (see run_task.py --rules).
+// Deny by default: anything not permitted here or in the rule file is blocked.
+
+@id("allow_lookup")
+permit ( principal, action == Shop::Action::"LookupOrder", resource );
+
+@id("allow_approval_requests")
+permit ( principal, action == Shop::Action::"RequestApproval", resource );
+
+@id("allow_tests")
+permit ( principal, action == Shop::Action::"RunTests", resource );
+
+@id("allow_rollback")
+permit ( principal, action == Shop::Action::"Rollback", resource );
+
+// ===== rule file under test: rules/refund_recent_approval_1h.dw
+// Assignment 4 rule: "Only refund if a manager approved it recently."
+// Hand-written stand-in until Jack's form -> Dogwood converter produces this file.
+// "Recently" = within 1 hour here (Part 3 compares 1h vs 24h).
+
+@id("refund_only_if_recently_approved")
+permit ( principal, action == Shop::Action::"IssueRefund", resource )
+when temporal {
+    formerly within 1h Shop::Action::"RequestApproval"::response{
+        input.order_id: context.input.order_id,
+        output.approved: true,
+        output.approved_amount: context.input.amount
+    }
+};

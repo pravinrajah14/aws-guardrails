@@ -1,0 +1,1 @@
+@1 scope(principal: Shop::OAuthUser::"support-agent", resource: Shop::Gateway::"testbed") request_context(input: { order_id: "A100" }) Shop::Action::"LookupOrder"::request(input: { order_id: "A100" }, callerPrincipal: Shop::OAuthUser::"support-agent", callerResource: Shop::Gateway::"testbed", requestId: "r1")
