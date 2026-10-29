@@ -1,16 +1,4 @@
-"""Run agent tasks in the store, enforce a rule file with Dogwood, record everything, and score it.
-
-Examples:
-  python run_task.py --task refund_approved --model qwen2.5:3b
-  python run_task.py --task refund_approved --approval different --different-amount 25
-  python run_task.py --rules rules/refund_recent_approval.dw --all --runs 3
-  python run_task.py --task refund_approved --model scripted        (no model, fixed script)
-
-Inputs:
-  --tasks   a task file (default tasks/refund_tasks.json; Camillia's task file goes here)
-  --rules   the rule file under test, in Dogwood (.dw) format (Jack's converter output goes here)
-  --base    the store's base permissions, always loaded before the rule file
-"""
+"""Run guarded agent tasks and score their final state."""
 import argparse
 import json
 import sys
@@ -20,7 +8,7 @@ from pathlib import Path
 
 from agent import OllamaModel, ScriptedModel, run_agent
 from enforce import DogwoodGate, build_policy
-from recorder import Recorder
+from recorder import Recorder, file_hash
 from tools import APPROVAL_MODES, MockWorld
 
 SCHEMA = "policies/schema.cedarschema"
@@ -64,7 +52,8 @@ def run_one(task, args, run_number):
     else:
         model = OllamaModel(args.model)
 
-    rec = Recorder()
+    output_dir = getattr(args, "output_dir", None)
+    rec = Recorder(root=Path(output_dir) / "traces" if output_dir else ".provenance")
     print(f"\n=== {task['id']} (run {run_number}) -> {rec.dir}")
     policy = build_policy(args.base, args.rules, rec.dir / "policy.dw")
     rec.start_session(task["id"], task["prompt"], model.name, policy, SCHEMA)
@@ -107,9 +96,11 @@ def run_one(task, args, run_number):
 
 def write_scorecard(rows, args):
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    out = Path("results")
-    out.mkdir(exist_ok=True)
+    out = Path(getattr(args, "output_dir", None) or "results")
+    out.mkdir(parents=True, exist_ok=True)
     meta = {"rules": str(args.rules), "base": str(args.base), "tasks": str(args.tasks), "model": args.model}
+    meta["sha256"] = {"rules": file_hash(args.rules), "base": file_hash(args.base),
+                      "tasks": file_hash(args.tasks), "schema": file_hash(SCHEMA)}
     (out / f"agent_scorecard_{stamp}.json").write_text(json.dumps({"setup": meta, "runs": rows}, indent=2))
     passed = sum(r["passed"] for r in rows)
     lines = [
@@ -123,7 +114,7 @@ def write_scorecard(rows, args):
         lines.append(f"| {r['task']} | {r['run']} | {r['approval']} | {'PASS' if r['passed'] else 'FAIL'} | "
                      f"{r['allowed']} | {r['blocked']} | {r['reason']} | {r['session']} | |")
     (out / f"agent_scorecard_{stamp}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"\nScorecard: results/agent_scorecard_{stamp}.md  (passed {passed} of {len(rows)})")
+    print(f"\nScorecard: {out / f'agent_scorecard_{stamp}.md'}  (passed {passed} of {len(rows)})")
 
 
 def main():
@@ -138,6 +129,7 @@ def main():
     p.add_argument("--different-amount", type=int, help="amount approved when --approval different")
     p.add_argument("--runs", type=int, default=1, help="repeat each task this many times")
     p.add_argument("--max-turns", type=int, default=10)
+    p.add_argument("--output-dir", help="Save scorecards and session traces together here")
     args = p.parse_args()
 
     tasks = load_tasks(args.tasks)

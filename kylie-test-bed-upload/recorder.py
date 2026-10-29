@@ -1,17 +1,4 @@
-"""A Provenance-style recorder for agent runs.
-
-Like Berkeley's Provenance extension for VS Code, it:
-- records everything inside one "assignment" (here, one agent session) and nothing else,
-- keeps the log on your own computer in a .provenance/ folder, with no network calls,
-- writes plain text you can open and read, and
-- makes the record hard to edit quietly: every event stores a hash of the event before it,
-  so changing or deleting a line breaks the chain (review.py checks this).
-
-Files per session, in .provenance/<session_id>/:
-  events.jsonl  one JSON event per line, hash-chained (the record of truth)
-  timeline.txt  the same events as readable lines, written live
-  trace.log     the history in Dogwood's format (written by enforce.py)
-"""
+"""Record hash-chained agent session events."""
 import hashlib
 import json
 import platform

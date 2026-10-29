@@ -25,7 +25,8 @@
         "action": { "type": "string", "description": "The earlier action, e.g. RequestApproval." },
         "within": { "type": "string", "pattern": "^[0-9]+(s|m|h)$", "description": "How long ago counts as recent, e.g. 1h. There is no default: 'recently' must be a number." },
         "same":   { "type": "array", "items": { "type": "string" }, "description": "Input fields that must match between the earlier call and this one (e.g. order_id, amount)." },
-        "output": { "type": "object", "description": "Result fields the earlier call must have returned (e.g. approved: true)." }
+        "output": { "type": "object", "description": "Result fields the earlier call must have returned (e.g. approved: true)." },
+        "output_same": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Map prior result fields to current inputs, e.g. approved_amount to amount." }
       }
     }
   },

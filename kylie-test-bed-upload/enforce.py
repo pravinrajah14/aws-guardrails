@@ -1,16 +1,4 @@
-"""The thin enforcement layer: every tool call goes through Dogwood before it runs.
-
-How it works:
-1. Keep a trace of everything that happened this session, in Dogwood's trace format.
-2. When the agent wants to call a tool, write the trace plus that new request
-   to a file and run `dogwood replay` on it.
-3. The verdict on the last line is the decision for this call: ALLOW or DENY.
-4. After a tool runs, add its result (a "response" or "error" event) to the trace,
-   so later rules like "approval before refund" can see it.
-
-Dogwood's reference interpreter is a CLI, so we call it as a subprocess.
-Set DOGWOOD_CMD if it is not on your PATH (for example "wsl ~/.cargo/bin/dogwood").
-"""
+"""Validate and replay Dogwood policies before tool execution."""
 import json
 import os
 import re
@@ -66,12 +54,7 @@ def permit_rules_by_action(policy_path):
 
 
 def build_policy(base_path, rule_path, out_path):
-    """The store's base permissions + the rule file under test, written as one policy file.
-
-    Any rule file in Dogwood (.dw) format can be loaded this way, as long as it uses the
-    store's tool names (see policies/schema.cedarschema). The combined file is saved in the
-    session folder so every run records exactly which rules it enforced.
-    """
+    """The store's base permissions + the rule file under test, written as one policy file."""
     base = Path(base_path).read_text(encoding="utf-8")
     rule = Path(rule_path).read_text(encoding="utf-8")
     combined = (
@@ -131,9 +114,7 @@ class DogwoodGate:
         return code == 0, (out + err).strip()
 
     def replay(self, lines):
-        """Run `dogwood replay` on a list of trace lines.
-        Returns (ok, verdicts, problem). There is one verdict per request event, in order:
-        {"ts": timestamp, "decision": "ALLOW" or "DENY", "rules": [rule indexes]}."""
+        """Run `dogwood replay` on a list of trace lines."""
         self.pending_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         code, out, err = self._run([
             "replay", self.policy, "--policy-schema", self.schema,

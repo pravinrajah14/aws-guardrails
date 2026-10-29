@@ -120,6 +120,8 @@ def permits(form, h):
         cs = [h.gap(ev) >= 0, h.gap(ev) <= w]
         cs += [ev["input"][f] == h.request[f] for f in r.get("same", [])]
         cs += [ev["output"][k] == literal(v) for k, v in r.get("output", {}).items()]
+        cs += [ev["output"][previous] == h.request[current]
+               for previous, current in r.get("output_same", {}).items()]
         matches.append(And(*cs))
     gated = Or(*matches)
     if "only_when" in form:

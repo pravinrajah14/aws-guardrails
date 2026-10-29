@@ -6,7 +6,14 @@
   "requires": {
     "action": "RequestApproval",
     "within": "1h",
-    "same": ["order_id", "amount"],
-    "output": { "approved": true }
+    "same": [
+      "order_id"
+    ],
+    "output": {
+      "approved": true
+    },
+    "output_same": {
+      "approved_amount": "amount"
+    }
   }
 }

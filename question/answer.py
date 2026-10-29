@@ -30,6 +30,7 @@ def main():
     p.add_argument("--answer", choices=["allow", "block"])
     p.add_argument("--question", default=str(OUT / "question.json"))
     p.add_argument("--actions", default=str(ACTIONS))
+    p.add_argument("--out", help="New directory for this answer and its scorecard")
     args = p.parse_args()
 
     q = json.loads(Path(args.question).read_text(encoding="utf-8"))
@@ -50,7 +51,9 @@ def main():
     form = json.loads((forms_dir / kept["form"]).read_text(encoding="utf-8"))
     other = json.loads((forms_dir / dropped["form"]).read_text(encoding="utf-8"))
 
-    out = OUT / f"answer_{answer}"
+    out = Path(args.out).resolve() if args.out else OUT / f"answer_{answer}"
+    if args.out and out.exists():
+        sys.exit(f"output already exists: {out}; choose a new directory")
     if out.exists():
         shutil.rmtree(out)
     work = out / "dogwood"
@@ -79,16 +82,21 @@ def main():
         if mine[case["id"]] != theirs[case["id"]]:
             depends.append((case["id"], expects, mine[case["id"]]))
 
-    run = subprocess.run([sys.executable, "score_actions.py", str(actions_path), "--rules", str(rule_path)],
+    command = [sys.executable, "score_actions.py", str(actions_path), "--rules", str(rule_path)]
+    if args.out:
+        command += ["--output-dir", str(out / "scripted")]
+    run = subprocess.run(command,
                          cwd=STORE, capture_output=True, text=True)
     if run.returncode:
         sys.exit(run.stdout + run.stderr)
     saved = next(l for l in run.stdout.splitlines() if l.startswith("Saved "))
     stem = Path(saved.split()[1]).stem
     traces = saved.split("(traces in ", 1)[1].rstrip(")")
+    card_dir = out / "scripted" if args.out else STORE / "results"
     for ext in ("md", "json"):
-        shutil.move(str(STORE / "results" / f"{stem}.{ext}"), out / f"rule_scorecard.{ext}")
-    shutil.rmtree(STORE / traces, ignore_errors=True)
+        shutil.move(str(card_dir / f"{stem}.{ext}"), out / f"rule_scorecard.{ext}")
+    if not args.out:
+        shutil.rmtree(STORE / traces, ignore_errors=True)
 
     card = json.loads((out / "rule_scorecard.json").read_text(encoding="utf-8"))
     wrong = [d for d in card["decisions"] if not d["correct"]]

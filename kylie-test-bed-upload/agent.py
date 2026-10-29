@@ -59,9 +59,7 @@ class OllamaModel:
 
 
 class ScriptedModel:
-    """A stand-in 'model' that follows a fixed script. Use it to test the pipeline
-    without Ollama. The log marks these runs as scripted, so they are never mistaken
-    for a real model run."""
+    """Follow fixed tool calls for explicitly labeled scripted runs."""
 
     SCRIPTS = {
         "refund": [
@@ -155,8 +153,7 @@ def run_agent(model, task_text, gate, recorder, world=None, max_turns=10):
 
 
 def handle_call(call, gate, recorder, world):
-    """Check one tool call with the gate, run it if allowed, record every step.
-    Returns the text the model sees as the tool's result."""
+    """Check one tool call with the gate, run it if allowed, record every step."""
     name, raw_args = call["name"], call["args"]
 
     if name not in TOOL_SPECS:

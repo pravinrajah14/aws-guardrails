@@ -7,11 +7,13 @@
     "action": "RequestApproval",
     "within": "24h",
     "same": [
-      "order_id",
-      "amount"
+      "order_id"
     ],
     "output": {
       "approved": true
+    },
+    "output_same": {
+      "approved_amount": "amount"
     }
   }
 }

@@ -15,8 +15,8 @@ permit (principal, action == Shop::Action::"IssueRefund", resource)
 when temporal {
     formerly within 1h Shop::Action::"RequestApproval"::response{
         input.order_id: context.input.order_id,
-        input.amount: context.input.amount,
-        output.approved: true
+        output.approved: true,
+        output.approved_amount: context.input.amount
     }
 };
 

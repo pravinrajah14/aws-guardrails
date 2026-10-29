@@ -1,10 +1,4 @@
-"""Review a recorded session, the way course staff would read a Provenance log.
-
-  python review.py .provenance/session-20261015-213000
-
-Checks the hash chain (was anything edited or deleted?), then prints the timeline
-and a short summary: how many actions were allowed, blocked, and failed.
-"""
+"""Verify a session hash chain and summarize its events."""
 import json
 import sys
 from pathlib import Path

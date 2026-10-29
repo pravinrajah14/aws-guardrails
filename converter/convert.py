@@ -1,25 +1,5 @@
 #!/usr/bin/env python3
-"""Rule form (JSON) -> Dogwood policy text. No hand-editing in between.
-
-Usage:
-    python3 convert.py forms/manager_approval.json [more forms...] \
-        [--schema ../4_rules/schema.cedarschema] [--baseline] [-o out.dw]
-
-Output follows Kylie's testbed style (kylie-test-bed/policies/policy.dw), so her store
-can load it as-is:
-  - requires_prior ("needs X first") -> `permit ... when temporal { formerly ... }`,
-    so the gate can tell the agent which rule would allow the action.
-  - limit / allowlist -> `forbid` (forbid beats any permit).
-Cedar is deny-by-default and permits on the same action combine as OR, so two
-requires_prior forms on one action are refused (either alone would let it through).
---baseline adds a plain `permit` for every schema action that no requires_prior form
-gates (LookupOrder etc.), like Kylie's allow_* rules.
-
-The action schema is read so that a typo in the form (wrong action, wrong field,
-missing window) is an error here instead of a silently wrong policy. `dogwood
-validate` would NOT catch most of those (see ../checker/).
-Standard library only.
-"""
+"""Compile structured rule forms into Dogwood policies."""
 import argparse
 import json
 import re
@@ -31,7 +11,7 @@ OPS = {">", ">=", "<", "<=", "==", "!="}
 WINDOW = re.compile(r"^[0-9]+(s|m|h)$")
 ID = re.compile(r"^[a-z][a-z0-9_]*$")
 TOP_KEYS = {"id", "sentence", "action", "kind", "only_when", "field", "max", "allowed", "requires"}
-REQ_KEYS = {"action", "within", "same", "output"}
+REQ_KEYS = {"action", "within", "same", "output", "output_same"}
 
 
 class FormError(ValueError):
@@ -137,7 +117,12 @@ def validate_form(f, actions):
         for fld, val in r.get("output", {}).items():
             need(fld in prior["output"], f"output: {r['action']} has no output field {fld!r}")
             check_value_type(val, prior["output"][fld], f"output.{fld}")
-        need(r.get("same") or r.get("output"), "requires needs 'same' and/or 'output', or it matches any earlier call")
+        for previous, current in r.get("output_same", {}).items():
+            need(previous in prior["output"], f"output_same: unknown prior output {previous!r}")
+            need(current in inp, f"output_same: unknown current input {current!r}")
+            need(prior["output"][previous] == inp[current], "output_same: field types differ")
+            need(previous not in r.get("output", {}), "output_same: output field also has a literal constraint")
+        need(r.get("same") or r.get("output") or r.get("output_same"), "requires needs a matching condition")
 
 
 # ------------------------------------------------------------------ emit
@@ -172,6 +157,8 @@ def convert_form(f, ns):
     r = f["requires"]
     fields = [f"input.{x}: context.input.{x}" for x in r.get("same", [])]
     fields += [f"output.{k}: {lit(v)}" for k, v in r.get("output", {}).items()]
+    fields += [f"output.{previous}: context.input.{current}"
+               for previous, current in r.get("output_same", {}).items()]
     body = ",\n".join("        " + x for x in fields)
     when = ""
     if "only_when" in f:
@@ -217,7 +204,7 @@ def convert(forms, schema_path, baseline=False):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("forms", nargs="+")
-    ap.add_argument("--schema", default=str(Path(__file__).parent.parent / "4_rules" / "schema.cedarschema"))
+    ap.add_argument("--schema", default=str(Path(__file__).parent.parent / "kylie-test-bed-upload" / "policies" / "schema.cedarschema"))
     ap.add_argument("--baseline", action="store_true")
     ap.add_argument("-o", "--out")
     a = ap.parse_args()

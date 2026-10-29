@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Does the GENERATED manager-approval rule behave correctly? (validate only checks syntax.)
-
-Converts forms/manager_approval.json, then replays hand-made histories through
-`dogwood replay` and compares the verdict on the final IssueRefund request with the
-answer a human expects. Run:  python3 test_behavior.py   (needs `dogwood` on PATH)
-"""
+"""Check generated-policy decisions using real Dogwood replay."""
 import os
 import subprocess
 import sys
@@ -14,7 +9,7 @@ from pathlib import Path
 from convert import convert, json
 
 HERE = Path(__file__).parent
-SCHEMA = HERE.parent / "4_rules" / "schema.cedarschema"
+SCHEMA = HERE.parent / "kylie-test-bed-upload" / "policies" / "schema.cedarschema"
 DOGWOOD = os.environ.get("DOGWOOD", "dogwood")
 # Same principal/resource/event shape as kylie-test-bed/enforce.py.
 P = 'scope(principal: Shop::OAuthUser::"support-agent", resource: Shop::Gateway::"testbed")'
@@ -33,10 +28,12 @@ def ev(t, kind, action, inp, out=None):
             f'(input: {rec(inp)}{o}, {WHO}, requestId: "r{_rid[0]}")')
 
 
-def approval(t, order="A200", amount=300, approved=True):
+def approval(t, order="A200", amount=300, approved=True, approved_amount=None):
     i = {"order_id": order, "amount": amount, "reason": "damaged"}
     return [ev(t, "request", "RequestApproval", i),
-            ev(t + 1, "response", "RequestApproval", i, {"approved": approved, "approver": "manager.jordan"})]
+            ev(t + 1, "response", "RequestApproval", i,
+               {"approved": approved, "approver": "manager.jordan",
+                "approved_amount": amount if approved_amount is None else approved_amount})]
 
 
 def refund(t, order="A200", amount=300):
@@ -45,6 +42,9 @@ def refund(t, order="A200", amount=300):
 
 H = 3600
 CASES = [  # (name, history, expected verdict on the final Refund)
+    ("requested 300 but only 100 approved: block 300", approval(0, approved_amount=100) + refund(600), "DENY"),
+    ("requested 300 but only 100 approved: allow 100", approval(0, approved_amount=100) + refund(600, amount=100), "ALLOW"),
+    ("approval is exact, not a ceiling: block 90", approval(0, approved_amount=100) + refund(600, amount=90), "DENY"),
     ("manager approved, same order+amount, 10 min ago", approval(0) + refund(600), "ALLOW"),
     ("no approval at all", refund(0), "DENY"),
     ("approved for a different amount", approval(0, amount=100) + refund(600, amount=300), "DENY"),

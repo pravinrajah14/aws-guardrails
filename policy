@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(cd -- "$(dirname -- "$0")" && pwd)"
+cd "$root"
+
+case "${1:-}" in
+  create|test) stage="$1"; shift ;;
+  *) echo "Usage: ./policy create | ./policy test"; exit 2 ;;
+esac
+
+if [[ -z "${DOGWOOD_CMD:-}" ]] && ! command -v dogwood >/dev/null 2>&1; then
+  if [[ -x "$HOME/.cargo/bin/dogwood" ]]; then
+    export DOGWOOD_CMD="$HOME/.cargo/bin/dogwood"
+  else
+    echo "Dogwood is missing. See README.md." >&2
+    exit 2
+  fi
+fi
+
+for candidate in "${GUARDRAILS_PYTHON:-}" "$root/.venv/bin/python" "$root/../context-engine-lab/.venv/bin/python" python3; do
+  if [[ -n "$candidate" ]] && "$candidate" -c 'import z3' >/dev/null 2>&1; then
+    exec "$candidate" "$root/run_pipeline.py" --stage "$stage" "$@"
+  fi
+done
+
+echo "Python with z3-solver is missing. See README.md." >&2
+exit 2

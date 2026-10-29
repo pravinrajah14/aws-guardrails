@@ -1,27 +1,4 @@
-"""Score a rule WITHOUT the agent: replay scripted action lists through Dogwood and compare
-every decision to its known right answer. Any wrong decision is the rule's fault.
-
-  python score_actions.py tests/refund_recent_approval_actions.json --rules rules/refund_recent_approval.dw
-
-Action list format (draft, agree with the team):
-{
-  "cases": [
-    {
-      "id": "approved_30m_ago",
-      "events": [
-        {"at": "0m",  "tool": "request_approval", "kind": "response",
-         "input": {"order_id": "A100", "amount": 40, "reason": "damaged"},
-         "output": {"approved": true, "approver": "manager.jordan", "approved_amount": 40}},
-        {"at": "30m", "tool": "issue_refund", "input": {"order_id": "A100", "amount": 40}, "expect": "ALLOW"}
-      ]
-    }
-  ]
-}
-- "at" is time since the case started: seconds as a number, or "45s", "30m", "3h", "1d". Must increase.
-- "kind" is "request" (default: the agent asks to do something, Dogwood decides) or
-  "response" / "error" (history: something that already happened).
-- Only requests with "expect" are scored. Each case is its own fresh history.
-"""
+"""Score policy decisions against scripted action histories."""
 import argparse
 import json
 import re
@@ -73,11 +50,13 @@ def main():
     p.add_argument("actions", help="action list file (JSON)")
     p.add_argument("--rules", required=True, help="rule file under test (.dw)")
     p.add_argument("--base", default="policies/base.dw")
+    p.add_argument("--output-dir", help="Save this evaluation's scorecard and traces together")
     args = p.parse_args()
 
     cases = json.loads(Path(args.actions).read_text(encoding="utf-8"))["cases"]
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    work = Path(".provenance") / f"score-{stamp}"
+    output_root = Path(args.output_dir) if args.output_dir else None
+    work = (output_root / "traces" if output_root else Path(".provenance")) / f"score-{stamp}"
     work.mkdir(parents=True, exist_ok=True)
     policy = build_policy(args.base, args.rules, work / "policy.dw")
     gate = DogwoodGate(work, policy, SCHEMA)
@@ -99,8 +78,8 @@ def main():
             rows.append({"case": case["id"], **s, "got": got, "rules": rules, "correct": got == s["expect"]})
 
     right = sum(r["correct"] for r in rows)
-    out = Path("results")
-    out.mkdir(exist_ok=True)
+    out = output_root or Path("results")
+    out.mkdir(parents=True, exist_ok=True)
     (out / f"rule_scorecard_{stamp}.json").write_text(
         json.dumps({"rules": args.rules, "actions": args.actions, "right": right, "total": len(rows), "decisions": rows}, indent=2))
     md = [f"# Rule scorecard, no agent ({stamp})", "",
@@ -111,7 +90,7 @@ def main():
         md.append(f"| {r['case']} | `{r['call']}` | {r['expect']} | {r['got']} | {r['rules'] or '-'} | {'yes' if r['correct'] else '**NO**'} |")
     (out / f"rule_scorecard_{stamp}.md").write_text("\n".join(md) + "\n", encoding="utf-8")
     print("\n".join(md))
-    print(f"\nSaved results/rule_scorecard_{stamp}.md (traces in {work})")
+    print(f"\nSaved {out / f'rule_scorecard_{stamp}.md'} (traces in {work})")
 
 
 if __name__ == "__main__":

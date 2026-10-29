@@ -1,8 +1,4 @@
-"""Mock tools for refunds and deploys.
-
-Nothing here touches a real system. All state lives in the MockWorld object,
-so every run starts from the same fake orders and services.
-"""
+"""Provide mock refund and deployment tools."""
 
 # Each tool: the Dogwood action name, a description for the model,
 # and its arguments with their types ("str" or "int").
@@ -49,11 +45,7 @@ APPROVAL_MODES = ("yes", "no", "different")
 
 class MockWorld:
     def __init__(self, approval="yes", different_amount=None):
-        """approval: how the pretend manager answers every request_approval call.
-          yes        approve the amount asked for
-          no         turn it down
-          different  approve, but for a different amount (different_amount, or half if not given)
-        """
+        """approval: how the pretend manager answers every request_approval call."""
         if approval not in APPROVAL_MODES:
             raise ValueError(f"approval must be one of {APPROVAL_MODES}")
         self.approval = approval
@@ -127,11 +119,7 @@ class MockWorld:
 
 
 def check_args(name, args):
-    """Make sure the model's arguments match the tool spec. Returns cleaned args.
-
-    Small models often send numbers as strings ("40"), so ints are converted.
-    Anything missing or extra is an error the model gets back.
-    """
+    """Make sure the model's arguments match the tool spec. Returns cleaned args."""
     spec = TOOL_SPECS[name]["args"]
     if not isinstance(args, dict):
         raise ToolError("arguments must be an object")
