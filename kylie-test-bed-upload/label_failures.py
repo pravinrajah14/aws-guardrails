@@ -1,6 +1,10 @@
 """Part 4: give every failed agent run a label (rule, prompt, or agent failure) and a one-line reason.
 
-  python label_failures.py                 (reads every session under .provenance/)
+  python label_failures.py [RUN_FOLDER] [--out DIR]
+
+Reads every session under RUN_FOLDER (default .provenance/) and writes failure_labels.{md,json}
+into --out, which defaults to RUN_FOLDER itself, so labeling a run never touches the repo's
+results/. To refresh the committed report, pass --out results on purpose.
 
 The three steps from the assignment, done automatically:
   1. Check every guard decision against the expected answer. Any wrong -> RULE failure.
@@ -14,9 +18,9 @@ It also re-scores every run against the right expected result, because two kinds
 happened in our own test setup (a run scored against the wrong task, a task that did not fit
 the rule file). Those are reported separately so they are not counted as agent failures.
 """
+import argparse
 import json
 import re
-import sys
 from collections import Counter
 from pathlib import Path
 
@@ -269,7 +273,13 @@ def same_situation(a, b):
 # ------------------------------------------------------------------ main
 
 def main():
-    root = Path(sys.argv[1] if len(sys.argv) > 1 else ".provenance")
+    p = argparse.ArgumentParser(description="Label every failed agent run as a rule, prompt or agent failure.")
+    p.add_argument("root", nargs="?", default=".provenance", help="run folder to label (default: .provenance)")
+    p.add_argument("--out", help="where to write failure_labels.{md,json} (default: the run folder itself)")
+    args = p.parse_args()
+    root = Path(args.root)
+    if not root.is_dir():
+        p.error(f"run folder not found: {root}")
     runs = []
     for folder in sorted(root.rglob("session-*")):
         if (folder / "events.jsonl").exists():
@@ -318,8 +328,8 @@ def main():
     counts = Counter(r["label"] for r in rows)
     all_decisions = sum(s["guard_total"] for s in runs)
     all_right = sum(s["guard_right"] for s in runs)
-    out = Path("results")
-    out.mkdir(exist_ok=True)
+    out = Path(args.out) if args.out else root
+    out.mkdir(parents=True, exist_ok=True)
     (out / "failure_labels.json").write_text(json.dumps({"counts": counts, "runs": len(runs), "rows": rows,
         "rescored": [{"session": s["name"], "task": s["task"], "approval": s["approval"], "rules": s["rules"],
                       "recorded": s["passed_as_recorded"], "correct": s["passed"]} for s in rescored]}, indent=2))

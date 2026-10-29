@@ -94,10 +94,11 @@ Scorecards go to `results/`. The `failure_label` column is filled in for Part 4 
 ## Part 4: failure labels
 
 ```
-python label_failures.py
+python label_failures.py                       # labels .provenance/, writes the report there
+python label_failures.py RUN_FOLDER --out DIR  # any run folder; --out defaults to RUN_FOLDER
 ```
 
-Reads every session in `.provenance/` and writes `results/failure_labels.md`. For each failed agent run:
+Reads every session in the run folder and writes `failure_labels.md` (and `.json`) next to them, never into `results/` unless `--out results` is given. For each failed agent run:
 
 1. **Rule check.** Every guard decision is compared with a plain-Python copy of the rule (written separately from Dogwood). Any disagreement is a **rule failure**.
 2. **Prompt check.** If every decision was right, it finds the fix for what went wrong and looks at runs made with that fix on, in the same situation. If the failure never came back in 3 or more of them, it is a **prompt failure**.
