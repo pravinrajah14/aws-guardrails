@@ -21,10 +21,11 @@ def rec(d):
     return "{ " + ", ".join(f"{k}: {json.dumps(v)}" for k, v in d.items()) + " }"
 
 
-def ev(t, kind, action, inp, out=None):
+def ev(t, kind, action, inp, out=None, facts=None):
     _rid[0] += 1
     o = f", output: {rec(out)}" if out is not None else ""
-    return (f'@{t} {P} request_context(input: {rec(inp)}) Shop::Action::"{action}"::{kind}'
+    f = f", facts: {rec(facts)}" if facts else ""
+    return (f'@{t} {P} request_context(input: {rec(inp)}{f}) Shop::Action::"{action}"::{kind}'
             f'(input: {rec(inp)}{o}, {WHO}, requestId: "r{_rid[0]}")')
 
 
@@ -36,22 +37,36 @@ def approval(t, order="A200", amount=300, approved=True, approved_amount=None):
                 "approved_amount": amount if approved_amount is None else approved_amount})]
 
 
-def refund(t, order="A200", amount=300):
-    return [ev(t, "request", "IssueRefund", {"order_id": order, "amount": amount})]
+def refund(t, order="A200", amount=300, facts=None):
+    return [ev(t, "request", "IssueRefund", {"order_id": order, "amount": amount}, facts=facts)]
+
+
+def ok(approved_amount=300, role="manager"):
+    """The facts the context engine attaches when it finds one valid approval (order A200 totals 320)."""
+    f = {"status": "ok", "approved_amount": approved_amount, "order_total": 320}
+    if role:
+        f["approver_role"] = role
+    return f
 
 
 H = 3600
+# Refund requests carry the facts kylie-test-bed-upload/context_engine.py would attach for that
+# history: none when there is no valid approval, status "expired" when it is too old.
 CASES = [  # (name, history, expected verdict on the final Refund)
-    ("requested 300 but only 100 approved: block 300", approval(0, approved_amount=100) + refund(600), "DENY"),
-    ("requested 300 but only 100 approved: allow 100", approval(0, approved_amount=100) + refund(600, amount=100), "ALLOW"),
-    ("approval is exact, not a ceiling: block 90", approval(0, approved_amount=100) + refund(600, amount=90), "DENY"),
-    ("manager approved, same order+amount, 10 min ago", approval(0) + refund(600), "ALLOW"),
+    ("requested 300 but only 100 approved: block 300", approval(0, approved_amount=100) + refund(600, facts=ok(100)), "DENY"),
+    ("requested 300 but only 100 approved: allow 100", approval(0, approved_amount=100) + refund(600, amount=100, facts=ok(100)), "ALLOW"),
+    # Part 2 (context engine): the approved amount is a ceiling, not an exact match (docs/INTEGRATION.md).
+    ("approval is a ceiling: allow 90 of 100 approved", approval(0, approved_amount=100) + refund(600, amount=90, facts=ok(100)), "ALLOW"),
+    ("manager approved, same order+amount, 10 min ago", approval(0) + refund(600, facts=ok()), "ALLOW"),
     ("no approval at all", refund(0), "DENY"),
-    ("approved for a different amount", approval(0, amount=100) + refund(600, amount=300), "DENY"),
+    ("approved for a different amount", approval(0, amount=100) + refund(600, amount=300, facts=ok(100)), "DENY"),
     ("approved for a different order", approval(0, order="A100") + refund(600), "DENY"),
     ("approval was denied (approved=false)", approval(0, approved=False) + refund(600), "DENY"),
-    ("approval 59 min ago (inside window)", approval(0) + refund(59 * 60), "ALLOW"),
-    ("approval 61 min ago (stale)", approval(0) + refund(61 * 60), "DENY"),
+    ("approval 59 min ago (inside window)", approval(0) + refund(59 * 60, facts=ok()), "ALLOW"),
+    ("approval 61 min ago (stale)", approval(0) + refund(61 * 60, facts={"status": "expired", "order_total": 320}), "DENY"),
+    ("approved by support, not a manager", approval(0) + refund(600, facts=ok(role="support")), "DENY"),
+    ("approver with no known role", approval(0) + refund(600, facts=ok(role=None)), "DENY"),
+    ("facts say ok but no approval in the trace", refund(600, facts=ok()), "DENY"),
 ]
 
 

@@ -11,7 +11,7 @@ OPS = {">", ">=", "<", "<=", "==", "!="}
 WINDOW = re.compile(r"^[0-9]+(s|m|h)$")
 ID = re.compile(r"^[a-z][a-z0-9_]*$")
 TOP_KEYS = {"id", "sentence", "action", "kind", "only_when", "field", "max", "allowed", "requires"}
-REQ_KEYS = {"action", "within", "same", "output", "output_same"}
+REQ_KEYS = {"action", "within", "same", "output", "output_same", "at_most", "approver_role"}
 
 
 class FormError(ValueError):
@@ -36,9 +36,11 @@ def load_schema(path):
     for name, body in re.findall(r'action\s+"(\w+)"\s+appliesTo\s*\{(.*?)\n\s*\}\s*;', text, re.S):
         inp = re.search(r"input\s*:\s*(\w+)", body)
         out = re.search(r"output\??\s*:\s*(\w+)", body)
+        facts = re.search(r"facts\??\s*:\s*(\w+)", body)
         actions[name] = {
             "input": types.get(inp.group(1), {}) if inp else {},
             "output": types.get(out.group(1), {}) if out else {},
+            "facts": types.get(facts.group(1), {}) if facts else {},
         }
     return ns.group(1), actions
 
@@ -122,13 +124,36 @@ def validate_form(f, actions):
             need(current in inp, f"output_same: unknown current input {current!r}")
             need(prior["output"][previous] == inp[current], "output_same: field types differ")
             need(previous not in r.get("output", {}), "output_same: output field also has a literal constraint")
-        need(r.get("same") or r.get("output") or r.get("output_same"), "requires needs a matching condition")
+        facts = actions[act]["facts"]
+        for current, fact in r.get("at_most", {}).items():
+            need(current in inp, f"at_most: {act} has no input field {current!r}")
+            need(fact in facts, f"at_most: {act} has no checked fact {fact!r} (see the schema's facts type)")
+            need(inp[current] == "Long" and facts[fact] == "Long", "at_most: both fields must be Long")
+        if "approver_role" in r:
+            need(isinstance(r["approver_role"], str) and r["approver_role"], "approver_role must be a non-empty string")
+            need("approver_role" in facts, f"approver_role: {act} has no checked fact 'approver_role'")
+        need(r.get("same") or r.get("output") or r.get("output_same") or r.get("at_most"),
+             "requires needs a matching condition")
 
 
 # ------------------------------------------------------------------ emit
 
 def condition(c):
     return f"context.input.{c['field']} {c['op']} {lit(c['value'])}"
+
+
+def facts_clause(r):
+    """Checks on the context engine's facts. The engine attaches facts only when it found them in
+    the store; when they are missing or unsure the 'has' tests fail and deny-by-default blocks."""
+    checks = []
+    for current, fact in r.get("at_most", {}).items():
+        checks += [f"context.facts has {fact}", f"context.input.{current} <= context.facts.{fact}"]
+    if "approver_role" in r:
+        checks += ["context.facts has approver_role", f"context.facts.approver_role == {lit(r['approver_role'])}"]
+    if not checks:
+        return ""
+    checks = ["context has facts", 'context.facts.status == "ok"'] + checks
+    return "\nwhen {\n    " + " &&\n    ".join(checks) + "\n}"
 
 
 def snake(name):
@@ -165,6 +190,7 @@ def convert_form(f, ns):
         c = condition(f["only_when"])
         out.append(f'@id("{f["id"]}_not_applicable")\npermit {scope}\nwhen {{ !({c}) }};\n')
         when = f"\nwhen {{ {c} }}"
+    when += facts_clause(r)
     out.append(
         f'@id("{f["id"]}")\npermit {scope}{when}\n'
         f"when temporal {{\n"

@@ -12,8 +12,9 @@
     "output": {
       "approved": true
     },
-    "output_same": {
-      "approved_amount": "amount"
-    }
+    "at_most": {
+      "amount": "approved_amount"
+    },
+    "approver_role": "manager"
   }
 }

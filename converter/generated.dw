@@ -12,11 +12,18 @@ permit (principal, action == Shop::Action::"Rollback", resource);
 // Only refund if a manager approved it recently.
 @id("refund_needs_manager_approval")
 permit (principal, action == Shop::Action::"IssueRefund", resource)
+when {
+    context has facts &&
+    context.facts.status == "ok" &&
+    context.facts has approved_amount &&
+    context.input.amount <= context.facts.approved_amount &&
+    context.facts has approver_role &&
+    context.facts.approver_role == "manager"
+}
 when temporal {
     formerly within 1h Shop::Action::"RequestApproval"::response{
         input.order_id: context.input.order_id,
-        output.approved: true,
-        output.approved_amount: context.input.amount
+        output.approved: true
     }
 };
 
