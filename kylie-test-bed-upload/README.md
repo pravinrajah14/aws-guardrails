@@ -21,6 +21,7 @@ scripted action lists -> score_actions.py -> enforce.py -> dogwood replay -> rul
 | `run_task.py` | Runs agent tasks from a task file against a rule file, then writes an **agent scorecard**. |
 | `score_actions.py` | Runs scripted action lists (no agent) against a rule file, then writes a **rule scorecard**. |
 | `review.py` | Checks a session's hash chain and prints its timeline. |
+| `label_failures.py` | Part 4: labels every failed agent run as a rule, prompt or agent failure. |
 | `policies/schema.cedarschema` | The store's tools, as Dogwood sees them. Rule files must use these names. |
 | `policies/base.dw` | Permissions the store always loads (lookup, approval requests, tests, rollback). |
 | `rules/` | Rule files under test. `refund_recent_approval.dw` is the Assignment 4 rule; `starter.dw` is the Assignment 3 set. |
@@ -86,8 +87,37 @@ Scorecards go to `results/`. The `failure_label` column is filled in for Part 4 
 - **Refund means a refund_id.** The prompt says a refund only happens when `issue_refund` returns a refund_id (added after Assignment 3 Run 4, where the agent claimed a refund it never made).
 - **Fail closed.** If Dogwood errors or returns no verdict, the action is blocked.
 
+## Architecture
+
+![Architecture](results/architecture.png)
+
+## Part 4: failure labels
+
+```
+python label_failures.py
+```
+
+Reads every session in `.provenance/` and writes `results/failure_labels.md`. For each failed agent run:
+
+1. **Rule check.** Every guard decision is compared with a plain-Python copy of the rule (written separately from Dogwood). Any disagreement is a **rule failure**.
+2. **Prompt check.** If every decision was right, it finds the fix for what went wrong and looks at runs made with that fix on, in the same situation. If the failure never came back in 3 or more of them, it is a **prompt failure**.
+3. Otherwise it is an **agent failure**.
+
+It also re-scores runs against the right expected result, flags passes where the agent did nothing, and prints a controlled-test table.
+
+**Switches for controlled tests** (turn one fix off at a time):
+
+| Flag | Turns off |
+|---|---|
+| `--prompt a3` | The lines "a refund only counts with a refund_id" and the approved-amount lines |
+| `--prompt a3-original` | The above, plus the "work alone, never ask the user" lines |
+| `--no-nudge` | The one-time reminder after a block |
+| `--no-repair` | The "your last reply was not a valid tool call" message |
+| `--prompt current-amount` | Adds "ask for exactly the amount the task needs" (fixes the $500 failure) |
+
 ## Results
 
 - Assignment 3: [`results/refund_run_logs.md`](results/refund_run_logs.md).
 - Assignment 4, rule scored without the agent (10 of 10): [`results/rule_scorecard_20261021-203602.md`](results/rule_scorecard_20261021-203602.md).
 - Assignment 4, rule scored with the agent (12 of 12): [`results/agent_scorecard_20261021-211011.md`](results/agent_scorecard_20261021-211011.md).
+- Assignment 4, Part 4 failure labels (rule 0, prompt 14, agent 1): [`results/failure_labels.md`](results/failure_labels.md).

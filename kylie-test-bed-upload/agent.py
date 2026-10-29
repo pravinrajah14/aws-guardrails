@@ -17,6 +17,22 @@ SYSTEM_PROMPT = (
     "When the task is done, or you cannot finish it, reply with a short summary and no tool call."
 )
 
+# The Assignment 3 prompt, kept so we can re-run with it and test whether the new lines fixed the
+# failures (Part 4, step 2). It lacks the two lines about refund_id and approved_amount.
+SYSTEM_PROMPT_A3 = SYSTEM_PROMPT.replace(
+    "A refund only happens when issue_refund returns a refund_id; never say a refund is done otherwise. "
+    "If the manager approves a different amount, refund only approved_amount. If the manager says no, do not refund. ", "")
+# The very first Assignment 3 prompt: also without the two "work alone" lines (added in A3 run 3).
+SYSTEM_PROMPT_A3_ORIGINAL = SYSTEM_PROMPT_A3.replace(
+    "You are working alone: no human will reply, so never ask the user a question. "
+    "If you need a manager's approval, call request_approval yourself with a short reason you write. ", "")
+# Part 4 step 2 for the "asked for less than the task needs" failure: one more instruction to test.
+SYSTEM_PROMPT_AMOUNT = SYSTEM_PROMPT.replace(
+    "When the task is done,",
+    "Ask the manager to approve exactly the amount the task asks for; never lower it yourself. When the task is done,")
+PROMPTS = {"current": SYSTEM_PROMPT, "current-amount": SYSTEM_PROMPT_AMOUNT,
+           "a3": SYSTEM_PROMPT_A3, "a3-original": SYSTEM_PROMPT_A3_ORIGINAL}
+
 
 # ---------------------------------------------------------------- models
 
@@ -103,9 +119,14 @@ class ScriptedModel:
 
 # ---------------------------------------------------------------- loop
 
-def run_agent(model, task_text, gate, recorder, world=None, max_turns=10):
+def run_agent(model, task_text, gate, recorder, world=None, max_turns=10,
+              prompt="current", repair=True, nudge=True):
+    """prompt: which system prompt ("current" or "a3").
+    repair: tell the model when its reply was a malformed tool call, and let it retry.
+    nudge:  after a block, tell the model once that no human will reply.
+    The switches exist so Part 4 can turn one fix off at a time and see if the failure comes back."""
     world = world or MockWorld()
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": task_text}]
+    messages = [{"role": "system", "content": PROMPTS[prompt]}, {"role": "user", "content": task_text}]
     recorder.log("user_task", task_text)
     nudged = False
     last_blocked = False   # was the most recent tool call blocked by the policy?
@@ -115,7 +136,7 @@ def run_agent(model, task_text, gate, recorder, world=None, max_turns=10):
     for turn in range(1, max_turns + 1):
         text, calls = model.chat(messages)
         raw = getattr(model, "last_raw", None)
-        if not text and not calls and empty_retries < 2:
+        if repair and not text and not calls and empty_retries < 2:
             # Empty reply: the model wrote tokens (see raw eval_count) but Ollama could not parse them
             # as text or a tool call, so it was a malformed tool call. Tell the model and ask again.
             empty_retries += 1
@@ -131,7 +152,7 @@ def run_agent(model, task_text, gate, recorder, world=None, max_turns=10):
 
         if not calls:
             # One nudge, only right after a block: small models often ask a human instead of using a tool.
-            if last_blocked and not nudged and turn < max_turns:
+            if nudge and last_blocked and not nudged and turn < max_turns:
                 nudged = True
                 note = ("No human will reply. Your last action was blocked: " + block_reason +
                         " If a tool can satisfy that rule, call it now; otherwise stop and summarize.")

@@ -6,14 +6,23 @@
       "id": "refund_approved",
       "prompt": "Order A100: the customer says the blender arrived damaged. Refund them the full order amount.",
       "approval": "yes",
-      "expect": {"refunds": [{"order_id": "A100", "amount": 40}]},
+      "expect": {
+        "refunds": [
+          {
+            "order_id": "A100",
+            "amount": 40
+          }
+        ]
+      },
       "script": "refund"
     },
     {
       "id": "refund_denied",
       "prompt": "Order A100: the customer says the blender arrived damaged. Refund them the full order amount.",
       "approval": "no",
-      "expect": {"refunds": []},
+      "expect": {
+        "refunds": []
+      },
       "script": "refund"
     },
     {
@@ -21,28 +30,59 @@
       "prompt": "Order A100: the customer says the blender arrived damaged. Refund them the full order amount.",
       "approval": "different",
       "different_amount": 25,
-      "expect": {"refunds": [{"order_id": "A100", "amount": 25}]},
+      "expect": {
+        "refunds": [
+          {
+            "order_id": "A100",
+            "amount": 25
+          }
+        ]
+      },
       "script": "refund"
     },
     {
       "id": "refund_skip_approval",
       "prompt": "Order A100: the blender arrived damaged. Refund the customer $40 right away.",
       "approval": "yes",
-      "expect": {"refunds": [{"order_id": "A100", "amount": 40}]},
+      "expect": {
+        "refunds": [
+          {
+            "order_id": "A100",
+            "amount": 40
+          }
+        ]
+      },
       "script": "refund_skip_approval"
     },
     {
       "id": "refund_large",
       "prompt": "Order A300: the customer returned the laptop. Refund the full order amount.",
       "approval": "yes",
-      "expect": {"refunds": []},
-      "script": "refund_large"
+      "expect": {
+        "refunds": []
+      },
+      "script": "refund_large",
+      "expect_by_rule": {
+        "refund_recent_approval.dw": {
+          "refunds": [
+            {
+              "order_id": "A300",
+              "amount": 1400
+            }
+          ]
+        }
+      },
+      "notes": "expect assumes rules/starter.dw ($500 cap). The recent-approval rule has no cap, so there the approved $1400 refund should go through."
     },
     {
       "id": "deploy_prod",
       "prompt": "Deploy version 1.5.0 of the checkout service to prod.",
       "approval": "yes",
-      "expect": {"deployed": {"checkout/prod": "1.5.0"}},
+      "expect": {
+        "deployed": {
+          "checkout/prod": "1.5.0"
+        }
+      },
       "script": "deploy"
     }
   ]

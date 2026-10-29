@@ -42,8 +42,10 @@ def check(world, expect):
 def run_one(task, args, run_number):
     approval = args.approval or task.get("approval", "yes")
     if args.approval and args.approval != task.get("approval", "yes"):
-        print(f"  note: --approval {args.approval} overrides the task's '{task.get('approval')}', "
-              f"but the expected result still comes from the task file. Prefer refund_denied / refund_different_amount.")
+        # The expected result in the task file assumes the task's own approval mode, so an override
+        # would score the run against the wrong answer. Refuse instead of producing a misleading score.
+        sys.exit(f"--approval {args.approval} conflicts with task '{task['id']}' (approval "
+                 f"'{task.get('approval')}'). Pick the task written for that mode, e.g. refund_denied.")
     different = args.different_amount if args.different_amount is not None else task.get("different_amount")
     world = MockWorld(approval=approval, different_amount=different)
 
@@ -58,9 +60,13 @@ def run_one(task, args, run_number):
     policy = build_policy(args.base, args.rules, rec.dir / "policy.dw")
     rec.start_session(task["id"], task["prompt"], model.name, policy, SCHEMA)
     rec.log("store_setup", f"rules={args.rules} approval={approval}"
-            + (f" different_amount={different}" if approval == "different" else ""),
+            + (f" different_amount={different}" if approval == "different" else "")
+            + f" prompt={args.prompt} repair={'off' if args.no_repair else 'on'} nudge={'off' if args.no_nudge else 'on'}",
             rule_file=str(args.rules), base_file=str(args.base), approval=approval,
-            different_amount=different, run=run_number)
+            different_amount=different, run=run_number,
+            expect=task.get("expect_by_rule", {}).get(Path(args.rules).name, task["expect"]),
+            prompt=args.prompt, repair=not args.no_repair, nudge=not args.no_nudge,
+            agent_sha256=file_hash("agent.py"))
 
     gate = DogwoodGate(rec.dir, policy, SCHEMA)
     ok, msg = gate.validate()
@@ -71,12 +77,15 @@ def run_one(task, args, run_number):
         sys.exit(2)
 
     try:
-        world, final = run_agent(model, task["prompt"], gate, rec, world=world, max_turns=args.max_turns)
+        world, final = run_agent(model, task["prompt"], gate, rec, world=world, max_turns=args.max_turns,
+                                 prompt=args.prompt, repair=not args.no_repair, nudge=not args.no_nudge)
     except Exception as e:
         rec.log("session_end", f"crashed: {e}", passed=False, error=repr(e))
         raise
 
-    passed, reason = check(world, task["expect"])
+    # A task can say what is right under a specific rule file (e.g. no $500 cap in some rules).
+    expect = task.get("expect_by_rule", {}).get(Path(args.rules).name, task["expect"])
+    passed, reason = check(world, expect)
     rec.log("task_check", ("PASS: " if passed else "FAIL: ") + reason, passed=passed,
             refunds=world.refunds, approvals=world.approvals,
             deployed={f"{s}/{e}": v for (s, e), v in world.deployed.items()})
@@ -98,7 +107,8 @@ def write_scorecard(rows, args):
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     out = Path(getattr(args, "output_dir", None) or "results")
     out.mkdir(parents=True, exist_ok=True)
-    meta = {"rules": str(args.rules), "base": str(args.base), "tasks": str(args.tasks), "model": args.model}
+    meta = {"rules": str(args.rules), "base": str(args.base), "tasks": str(args.tasks), "model": args.model,
+            "prompt": args.prompt, "repair": not args.no_repair, "nudge": not args.no_nudge}
     meta["sha256"] = {"rules": file_hash(args.rules), "base": file_hash(args.base),
                       "tasks": file_hash(args.tasks), "schema": file_hash(SCHEMA)}
     (out / f"agent_scorecard_{stamp}.json").write_text(json.dumps({"setup": meta, "runs": rows}, indent=2))
@@ -106,6 +116,7 @@ def write_scorecard(rows, args):
     lines = [
         f"# Agent scorecard ({stamp})", "",
         f"- Rule file: `{args.rules}`  |  Model: `{args.model}`  |  Tasks: `{args.tasks}`",
+        f"- Prompt: `{args.prompt}`  |  Malformed-reply repair: {'off' if args.no_repair else 'on'}  |  Nudge: {'off' if args.no_nudge else 'on'}",
         f"- **Passed {passed} of {len(rows)} runs**", "",
         "| Task | Run | Approval | Result | Allowed | Blocked | Why | Session | Failure label |",
         "|---|---|---|---|---|---|---|---|---|",
@@ -130,6 +141,9 @@ def main():
     p.add_argument("--runs", type=int, default=1, help="repeat each task this many times")
     p.add_argument("--max-turns", type=int, default=10)
     p.add_argument("--output-dir", help="Save scorecards and session traces together here")
+    p.add_argument("--prompt", choices=["current", "current-amount", "a3", "a3-original"], default="current", help="system prompt version")
+    p.add_argument("--no-repair", action="store_true", help="turn off the malformed-reply message (Part 4 tests)")
+    p.add_argument("--no-nudge", action="store_true", help="turn off the after-block nudge (Part 4 tests)")
     args = p.parse_args()
 
     tasks = load_tasks(args.tasks)
