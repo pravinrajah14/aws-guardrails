@@ -128,6 +128,7 @@ def run_agent(model, task_text, gate, recorder, world=None, max_turns=10,
     world = world or MockWorld()
     messages = [{"role": "system", "content": PROMPTS[prompt]}, {"role": "user", "content": task_text}]
     recorder.log("user_task", task_text)
+    gate.note_message("user", task_text)
     nudged = False
     last_blocked = False   # was the most recent tool call blocked by the policy?
     block_reason = ""
@@ -192,6 +193,14 @@ def handle_call(call, gate, recorder, world):
     recorder.log("policy_decision", f"{v['decision']} {name}({fmt_args(args)}) rules: {rule_text}"
                  + (f" ({v['note']})" if v["note"] else ""),
                  tool=name, action=action, args=args, **v)
+    if v["facts_status"]:
+        recorder.log("facts", f"{v['facts_status']}: {v['facts_reason']}", tool=name, request_id=v["request_id"],
+                     facts=v["facts"], status=v["facts_status"], sources=v["facts_sources"])
+    for claim in v["ignored_claims"]:
+        recorder.log("claim_ignored", f"ignored unverified claim, no approval record: {claim}", tool=name)
+    if v["needs_review"]:
+        recorder.log("needs_review", f"flagged for a person: {v['facts_reason']}", tool=name,
+                     request_id=v["request_id"])
 
     if v["decision"] != "ALLOW":
         recorder.log("blocked", f"{name} not run", tool=name, request_id=v["request_id"])

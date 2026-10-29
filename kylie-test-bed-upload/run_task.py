@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from agent import OllamaModel, ScriptedModel, run_agent
-from enforce import DogwoodGate, build_policy
+from enforce import DogwoodGate, build_policy, find_form
 from recorder import Recorder, file_hash
 from tools import APPROVAL_MODES, MockWorld
 
@@ -68,7 +68,10 @@ def run_one(task, args, run_number):
             prompt=args.prompt, repair=not args.no_repair, nudge=not args.no_nudge,
             agent_sha256=file_hash("agent.py"))
 
-    gate = DogwoodGate(rec.dir, policy, SCHEMA)
+    form, form_path = find_form(args.rules, getattr(args, "form", None))
+    rec.log("rule_form", f"form={form_path or 'none'} (the context engine's window comes from it)",
+            form=form, form_path=str(form_path) if form_path else None)
+    gate = DogwoodGate(rec.dir, policy, SCHEMA, form=form, store=world)
     ok, msg = gate.validate()
     rec.log("policy_validate", "OK" if ok else "FAILED", output=msg)
     if not ok:
@@ -144,6 +147,7 @@ def main():
     p.add_argument("--prompt", choices=["current", "current-amount", "a3", "a3-original"], default="current", help="system prompt version")
     p.add_argument("--no-repair", action="store_true", help="turn off the malformed-reply message (Part 4 tests)")
     p.add_argument("--no-nudge", action="store_true", help="turn off the after-block nudge (Part 4 tests)")
+    p.add_argument("--form", help="rule form for the context engine (default: updated_form.json next to --rules)")
     args = p.parse_args()
 
     tasks = load_tasks(args.tasks)
