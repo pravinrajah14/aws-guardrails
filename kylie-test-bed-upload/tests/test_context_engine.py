@@ -30,7 +30,8 @@ def facts(approvals, now, amount=40, order="A100", steps=(), window=H):
 def test_ok_attaches_amount_role_and_total():
     r = facts([approval(0, approved_amount=20)], now=600)
     assert r["status"] == "ok"
-    assert r["facts"] == {"status": "ok", "approved_amount": 20, "approver_role": "manager", "order_total": 40}
+    assert r["facts"] == {"status": "ok", "approved_amount": 20, "approver_role": "manager",
+                          "order_total": 40}
     assert r["details"]["approver"] == "manager.jordan" and r["details"]["age_seconds"] == 600
     assert any("staff[manager.jordan]" in s for s in r["sources"])
     assert any("orders[A100]" in s for s in r["sources"])
@@ -114,3 +115,27 @@ def test_window_comes_from_the_form():
     assert window_seconds("90m") == 5400
     with pytest.raises(ValueError):
         window_seconds("recently")
+
+
+# ---- Part 2b: only approvals inside the window can conflict
+
+def test_expired_approval_is_ignored_not_a_conflict():
+    r = facts([approval(0, approved_amount=20), approval(2 * H, approved_amount=40)], now=2 * H + 600)
+    assert r["status"] == "ok" and r["facts"]["approved_amount"] == 40
+    assert any("@0" in s and "expired, ignored" in s for s in r["sources"])
+    assert not any(f"@{2 * H}" in s and "expired" in s for s in r["sources"])
+
+
+def test_expired_refusal_is_ignored():
+    r = facts([approval(0, approved=False), approval(2 * H)], now=2 * H + 600)
+    assert r["status"] == "ok"
+
+
+def test_two_fresh_approvals_that_disagree_conflict():
+    r = facts([approval(2 * H, approved_amount=20), approval(2 * H + 600, approved_amount=40)], now=2 * H + 1200)
+    assert r["status"] == "conflict" and r["review"] is True
+
+
+def test_only_expired_approvals_is_expired():
+    r = facts([approval(0, approved_amount=20), approval(600, approved_amount=40)], now=600 + H + 1)
+    assert r["status"] == "expired" and r["facts"] == {"status": "expired", "order_total": 40}

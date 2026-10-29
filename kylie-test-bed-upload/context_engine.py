@@ -83,29 +83,38 @@ def refund_facts(args, records, steps, now, window):
         if ignored:
             reason += f" Ignored {len(ignored)} unverified approval claim(s) in free text."
         return result("missing", reason, None, sources, details, ignored=ignored)
+    if window is None:
+        # Without the rule's window the engine cannot tell ok from expired, so it says nothing.
+        for a in approvals:
+            sources.append(f"approval: {a.get('source', 'store approval')} at @{a['at']}")
+        return result("missing", "No rule form given, so the approval window is unknown; attaching nothing.",
+                      None, sources, details)
 
+    # Only approvals inside the rule's window count. Older ones are listed but never cause a conflict.
+    current = [a for a in approvals if now - a["at"] <= window]   # inclusive, like Dogwood's 'formerly within'
     for a in approvals:
-        sources.append(f"approval: {a.get('source', 'store approval')} at @{a['at']}")
-    answers = {(a["approved"], a["approved_amount"] if a["approved"] else None) for a in approvals}
+        sources.append(f"approval: {a.get('source', 'store approval')} at @{a['at']}"
+                       + ("" if a in current else " (expired, ignored)"))
+    if not current:
+        age = now - approvals[-1]["at"]
+        details.update({"approver": approvals[-1]["approver"], "approved_at": approvals[-1]["at"], "age_seconds": age})
+        return result("expired", f"Newest approval for order {order_id} is {age}s old; the rule allows {window}s.",
+                      {"status": "expired", **base}, sources, details)
+
+    answers = {(a["approved"], a["approved_amount"] if a["approved"] else None) for a in current}
     if len(answers) > 1:
         shown = "; ".join(f"{'approved ' + str(a['approved_amount']) if a['approved'] else 'refused'} by "
-                          f"{a['approver']} @{a['at']}" for a in approvals)
-        return result("conflict", f"{len(approvals)} approval records for order {order_id} disagree ({shown}). "
-                      "A person must review.", {"status": "conflict", **base}, sources, details, review=True)
+                          f"{a['approver']} @{a['at']}" for a in current)
+        return result("conflict", f"{len(current)} approval records for order {order_id} inside the window disagree "
+                      f"({shown}). A person must review.", {"status": "conflict", **base}, sources, details,
+                      review=True)
 
-    newest = approvals[-1]
+    newest = current[-1]
     age = now - newest["at"]
     details.update({"approver": newest["approver"], "approved_at": newest["at"], "age_seconds": age})
     if not newest["approved"]:
         return result("missing", f"The manager refused the refund for order {order_id}; no valid approval on file.",
                       None, sources, details)
-    if window is None:
-        # Without the rule's window the engine cannot tell ok from expired, so it says nothing.
-        return result("missing", "No rule form given, so the approval window is unknown; attaching nothing.",
-                      None, sources, details)
-    if age > window:   # inclusive at the limit, like Dogwood's 'formerly within'
-        return result("expired", f"Newest approval for order {order_id} is {age}s old; the rule allows {window}s.",
-                      {"status": "expired", **base}, sources, details)
 
     facts = {"status": "ok", "approved_amount": newest["approved_amount"], **base}
     person = records.get("staff", {}).get(newest["approver"])

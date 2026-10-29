@@ -426,6 +426,98 @@
           "expect_status": "missing"
         }
       ]
+    },
+    {
+      "id": "expired_20_then_fresh_40",
+      "why": "An expired approval is ignored, not a conflict",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 20,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 20
+          }
+        },
+        {
+          "at": "120m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "130m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "ALLOW",
+          "expect_status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "two_fresh_approvals_20_and_40",
+      "why": "Two approvals inside the window disagree: blocked, flagged for review",
+      "events": [
+        {
+          "at": "120m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 20,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 20
+          }
+        },
+        {
+          "at": "130m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "140m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY",
+          "expect_status": "conflict"
+        }
+      ]
     }
   ]
 }
