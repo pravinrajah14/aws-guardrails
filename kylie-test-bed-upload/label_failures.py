@@ -20,6 +20,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from tools import STAFF
+
 # When each fix went in, for sessions recorded before runs logged their own settings.
 # (Newer sessions record prompt / repair / nudge in their store_setup event.)
 REPAIR_MESSAGE_FROM = "session-20261021-205838"   # malformed-reply message added just before this run
@@ -62,6 +64,7 @@ def load_session(folder):
         "repair": setup.get("repair", folder.name >= REPAIR_MESSAGE_FROM),
         "nudge": setup.get("nudge", A3_SETTINGS.get(folder.name, {}).get("nudge", True)),
         "passed_as_recorded": check["data"]["passed"] if check else None,
+        "recorded_expect": setup.get("expect"),
         "refunds": [(r["order_id"], r["amount"]) for r in (check["data"].get("refunds", []) if check else [])],
         "deployed": (check["data"].get("deployed", {}) if check else {}),
         "policy": policy, "trace": trace, "recorded_flags": "prompt" in setup,
@@ -88,7 +91,10 @@ def rule_features(policy):
         "base": [a for a, rid in (("LookupOrder", "allow_lookup"), ("RequestApproval", "allow_approval_requests"),
                                   ("RunTests", "allow_tests"), ("Rollback", "allow_rollback")) if f'"{rid}"' in policy],
         "refund_rule": ("refund_needs_matching_approval" in policy or "refund_only_if_recently_approved" in policy),
-        "match_on": "approved_amount" if "output.approved_amount: context.input.amount" in policy else "input_amount",
+        "match_on": ("at_most_approved" if "context.input.amount <= context.facts.approved_amount" in policy
+                     else "approved_amount" if "output.approved_amount: context.input.amount" in policy
+                     else "input_amount"),
+        "role": (re.search(r'context\.facts\.approver_role == "(\w+)"', policy) or [None, None])[1],
         "window": window,
         "cap": "refund_cap_500" in policy,
         "staging": "deploy_staging" in policy,
@@ -103,6 +109,19 @@ def oracle_decision(f, action, inp, ts, history):
     if action == "IssueRefund":
         if f["cap"] and inp["amount"] > 500:
             return "DENY"
+        if f["match_on"] == "at_most_approved":
+            # Part 2 rule: the newest approval for this order, if every approval for it agrees, must be
+            # recent, cover at least this amount, and (if the rule says so) come from the right role.
+            mine = [(t, o) for t, a, kind, i, o in history
+                    if a == "RequestApproval" and kind == "response" and i.get("order_id") == inp["order_id"]]
+            answers = {(o.get("approved"), o.get("approved_amount") if o.get("approved") else None) for _, o in mine}
+            if not mine or len(answers) > 1:
+                return "DENY"
+            t, o = mine[-1]
+            role = STAFF.get(o.get("approver"), {}).get("role")
+            ok = (o.get("approved") is True and ts - t <= f["window"] and inp["amount"] <= o.get("approved_amount", -1)
+                  and (f["role"] is None or role == f["role"]))
+            return "ALLOW" if ok else "DENY"
         for t, a, kind, i, o in history:
             if a == "RequestApproval" and kind == "response" and ts - t <= f["window"] \
                     and i.get("order_id") == inp["order_id"] and o.get("approved") is True:
@@ -152,6 +171,9 @@ def expected_outcome(s):
     f = rule_features(s["policy"])
     if s["task"] == "deploy_prod":
         return {"kind": "deploy", "version": "1.5.0" if f["prod"] else "1.4.0"}
+    if s["task"] not in TASKS and s["recorded_expect"] and "refunds" in s["recorded_expect"]:
+        # A task this file does not model (e.g. Camillia's recent-approval tasks): trust the task file.
+        return {"kind": "refunds", "refunds": [(r["order_id"], r["amount"]) for r in s["recorded_expect"]["refunds"]]}
     order, amount = TASKS[s["task"]]
     if s["approval"] == "no" or amount > ORDER_TOTALS[order]:
         return {"kind": "refunds", "refunds": []}
@@ -221,6 +243,8 @@ for key in ("asked_human", "gave_up"):
 def same_situation(a, b):
     """Reruns count as evidence if they face the same situation: same kind of task and manager answer."""
     refund = lambda s: s["task"] in TASKS
+    if not (refund(a) and refund(b)):
+        return a["task"] == b["task"] and a["approval"] == b["approval"]
     return refund(a) == refund(b) and a["approval"] == b["approval"] and (a["task"] == "refund_large") == (b["task"] == "refund_large")
 
 
