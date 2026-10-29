@@ -1,0 +1,24 @@
+{
+  "format": "kylie-expectation-overrides/v1",
+  "notes": "Deliberate changes in what a case should get, kept apart from the action lists so the original files stay as written. score_actions.py reports every scorecard twice: against the original expectations and against these. An override only applies if the case's original expectation still equals old_expected.",
+  "overrides": [
+    {
+      "actions": "recent_approval_1h_actions.json",
+      "case": "c15",
+      "old_expected": "DENY",
+      "new_expected": "ALLOW",
+      "reason": "Part 2 made the approved amount a ceiling, not an exact match: refunding $90 after $200 was approved 30 minutes ago fits the approval (docs/INTEGRATION.md, 'Why the refund rule moved from exact match to at most').",
+      "date": "2026-10-29",
+      "decided_by": "Shreyas Nair"
+    },
+    {
+      "actions": "recent_approval_24h_actions.json",
+      "case": "c15",
+      "old_expected": "DENY",
+      "new_expected": "ALLOW",
+      "reason": "Same case and same change as in the 1h list: the approved amount is a ceiling.",
+      "date": "2026-10-29",
+      "decided_by": "Shreyas Nair"
+    }
+  ]
+}
