@@ -428,6 +428,137 @@
       ]
     },
     {
+      "id": "approved_40_refund_40_twice",
+      "why": "An approval is used up: the second $40 refund is blocked",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "ALLOW",
+          "expect_status": "ok"
+        },
+        {
+          "at": "11m",
+          "tool": "issue_refund",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "output": {
+            "refund_id": "R001",
+            "amount": 40
+          }
+        },
+        {
+          "at": "20m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY",
+          "expect_status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "approved_40_refund_25_15_then_1",
+      "why": "Partial refunds add up to the approval, then one more dollar is blocked",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 25
+          },
+          "expect": "ALLOW",
+          "expect_status": "ok"
+        },
+        {
+          "at": "11m",
+          "tool": "issue_refund",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 25
+          },
+          "output": {
+            "refund_id": "R001",
+            "amount": 25
+          }
+        },
+        {
+          "at": "20m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 15
+          },
+          "expect": "ALLOW",
+          "expect_status": "ok"
+        },
+        {
+          "at": "21m",
+          "tool": "issue_refund",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 15
+          },
+          "output": {
+            "refund_id": "R002",
+            "amount": 15
+          }
+        },
+        {
+          "at": "30m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 1
+          },
+          "expect": "DENY",
+          "expect_status": "ok"
+        }
+      ]
+    },
+    {
       "id": "expired_20_then_fresh_40",
       "why": "An expired approval is ignored, not a conflict",
       "events": [

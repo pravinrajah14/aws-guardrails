@@ -30,7 +30,7 @@ def facts(approvals, now, amount=40, order="A100", steps=(), window=H):
 def test_ok_attaches_amount_role_and_total():
     r = facts([approval(0, approved_amount=20)], now=600)
     assert r["status"] == "ok"
-    assert r["facts"] == {"status": "ok", "approved_amount": 20, "approver_role": "manager",
+    assert r["facts"] == {"status": "ok", "approved_amount": 20, "refunded_so_far": 0, "approver_role": "manager",
                           "order_total": 40}
     assert r["details"]["approver"] == "manager.jordan" and r["details"]["age_seconds"] == 600
     assert any("staff[manager.jordan]" in s for s in r["sources"])
@@ -117,7 +117,58 @@ def test_window_comes_from_the_form():
         window_seconds("recently")
 
 
-# ---- Part 2b: only approvals inside the window can conflict
+# ---- Part 2b: approvals are used up, and only approvals inside the window can conflict
+
+def refund_done(ts, amount, order="A100", n=1):
+    """A completed refund: the store's record and the matching trace step."""
+    rec = {"refund_id": f"R{n:03d}", "order_id": order, "amount": amount, "at": ts}
+    step = {"ts": ts, "action": "IssueRefund", "kind": "response", "input": {"order_id": order, "amount": amount},
+            "output": {"refund_id": rec["refund_id"], "amount": amount}}
+    return rec, step
+
+
+def facts_with_refunds(approvals, done, now, amount=40, store=None, window=H):
+    records = {"approvals": approvals, "refunds": [r for r, _ in done] if store is None else store,
+               "orders": ORDERS, "staff": STAFF}
+    return get_facts("IssueRefund", {"order_id": "A100", "amount": amount}, records, [s for _, s in done], now, window)
+
+
+def test_refunded_so_far_is_zero_with_no_refunds():
+    r = facts_with_refunds([approval(0)], [], now=600)
+    assert r["status"] == "ok" and r["facts"]["refunded_so_far"] == 0
+
+
+def test_refunded_so_far_adds_refunds_since_the_approval():
+    done = [refund_done(100, 25), refund_done(200, 10, n=2)]
+    r = facts_with_refunds([approval(0)], done, now=600)
+    assert r["status"] == "ok" and r["facts"]["refunded_so_far"] == 35
+
+
+def test_refunds_before_the_approval_do_not_count():
+    done = [refund_done(100, 40)]
+    r = facts_with_refunds([approval(0), approval(200)], done, now=600)
+    assert r["status"] == "ok" and r["facts"]["refunded_so_far"] == 0
+
+
+def test_refunds_for_other_orders_do_not_count():
+    done = [refund_done(100, 40, order="A200")]
+    r = facts_with_refunds([approval(0)], done, now=600)
+    assert r["facts"]["refunded_so_far"] == 0
+
+
+def test_store_and_trace_disagree_is_a_conflict():
+    rec, step = refund_done(100, 40)
+    r = facts_with_refunds([approval(0)], [(rec, step)], now=600, store=[])
+    assert r["status"] == "conflict" and r["review"] is True
+    assert "approved_amount" not in r["facts"] and "refunded_so_far" not in r["facts"]
+
+
+def test_store_refund_with_no_time_is_a_conflict():
+    rec, _ = refund_done(100, 40)
+    del rec["at"]
+    r = facts_with_refunds([approval(0)], [], now=600, store=[rec])
+    assert r["status"] == "conflict" and r["review"] is True
+
 
 def test_expired_approval_is_ignored_not_a_conflict():
     r = facts([approval(0, approved_amount=20), approval(2 * H, approved_amount=40)], now=2 * H + 600)

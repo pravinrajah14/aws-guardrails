@@ -26,10 +26,11 @@ def case_lines(gate, case):
     """Turn one case's events into Dogwood trace lines. Returns (lines, scored requests).
 
     The store's records for the context engine come from the case itself: each request_approval
-    response is an approval record, orders and staff are the store's defaults. An event with
+    response is an approval record, each issue_refund response a refund record, orders and staff
+    are the store's defaults. An event with
     kind "message" is free text (e.g. a claimed approval); it adds no trace line."""
     lines, scored, last_ts = [], [], -1
-    records = {"approvals": [], "orders": MockWorld().orders, "staff": STAFF}
+    records = {"approvals": [], "refunds": [], "orders": MockWorld().orders, "staff": STAFF}
     steps = []
     for i, ev in enumerate(case["events"]):
         ts = to_seconds(ev["at"]) + 1          # +1 so "0m" is a valid first timestamp
@@ -59,6 +60,8 @@ def case_lines(gate, case):
             if action == "RequestApproval" and kind == "response":
                 records["approvals"].append({"order_id": args["order_id"], "asked": args["amount"],
                                              **ev["output"], "at": ts, "source": f"case event {i}"})
+            if action == "IssueRefund" and kind == "response":
+                records["refunds"].append({"order_id": args["order_id"], **ev["output"], "at": ts})
         steps.append({"ts": ts, "action": action, "kind": kind, "input": args, "output": ev.get("output")})
     return lines, scored
 

@@ -16,7 +16,8 @@ when {
     context has facts &&
     context.facts.status == "ok" &&
     context.facts has approved_amount &&
-    context.input.amount <= context.facts.approved_amount &&
+    context.facts has refunded_so_far &&
+    context.input.amount + context.facts.refunded_so_far <= context.facts.approved_amount &&
     context.facts has approver_role &&
     context.facts.approver_role == "manager"
 }

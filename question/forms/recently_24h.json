@@ -15,6 +15,9 @@
     "at_most": {
       "amount": "approved_amount"
     },
+    "spent_so_far": {
+      "amount": "refunded_so_far"
+    },
     "approver_role": "manager"
   }
 }

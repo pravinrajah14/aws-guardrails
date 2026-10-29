@@ -91,7 +91,9 @@ def rule_features(policy):
         "base": [a for a, rid in (("LookupOrder", "allow_lookup"), ("RequestApproval", "allow_approval_requests"),
                                   ("RunTests", "allow_tests"), ("Rollback", "allow_rollback")) if f'"{rid}"' in policy],
         "refund_rule": ("refund_needs_matching_approval" in policy or "refund_only_if_recently_approved" in policy),
-        "match_on": ("at_most_approved" if "context.input.amount <= context.facts.approved_amount" in policy
+        "match_on": ("at_most_unspent" if ("context.input.amount + context.facts.refunded_so_far"
+                                           " <= context.facts.approved_amount") in policy
+                     else "at_most_approved" if "context.input.amount <= context.facts.approved_amount" in policy
                      else "approved_amount" if "output.approved_amount: context.input.amount" in policy
                      else "input_amount"),
         "role": (re.search(r'context\.facts\.approver_role == "(\w+)"', policy) or [None, None])[1],
@@ -109,6 +111,22 @@ def oracle_decision(f, action, inp, ts, history):
     if action == "IssueRefund":
         if f["cap"] and inp["amount"] > 500:
             return "DENY"
+        if f["match_on"] == "at_most_unspent":
+            # Part 2b rule: only approvals inside the window count, and they must all agree. The newest
+            # must cover this refund plus every refund already made for the order since it was given.
+            mine = [(t, o) for t, a, kind, i, o in history
+                    if a == "RequestApproval" and kind == "response" and i.get("order_id") == inp["order_id"]
+                    and ts - t <= f["window"]]
+            answers = {(o.get("approved"), o.get("approved_amount") if o.get("approved") else None) for _, o in mine}
+            if not mine or len(answers) > 1:
+                return "DENY"
+            t, o = mine[-1]
+            spent = sum(out.get("amount", 0) for t2, a, kind, i, out in history
+                        if a == "IssueRefund" and kind == "response" and i.get("order_id") == inp["order_id"] and t2 > t)
+            role = STAFF.get(o.get("approver"), {}).get("role")
+            ok = (o.get("approved") is True and inp["amount"] + spent <= o.get("approved_amount", -1)
+                  and (f["role"] is None or role == f["role"]))
+            return "ALLOW" if ok else "DENY"
         if f["match_on"] == "at_most_approved":
             # Part 2 rule: the newest approval for this order, if every approval for it agrees, must be
             # recent, cover at least this amount, and (if the rule says so) come from the right role.

@@ -11,7 +11,7 @@ OPS = {">", ">=", "<", "<=", "==", "!="}
 WINDOW = re.compile(r"^[0-9]+(s|m|h)$")
 ID = re.compile(r"^[a-z][a-z0-9_]*$")
 TOP_KEYS = {"id", "sentence", "action", "kind", "only_when", "field", "max", "allowed", "requires"}
-REQ_KEYS = {"action", "within", "same", "output", "output_same", "at_most", "approver_role"}
+REQ_KEYS = {"action", "within", "same", "output", "output_same", "at_most", "spent_so_far", "approver_role"}
 
 
 class FormError(ValueError):
@@ -129,6 +129,10 @@ def validate_form(f, actions):
             need(current in inp, f"at_most: {act} has no input field {current!r}")
             need(fact in facts, f"at_most: {act} has no checked fact {fact!r} (see the schema's facts type)")
             need(inp[current] == "Long" and facts[fact] == "Long", "at_most: both fields must be Long")
+        for current, fact in r.get("spent_so_far", {}).items():
+            need(current in r.get("at_most", {}), f"spent_so_far: {current!r} has no at_most limit to count against")
+            need(fact in facts, f"spent_so_far: {act} has no checked fact {fact!r} (see the schema's facts type)")
+            need(facts[fact] == "Long", "spent_so_far: the fact must be Long")
         if "approver_role" in r:
             need(isinstance(r["approver_role"], str) and r["approver_role"], "approver_role must be a non-empty string")
             need("approver_role" in facts, f"approver_role: {act} has no checked fact 'approver_role'")
@@ -147,7 +151,13 @@ def facts_clause(r):
     the store; when they are missing or unsure the 'has' tests fail and deny-by-default blocks."""
     checks = []
     for current, fact in r.get("at_most", {}).items():
-        checks += [f"context.facts has {fact}", f"context.input.{current} <= context.facts.{fact}"]
+        # spent_so_far: what was already used against the same limit (e.g. refunded since the approval).
+        spent = r.get("spent_so_far", {}).get(current)
+        if spent:
+            checks += [f"context.facts has {fact}", f"context.facts has {spent}",
+                       f"context.input.{current} + context.facts.{spent} <= context.facts.{fact}"]
+        else:
+            checks += [f"context.facts has {fact}", f"context.input.{current} <= context.facts.{fact}"]
     if "approver_role" in r:
         checks += ["context.facts has approver_role", f"context.facts.approver_role == {lit(r['approver_role'])}"]
     if not checks:

@@ -6,8 +6,9 @@ stale or disagree, it attaches nothing (or only the status), and Dogwood's deny-
 
 Inputs (all plain Python, so the scripted scorer and the live agent use the same code):
   action, args   the request Dogwood is about to check
-  records        {"approvals": [...], "orders": {...}, "staff": {...}}; each approval is
-                 {order_id, asked, approved, approver, approved_amount, at, source}
+  records        {"approvals": [...], "refunds": [...], "orders": {...}, "staff": {...}}; each approval is
+                 {order_id, asked, approved, approver, approved_amount, at, source}, each refund is
+                 {refund_id, order_id, amount, at}
   steps          the session's earlier steps, oldest first: {ts, action, kind, input, output}
                  for tool events, {ts, kind: "message", who, text} for free text
   now            Dogwood timestamp of the request, in seconds (same clock as the approvals' "at")
@@ -116,7 +117,26 @@ def refund_facts(args, records, steps, now, window):
         return result("missing", f"The manager refused the refund for order {order_id}; no valid approval on file.",
                       None, sources, details)
 
-    facts = {"status": "ok", "approved_amount": newest["approved_amount"], **base}
+    # What has already been refunded against this approval: the store's refund records, checked
+    # against this session's trace. If they disagree the engine cannot say which is right.
+    store_refunds = [r for r in records.get("refunds", []) if r["order_id"] == order_id]
+    undated = [r for r in store_refunds if "at" not in r]
+    if undated:
+        return result("conflict", f"Store refund record(s) {[r.get('refund_id') for r in undated]} for order "
+                      f"{order_id} have no time, so it is unknown whether they used this approval. "
+                      "A person must review.", {"status": "conflict", **base}, sources, details, review=True)
+    store_total = sum(r["amount"] for r in store_refunds if r["at"] > newest["at"])
+    trace_total = sum((s.get("output") or {}).get("amount", 0) for s in steps
+                      if s.get("action") == "IssueRefund" and s["kind"] == "response"
+                      and s["input"].get("order_id") == order_id and s["ts"] > newest["at"])
+    details.update({"refunded_so_far_store": store_total, "refunded_so_far_trace": trace_total})
+    sources.append(f"refunded_so_far: store refunds for {order_id} since @{newest['at']}, checked against the trace")
+    if store_total != trace_total:
+        return result("conflict", f"Refunded since the approval for order {order_id}: store says {store_total}, "
+                      f"this session's trace says {trace_total}. A person must review.",
+                      {"status": "conflict", **base}, sources, details, review=True)
+
+    facts = {"status": "ok", "approved_amount": newest["approved_amount"], "refunded_so_far": store_total, **base}
     person = records.get("staff", {}).get(newest["approver"])
     if person and person.get("role"):
         facts["approver_role"] = person["role"]
@@ -124,7 +144,7 @@ def refund_facts(args, records, steps, now, window):
         sources.append(f"approver_role: staff[{newest['approver']}]")
     role = facts.get("approver_role", "unknown role")
     return result("ok", f"Approved {newest['approved_amount']} for order {order_id} by {newest['approver']} "
-                  f"({role}) {age}s ago.", facts, sources, details)
+                  f"({role}) {age}s ago; {store_total} refunded since.", facts, sources, details)
 
 
 def get_facts(action, args, records, steps, now, window):

@@ -10,7 +10,7 @@ namespace Shop {
   type IssueRefundInput = { order_id: String, amount: Long };
   type IssueRefundOutput = { refund_id: String, amount: Long };
   // Checked facts the context engine attaches to a refund request (context_engine.py).
-  type RefundFacts = { status: String, approved_amount?: Long, approver_role?: String, order_total?: Long };
+  type RefundFacts = { status: String, approved_amount?: Long, refunded_so_far?: Long, approver_role?: String, order_total?: Long };
 
   type RunTestsInput = { service: String, version: String };
   type RunTestsOutput = { passed: Bool };

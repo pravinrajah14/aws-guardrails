@@ -41,9 +41,9 @@ def refund(t, order="A200", amount=300, facts=None):
     return [ev(t, "request", "IssueRefund", {"order_id": order, "amount": amount}, facts=facts)]
 
 
-def ok(approved_amount=300, role="manager"):
+def ok(approved_amount=300, role="manager", refunded=0):
     """The facts the context engine attaches when it finds one valid approval (order A200 totals 320)."""
-    f = {"status": "ok", "approved_amount": approved_amount, "order_total": 320}
+    f = {"status": "ok", "approved_amount": approved_amount, "refunded_so_far": refunded, "order_total": 320}
     if role:
         f["approver_role"] = role
     return f
@@ -67,6 +67,11 @@ CASES = [  # (name, history, expected verdict on the final Refund)
     ("approved by support, not a manager", approval(0) + refund(600, facts=ok(role="support")), "DENY"),
     ("approver with no known role", approval(0) + refund(600, facts=ok(role=None)), "DENY"),
     ("facts say ok but no approval in the trace", refund(600, facts=ok()), "DENY"),
+    # Part 2b: an approval is used up by the refunds made against it (facts.refunded_so_far).
+    ("approved 100, 100 already refunded: block 100 more", approval(0, approved_amount=100) + refund(600, amount=100, facts=ok(100, refunded=100)), "DENY"),
+    ("approved 100, 60 already refunded: allow 40", approval(0, approved_amount=100) + refund(600, amount=40, facts=ok(100, refunded=60)), "ALLOW"),
+    ("approved 100, 60 already refunded: block 41", approval(0, approved_amount=100) + refund(600, amount=41, facts=ok(100, refunded=60)), "DENY"),
+    ("facts with no refunded_so_far", approval(0) + refund(600, facts={"status": "ok", "approved_amount": 300, "approver_role": "manager"}), "DENY"),
 ]
 
 

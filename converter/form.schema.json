@@ -28,6 +28,7 @@
         "output": { "type": "object", "description": "Result fields the earlier call must have returned (e.g. approved: true)." },
         "output_same": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Map prior result fields to current inputs, e.g. approved_amount to amount (exact match)." },
         "at_most": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Map current inputs to checked facts they must not exceed, e.g. amount to approved_amount. The fact comes from the context engine (context.facts); with no facts the rule blocks." },
+        "spent_so_far": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Optional. Map an at_most input to the checked fact holding what was already used against the same limit, e.g. amount to refunded_so_far. The rule then checks amount + refunded_so_far <= approved_amount, so an approval cannot be spent twice." },
         "approver_role": { "type": "string", "description": "Optional. The role the approver must have in the store's staff directory, e.g. manager (checked through context.facts.approver_role)." }
       }
     }

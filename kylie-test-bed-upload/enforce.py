@@ -89,10 +89,11 @@ def block_message(action, input_args, ctx):
         return "Conflicting approvals on file; a person must review. Do not retry."
     if facts_status == "ok":
         # State what is on file; Dogwood's rule decides what fits it.
-        d = ctx["details"]
+        d, f = ctx["details"], ctx["facts"]
+        spent = f" and {f['refunded_so_far']} dollars were already refunded against it" if f.get("refunded_so_far") else ""
         return (f"The approval on file for order {input_args['order_id']} is for "
-                f"{ctx['facts'].get('approved_amount')} dollars, by {d.get('approver')} "
-                f"({d.get('approver_role', 'no known role')}); this refund does not fit it.")
+                f"{f.get('approved_amount')} dollars, by {d.get('approver')} "
+                f"({d.get('approver_role', 'no known role')}){spent}; this refund does not fit it.")
     return ""
 
 
@@ -172,8 +173,8 @@ class DogwoodGate:
         """Ask the context engine for this request's facts, from the store (or the given records)."""
         if records is None:
             s = self.store
-            records = {"approvals": getattr(s, "approvals", []), "orders": getattr(s, "orders", {}),
-                       "staff": getattr(s, "staff", {})}
+            records = {"approvals": getattr(s, "approvals", []), "refunds": getattr(s, "refunds", []),
+                       "orders": getattr(s, "orders", {}), "staff": getattr(s, "staff", {})}
         return get_facts(action, input_args, records, self.steps if steps is None else steps,
                          ts, form_window(self.form, action))
 
@@ -235,6 +236,8 @@ class DogwoodGate:
                 # Stamp the store's approval record with the same clock Dogwood sees.
                 self.store.approvals[-1]["at"] = ts
                 self.store.approvals[-1]["source"] = f"store approvals[{len(self.store.approvals) - 1}] ({request_id})"
+            if action == "IssueRefund" and self.store is not None and getattr(self.store, "refunds", None):
+                self.store.refunds[-1]["at"] = ts
         self.trace_lines.append(line)
         self.steps.append({"ts": ts, "action": action, "kind": "error" if failed else "response",
                            "input": input_args, "output": output})

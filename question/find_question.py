@@ -127,6 +127,8 @@ def permits(form, h):
         for current, fact in r.get("at_most", {}).items():
             if fact not in ev["output"]:
                 sys.exit(f"at_most: the solver cannot model fact {fact!r}")
+            # spent_so_far (refunds already made against the approval) is 0 here: the solver's
+            # histories hold only earlier approvals, never a refund.
             cs.append(h.request[current] <= ev["output"][fact])
         if "approver_role" in r:
             names = [n for n, s in STAFF.items() if s["role"] == r["approver_role"]]
