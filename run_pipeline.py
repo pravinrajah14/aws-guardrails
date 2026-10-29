@@ -93,7 +93,8 @@ def main():
         manifest["code_sha256"] = {str(p.relative_to(ROOT)): digest(p) for p in [
             ROOT / "run_pipeline.py", ROOT / "converter/convert.py", ROOT / "question/find_question.py",
             ROOT / "question/answer.py", STORE / "agent.py", STORE / "run_task.py", STORE / "enforce.py",
-            STORE / "score_actions.py", STORE / "tools.py", STORE / "recorder.py"]}
+            STORE / "score_actions.py", STORE / "tools.py", STORE / "recorder.py",
+            STORE / "context_engine.py"]}
         if source is None:
             run("question", [sys.executable, ROOT / "question/find_question.py", "--out", out / "question"])
             question_data = json.loads((out / "question/question.json").read_text())

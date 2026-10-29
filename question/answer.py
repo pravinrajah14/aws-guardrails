@@ -13,7 +13,7 @@ from score_actions import case_lines
 def verdicts_for(form, cases, workdir, tag):
     rule = workdir / f"rule_{tag}.dw"
     rule.write_text(convert([(tag, form)], str(SCHEMA)), encoding="utf-8")
-    gate = DogwoodGate(workdir, build_policy(BASE, rule, workdir / f"policy_{tag}.dw"), SCHEMA)
+    gate = DogwoodGate(workdir, build_policy(BASE, rule, workdir / f"policy_{tag}.dw"), SCHEMA, form=form)
     found = {}
     for case in cases:
         lines, scored = case_lines(gate, case)

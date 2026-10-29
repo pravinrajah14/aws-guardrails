@@ -15,7 +15,7 @@ sys.path.insert(0, str(CONVERTER))
 from convert import convert, load_schema, validate_form
 from enforce import DogwoodGate, build_policy
 from score_actions import case_lines
-from tools import TOOL_SPECS
+from tools import STAFF, TOOL_SPECS
 
 SCHEMA = STORE / "policies" / "schema.cedarschema"
 BASE = STORE / "policies" / "base.dw"
@@ -122,6 +122,15 @@ def permits(form, h):
         cs += [ev["output"][k] == literal(v) for k, v in r.get("output", {}).items()]
         cs += [ev["output"][previous] == h.request[current]
                for previous, current in r.get("output_same", {}).items()]
+        # Facts checks: the context engine reads the fact from the approval's output field of the
+        # same name, and the approver's role from the store's staff directory.
+        for current, fact in r.get("at_most", {}).items():
+            if fact not in ev["output"]:
+                sys.exit(f"at_most: the solver cannot model fact {fact!r}")
+            cs.append(h.request[current] <= ev["output"][fact])
+        if "approver_role" in r:
+            names = [n for n, s in STAFF.items() if s["role"] == r["approver_role"]]
+            cs.append(Or(*[ev["output"]["approver"] == StringVal(n) for n in names]) if names else BoolVal(False))
         matches.append(And(*cs))
     gated = Or(*matches)
     if "only_when" in form:
@@ -256,7 +265,7 @@ def dogwood_verdict(form, case, workdir, tag):
     rule = workdir / f"rule_{tag}.dw"
     rule.write_text(convert([(tag, form)], str(SCHEMA)), encoding="utf-8")
     policy = build_policy(BASE, rule, workdir / f"policy_{tag}.dw")
-    gate = DogwoodGate(workdir, policy, SCHEMA)
+    gate = DogwoodGate(workdir, policy, SCHEMA, form=form)
     ok, msg = gate.validate()
     if not ok:
         sys.exit(f"{tag}: policy did not validate\n{msg}")
