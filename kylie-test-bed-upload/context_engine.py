@@ -2,7 +2,11 @@
 
 Dogwood still makes every decision. The engine only reads records and reports what they say,
 so a rule can test those facts. It never fills a gap with a guess: when the records are missing,
-stale or disagree, it attaches nothing (or only the status), and Dogwood's deny-by-default blocks.
+stale or disagree, it attaches no approval facts (only the status and the order's facts), and
+Dogwood's deny-by-default blocks.
+
+Order facts (order_total, refunded_on_order) are attached on every IssueRefund whose order is in the
+store, with or without a rule form, so the store-wide invariant in policies/base.dw can always check them.
 
 Inputs (all plain Python, so the scripted scorer and the live agent use the same code):
   action, args   the request Dogwood is about to check
@@ -15,7 +19,8 @@ Inputs (all plain Python, so the scripted scorer and the live agent use the same
   window         the rule form's "within", in seconds; None if no form was given
 
 Output: {"facts", "status", "reason", "sources", "details", "review", "ignored_claims"}
-  facts    what goes into Dogwood's request_context (schema type RefundFacts), or None
+  facts    what goes into Dogwood's request_context (schema type RefundFacts), or None when the
+           order is not in the store and there is no approval to report
   status   ok | missing | expired | conflict (None for actions the engine has no facts for)
 """
 import re
@@ -75,6 +80,22 @@ def refund_facts(args, records, steps, now, window):
     if order is not None and isinstance(order.get("total"), int):
         base["order_total"] = order["total"]
         sources.append(f"order_total: store orders[{order_id}]")
+        # Every completed refund for this order, whichever approval it used, checked against the trace.
+        store_all = sum(r["amount"] for r in records.get("refunds", []) if r["order_id"] == order_id)
+        trace_all = sum((s.get("output") or {}).get("amount", 0) for s in steps
+                        if s.get("action") == "IssueRefund" and s["kind"] == "response"
+                        and s["input"].get("order_id") == order_id)
+        details.update({"refunded_on_order_store": store_all, "refunded_on_order_trace": trace_all})
+        if store_all != trace_all:
+            return result("conflict", f"Refunded on order {order_id}: store says {store_all}, this session's "
+                          f"trace says {trace_all}. A person must review.",
+                          {"status": "conflict", **base}, sources, details, review=True)
+        base["refunded_on_order"] = store_all
+        sources.append(f"refunded_on_order: store refunds for {order_id}, checked against the trace")
+
+    def order_only(status):
+        # No approval facts to report: only the status, plus the order's facts if the order is known.
+        return {"status": status, **base} if base else None
 
     approvals = sorted((a for a in records.get("approvals", []) if a["order_id"] == order_id and "at" in a),
                        key=lambda a: a["at"])
@@ -83,13 +104,13 @@ def refund_facts(args, records, steps, now, window):
         reason = f"No approval record for order {order_id}."
         if ignored:
             reason += f" Ignored {len(ignored)} unverified approval claim(s) in free text."
-        return result("missing", reason, None, sources, details, ignored=ignored)
+        return result("missing", reason, order_only("missing"), sources, details, ignored=ignored)
     if window is None:
         # Without the rule's window the engine cannot tell ok from expired, so it says nothing.
         for a in approvals:
             sources.append(f"approval: {a.get('source', 'store approval')} at @{a['at']}")
-        return result("missing", "No rule form given, so the approval window is unknown; attaching nothing.",
-                      None, sources, details)
+        return result("missing", "No rule form given, so the approval window is unknown; attaching only the "
+                      "order's facts.", order_only("missing"), sources, details)
 
     # Only approvals inside the rule's window count. Older ones are listed but never cause a conflict.
     current = [a for a in approvals if now - a["at"] <= window]   # inclusive, like Dogwood's 'formerly within'
@@ -115,7 +136,7 @@ def refund_facts(args, records, steps, now, window):
     details.update({"approver": newest["approver"], "approved_at": newest["at"], "age_seconds": age})
     if not newest["approved"]:
         return result("missing", f"The manager refused the refund for order {order_id}; no valid approval on file.",
-                      None, sources, details)
+                      order_only("missing"), sources, details)
 
     # What has already been refunded against this approval: the store's refund records, checked
     # against this session's trace. If they disagree the engine cannot say which is right.

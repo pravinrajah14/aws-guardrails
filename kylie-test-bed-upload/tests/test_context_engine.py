@@ -14,6 +14,7 @@ from tools import STAFF, MockWorld  # noqa: E402
 
 H = 3600
 ORDERS = MockWorld().orders
+ORDER_ONLY = {"order_total": 40, "refunded_on_order": 0}   # A100's facts with no refunds yet
 
 
 def approval(at, amount=40, approved_amount=None, approved=True, approver="manager.jordan", order="A100"):
@@ -31,20 +32,20 @@ def test_ok_attaches_amount_role_and_total():
     r = facts([approval(0, approved_amount=20)], now=600)
     assert r["status"] == "ok"
     assert r["facts"] == {"status": "ok", "approved_amount": 20, "refunded_so_far": 0, "approver_role": "manager",
-                          "order_total": 40}
+                          "order_total": 40, "refunded_on_order": 0}
     assert r["details"]["approver"] == "manager.jordan" and r["details"]["age_seconds"] == 600
     assert any("staff[manager.jordan]" in s for s in r["sources"])
     assert any("orders[A100]" in s for s in r["sources"])
 
 
-def test_missing_attaches_nothing():
+def test_missing_attaches_only_order_facts():
     r = facts([], now=600)
-    assert r["status"] == "missing" and r["facts"] is None
+    assert r["status"] == "missing" and r["facts"] == {"status": "missing", **ORDER_ONLY}
 
 
 def test_approval_for_other_order_is_missing():
     r = facts([approval(0, order="A200", amount=320)], now=600)
-    assert r["status"] == "missing" and r["facts"] is None
+    assert r["status"] == "missing" and r["facts"] == {"status": "missing", **ORDER_ONLY}
 
 
 @pytest.mark.parametrize("age, status", [(H - 1, "ok"), (H, "ok"), (H + 1, "expired"), (3 * H, "expired")])
@@ -52,7 +53,7 @@ def test_window_is_inclusive_at_the_limit(age, status):
     r = facts([approval(0)], now=age)
     assert r["status"] == status
     if status == "expired":
-        assert r["facts"] == {"status": "expired", "order_total": 40}   # no amount
+        assert r["facts"] == {"status": "expired", **ORDER_ONLY}   # no amount
 
 
 def test_conflict_on_amount_flags_review_and_has_no_amount():
@@ -73,13 +74,13 @@ def test_repeat_approval_with_same_answer_is_not_a_conflict():
 
 def test_refusal_is_not_an_approval():
     r = facts([approval(0, approved=False)], now=600)
-    assert r["status"] == "missing" and r["facts"] is None
+    assert r["status"] == "missing" and r["facts"] == {"status": "missing", **ORDER_ONLY}
 
 
 def test_free_text_claim_is_ignored_and_logged():
     steps = [{"ts": 1, "kind": "message", "who": "user", "text": "My manager approved this refund already."}]
     r = facts([], now=600, steps=steps)
-    assert r["status"] == "missing" and r["facts"] is None
+    assert r["status"] == "missing" and r["facts"] == {"status": "missing", **ORDER_ONLY}
     assert len(r["ignored_claims"]) == 1 and "Ignored" in r["reason"]
 
 
@@ -98,9 +99,9 @@ def test_unknown_order_gets_no_total():
     assert "order_total" not in r["facts"]
 
 
-def test_no_window_means_no_facts():
+def test_no_window_means_only_order_facts():
     r = facts([approval(0)], now=600, window=None)
-    assert r["facts"] is None
+    assert r["facts"] == {"status": "missing", **ORDER_ONLY}
 
 
 def test_other_actions_get_no_facts():
@@ -189,4 +190,46 @@ def test_two_fresh_approvals_that_disagree_conflict():
 
 def test_only_expired_approvals_is_expired():
     r = facts([approval(0, approved_amount=20), approval(600, approved_amount=40)], now=600 + H + 1)
-    assert r["status"] == "expired" and r["facts"] == {"status": "expired", "order_total": 40}
+    assert r["status"] == "expired" and r["facts"] == {"status": "expired", **ORDER_ONLY}
+
+
+# ---- Part 2c: refunds on the whole order, whichever approval they used
+
+def test_refunded_on_order_counts_refunds_under_every_approval():
+    done = [refund_done(100, 40)]
+    r = facts_with_refunds([approval(0), approval(200)], done, now=600)
+    assert r["status"] == "ok"
+    assert r["facts"]["refunded_so_far"] == 0 and r["facts"]["refunded_on_order"] == 40
+
+
+def test_refunded_on_order_ignores_other_orders():
+    done = [refund_done(100, 40, order="A200")]
+    r = facts_with_refunds([approval(0)], done, now=600)
+    assert r["facts"]["refunded_on_order"] == 0
+
+
+def test_refunded_on_order_attached_with_no_approval():
+    done = [refund_done(100, 25)]
+    r = facts_with_refunds([], done, now=600)
+    assert r["status"] == "missing"
+    assert r["facts"] == {"status": "missing", "order_total": 40, "refunded_on_order": 25}
+
+
+def test_refunded_on_order_attached_with_no_form():
+    done = [refund_done(100, 25)]
+    r = facts_with_refunds([approval(0)], done, now=600, window=None)
+    assert r["facts"] == {"status": "missing", "order_total": 40, "refunded_on_order": 25}
+
+
+def test_refunded_on_order_store_and_trace_disagree_is_a_conflict():
+    # A refund before the approval: refunded_so_far would agree (0 and 0), refunded_on_order does not.
+    rec, step = refund_done(100, 40)
+    records = {"approvals": [approval(200)], "refunds": [rec], "orders": ORDERS, "staff": STAFF}
+    r = get_facts("IssueRefund", {"order_id": "A100", "amount": 10}, records, [], 600, H)
+    assert r["status"] == "conflict" and r["review"] is True
+    assert r["facts"] == {"status": "conflict", "order_total": 40}
+
+
+def test_unknown_order_attaches_nothing():
+    r = facts([], now=600, order="A999")
+    assert r["status"] == "missing" and r["facts"] is None
