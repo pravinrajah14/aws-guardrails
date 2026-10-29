@@ -41,3 +41,26 @@ All paths are under `kylie-test-bed-upload/` unless they start with `/`.
 - **`label_failures_reruns.py` rerun mode is broken with the new agent.** It sets `agent.SYSTEM_PROMPT`, but `run_agent` now reads `PROMPTS[prompt]`, which is built when the module is imported, so the added fix line is ignored. Its `Namespace` also has no `prompt`/`no_repair`/`no_nudge`, so `run_task.run_one` raises `AttributeError`. `--check-only` still works. Its usage line still says `python label_failures.py`.
 - **`run_task.py --approval X`** now exits when X differs from the task's approval mode (Kylie's change). It used to print a note and continue. `run_pipeline.py` never passes `--approval`, so the pipeline is not affected.
 - **Committed `question/out/` is stale.** `question/out/answer_*/updated_rule.dw` still matches on `input.amount` (written before Pravin's converter change), and `answer_allow/summary.txt` shows 16/21. Fresh pipeline runs write to `pipeline-runs/` and match on `output.approved_amount`.
+
+## Part 2: context engine (changes to teammates' files)
+
+**Why the refund rule moved from exact match to "at most".** Pravin's rule matched `output.approved_amount: context.input.amount` inside the temporal clause, so a refund had to equal the approved amount exactly. Part 2 makes the approved amount a ceiling: a refund may be anything up to what the manager approved (approved 25, refund 20 is allowed). Dogwood's temporal pattern can only test equality, so the amount check moved out of it. The context engine (`kylie-test-bed-upload/context_engine.py`) reads the newest approval from the store and attaches `facts.approved_amount`. The rule then checks `context.input.amount <= context.facts.approved_amount` in a normal `when` clause. The `formerly within` clause stays (now only `order_id` and `approved: true`), so Dogwood still decides recency on its own. The rule also needs `facts.status == "ok"` and `facts.approver_role == "manager"` (from the rule sentence "a manager approved it"). With no facts, deny-by-default blocks.
+
+Accepted consequence (Shreyas's decision, 2026-10-29): Camillia's `c15` (approved $200, refund $90, expected DENY) in both `tests/recent_approval_*_actions.json` is now a known wrong allow against her old expectation. Her files are unchanged.
+
+| File | Owner | Change |
+|---|---|---|
+| `converter/convert.py` | Jack/Pravin | New `requires` fields `at_most` and `approver_role`, which emit the facts `when` clause. `load_schema` also reads each action's `facts` type. `output_same` still works for other rules |
+| `converter/forms/manager_approval.json`, `question/forms/recently_1h.json`, `question/forms/recently_24h.json` | Jack/Shreyas | `output_same` replaced by `at_most: {amount: approved_amount}` and `approver_role: "manager"` |
+| `converter/generated.dw` | generated | Regenerated; `dogwood validate` passes |
+| `converter/test_behavior.py` | Pravin | Refund requests now carry the facts the engine would attach. "approval is exact, not a ceiling: block 90" became "approval is a ceiling: allow 90 of 100 approved" (same decision as c15). Added cases: support approver, unknown role, facts with no approval in the trace |
+| `question/find_question.py`, `question/answer.py` | Shreyas | The solver models `at_most` and `approver_role`. Gates get the form so the engine knows the window |
+| `kylie-test-bed-upload/policies/schema.cedarschema` | Kylie | `RefundFacts` type; `IssueRefund` context gets `facts?` |
+| `kylie-test-bed-upload/tools.py` | Kylie | `STAFF` directory (`manager.jordan` manager, `support.sam` support); `MockWorld.staff` |
+| `kylie-test-bed-upload/enforce.py` | Kylie/Pravin | `decide()` calls the engine and puts facts into `request_context`. It returns facts, status, sources and the review flag, and gives plain block messages. `record_result` stamps the store's approval records with Dogwood's clock. New `find_form()` |
+| `kylie-test-bed-upload/agent.py` | Kylie | Records `facts`, `claim_ignored` and `needs_review` events. Gives the user's task to the engine as untrusted free text |
+| `kylie-test-bed-upload/run_task.py`, `score_actions.py` | Kylie/Pravin | `--form` (default: `updated_form.json` next to the rule). The scorer builds store records from each case, scores `expect_status`, and counts wrong allows and wrong blocks |
+| `kylie-test-bed-upload/label_failures.py` | Kylie | Oracle understands the facts rule. Tasks it does not model use the expected result recorded in the run |
+| `run_pipeline.py` | Pravin | Hashes `context_engine.py` with the other code |
+
+Hand-written rules in `kylie-test-bed-upload/rules/` have no form beside them, so the engine attaches nothing and their decisions are unchanged (rescored: 17/17, 17/17, 20/20).
