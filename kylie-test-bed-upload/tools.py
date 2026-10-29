@@ -42,6 +42,13 @@ class ToolError(Exception):
 
 APPROVAL_MODES = ("yes", "no", "different")
 
+# Staff directory: who can sign off on what. The context engine reads approver roles from here;
+# an approver not listed has no known role.
+STAFF = {
+    "manager.jordan": {"name": "Jordan Park", "role": "manager"},
+    "support.sam": {"name": "Sam Rivera", "role": "support"},
+}
+
 
 class MockWorld:
     def __init__(self, approval="yes", different_amount=None):
@@ -51,6 +58,7 @@ class MockWorld:
         self.approval = approval
         self.different_amount = different_amount
         self.approvals = []   # every answer the manager gave, so checks can see it
+        self.staff = STAFF
         self.orders = {
             "A100": {"customer": "Dana Ortiz", "item": "blender", "total": 40, "status": "delivered, damaged"},
             "A200": {"customer": "Sam Lee", "item": "office chair", "total": 320, "status": "delivered"},
