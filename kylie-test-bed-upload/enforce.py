@@ -78,14 +78,21 @@ def find_form(rule_path, form_path=None):
     return json.loads(path.read_text(encoding="utf-8")), path
 
 
-def block_message(action, input_args, facts_status):
+def block_message(action, input_args, ctx):
     """Plain words for the agent when Dogwood blocks, based on what the engine found."""
+    facts_status = ctx["status"]
     if action != "IssueRefund":
         return ""
     if facts_status in ("missing", "expired"):
         return f"No valid approval on file for order {input_args['order_id']}; request approval first."
     if facts_status == "conflict":
         return "Conflicting approvals on file; a person must review. Do not retry."
+    if facts_status == "ok":
+        # State what is on file; Dogwood's rule decides what fits it.
+        d = ctx["details"]
+        return (f"The approval on file for order {input_args['order_id']} is for "
+                f"{ctx['facts'].get('approved_amount')} dollars, by {d.get('approver')} "
+                f"({d.get('approver_role', 'no known role')}); this refund does not fit it.")
     return ""
 
 
@@ -198,11 +205,9 @@ class DogwoodGate:
         names = [self.rule_name(i) for i in rules]
         if decision == "DENY" and not names and not note:
             needed = self.permits.get(action, [])
-            note = block_message(action, input_args, ctx["status"]) or "no permit rule matched (deny by default)"
+            note = block_message(action, input_args, ctx) or "no permit rule matched (deny by default)"
             if needed and not ctx["status"]:
                 note += "; this action is only allowed by: " + ", ".join(needed)
-            elif ctx["status"] == "ok":
-                note += f"; facts on file: {ctx['reason']}"
         return {
             "decision": decision,
             "rules": names,
