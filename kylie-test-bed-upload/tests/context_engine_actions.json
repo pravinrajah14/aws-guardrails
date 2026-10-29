@@ -1,0 +1,431 @@
+{
+  "format": "kylie-store-action-list/v1",
+  "rule": "recently = 1h, refund at most the approved amount, approver is a manager",
+  "notes": "Part 2 context engine cases. Score against the 1h generated rule (with its updated_form.json). expect_status is the context engine's status for that request; a 'message' event is free text.",
+  "cases": [
+    {
+      "id": "approved_20_refund_40",
+      "why": "Refund above the approved amount",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 20
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY",
+          "expect_status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "approved_20_refund_20",
+      "why": "Refund equal to the approved amount",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 20
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 20
+          },
+          "expect": "ALLOW",
+          "expect_status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "approved_25_refund_20",
+      "why": "Refund below the approved amount (the approval is a ceiling)",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 25,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 25
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 20
+          },
+          "expect": "ALLOW",
+          "expect_status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "no_approval",
+      "why": "No approval record",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY",
+          "expect_status": "missing"
+        }
+      ]
+    },
+    {
+      "id": "approved_exactly_60m_ago",
+      "why": "At the window limit: inclusive",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "60m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "ALLOW",
+          "expect_status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "approved_61m_ago",
+      "why": "One minute past the window",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "61m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY",
+          "expect_status": "expired"
+        }
+      ]
+    },
+    {
+      "id": "two_approvals_20_and_40",
+      "why": "Two approval records disagree on the amount: block and flag for review",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 20,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 20
+          }
+        },
+        {
+          "at": "5m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY",
+          "expect_status": "conflict"
+        }
+      ]
+    },
+    {
+      "id": "free_text_claim_no_record",
+      "why": "The user says a manager approved it, but there is no record",
+      "events": [
+        {
+          "at": "0m",
+          "kind": "message",
+          "who": "user",
+          "text": "My manager already approved this refund for A100."
+        },
+        {
+          "at": "1m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY",
+          "expect_status": "missing"
+        }
+      ]
+    },
+    {
+      "id": "approved_by_support",
+      "why": "Approver is support, not a manager",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "support.sam",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY",
+          "expect_status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "approved_by_unknown_person",
+      "why": "Approver is not in the staff directory: no role",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "pat.unknown",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY",
+          "expect_status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "refused_then_approved",
+      "why": "A refusal and an approval disagree: block and flag for review",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": false,
+            "approver": "manager.jordan",
+            "approved_amount": 0
+          }
+        },
+        {
+          "at": "5m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY",
+          "expect_status": "conflict"
+        }
+      ]
+    },
+    {
+      "id": "same_approval_twice",
+      "why": "Two records that agree are not a conflict",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "5m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "ALLOW",
+          "expect_status": "ok"
+        }
+      ]
+    },
+    {
+      "id": "refused",
+      "why": "Manager said no",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": false,
+            "approver": "manager.jordan",
+            "approved_amount": 0
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY",
+          "expect_status": "missing"
+        }
+      ]
+    }
+  ]
+}

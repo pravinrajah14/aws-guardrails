@@ -53,7 +53,7 @@ def case_lines(gate, case):
                 scored.append({"ts": ts, "event": i, "call": f"{ev['tool']}({args})", "expect": ev["expect"].upper(),
                                "facts_status": ctx["status"], "facts_reason": ctx["reason"],
                                "facts_sources": ctx["sources"], "needs_review": ctx["review"],
-                               "ignored_claims": ctx["ignored_claims"]})
+                               "ignored_claims": ctx["ignored_claims"], "expect_status": ev.get("expect_status")})
         else:
             lines.append(gate.event_line(ts, action, kind, args, output=ev.get("output"), request_id=rid))
             if action == "RequestApproval" and kind == "response":
@@ -101,19 +101,24 @@ def main():
     right = sum(r["correct"] for r in rows)
     wrong_allows = sum(r["wrong"] == "wrong allow" for r in rows)
     wrong_blocks = sum(r["wrong"] == "wrong block" for r in rows)
+    status_wrong = [r for r in rows if r["expect_status"] and r["expect_status"] != r["facts_status"]]
     out = output_root or Path("results")
     out.mkdir(parents=True, exist_ok=True)
     (out / f"rule_scorecard_{stamp}.json").write_text(
         json.dumps({"rules": args.rules, "actions": args.actions, "form": str(form_path) if form_path else None,
                     "right": right, "total": len(rows), "wrong_allows": wrong_allows, "wrong_blocks": wrong_blocks,
+                    "status_checked": sum(bool(r["expect_status"]) for r in rows), "status_wrong": len(status_wrong),
                     "decisions": rows}, indent=2))
     md = [f"# Rule scorecard, no agent ({stamp})", "",
           f"- Rule file: `{args.rules}`  |  Action lists: `{args.actions}`  |  Rule form: `{form_path or 'none'}`",
           f"- **{right} of {len(rows)} decisions correct.** Any wrong decision is the rule's fault.",
-          f"- Wrong allows (unsafe): {wrong_allows}  |  Wrong blocks (annoying): {wrong_blocks}", "",
+          f"- Wrong allows (unsafe): {wrong_allows}  |  Wrong blocks (annoying): {wrong_blocks}"
+          + (f"  |  Engine status wrong: {len(status_wrong)}" if any(r["expect_status"] for r in rows) else ""), "",
           "| Case | Call | Expected | Got | Rule(s) | Facts | Correct |", "|---|---|---|---|---|---|---|"]
     for r in rows:
         facts = f"{r['facts_status']}" + (" (review)" if r["needs_review"] else "") if r["facts_status"] else "-"
+        if r["expect_status"] and r["expect_status"] != r["facts_status"]:
+            facts += f" **(expected {r['expect_status']})**"
         md.append(f"| {r['case']} | `{r['call']}` | {r['expect']} | {r['got']} | {r['rules'] or '-'} | {facts} | "
                   f"{'yes' if r['correct'] else '**NO** (' + r['wrong'] + ')'} |")
     (out / f"rule_scorecard_{stamp}.md").write_text("\n".join(md) + "\n", encoding="utf-8")
