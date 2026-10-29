@@ -144,6 +144,22 @@ def permits(form, h):
     return gated
 
 
+def time_only(form_a, form_b, h):
+    """When the two forms differ only in their window, the question should only vary time. Every
+    other field is held to the intended case: the earlier approval was for the amount asked, and
+    the request is for exactly that approved amount (at_most and spent_so_far then play no part)."""
+    rest = lambda f: {k: v for k, v in f["requires"].items() if k != "within"}
+    if rest(form_a) != rest(form_b) or form_a.get("only_when") != form_b.get("only_when"):
+        return []
+    cs = []
+    for ev in h.events:
+        for current, fact in form_a["requires"].get("at_most", {}).items():
+            cs.append(h.request[current] == ev["output"][fact])
+            if current in ev["input"]:
+                cs.append(ev["input"][current] == ev["output"][fact])
+    return cs
+
+
 def prefer_realistic(opt, h, pool):
     for ev in h.events:
         for part in ("input", "output"):
@@ -167,6 +183,7 @@ def solve(form_a, form_b, fields, pool):
             opt = Optimize()
             opt.add(*h.shape())
             opt.add(a != b)
+            opt.add(*time_only(form_a, form_b, h))
             for ev in h.events:
                 opt.add(h.gap(ev) % grain == 0)
             prefer_realistic(opt, h, pool)
@@ -183,6 +200,7 @@ def disagreement_range(form_a, form_b, fields):
         opt = Optimize()
         opt.add(*h.shape())
         opt.add(permits(form_a, h) != permits(form_b, h))
+        opt.add(*time_only(form_a, form_b, h))
         g = h.gap(h.events[0])
         (opt.minimize if direction == "min" else opt.maximize)(g)
         if opt.check() != sat:

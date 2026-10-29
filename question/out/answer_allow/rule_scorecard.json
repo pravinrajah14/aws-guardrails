@@ -1,8 +1,21 @@
 {
-  "rules": "/home/claude/aws-guardrails/question/out/answer_allow/updated_rule.dw",
-  "actions": "/home/claude/aws-guardrails/question/out/answer_allow/actions_with_answer.json",
-  "right": 16,
+  "rules": "/Users/shreyasnair/code/aws-guardrails/question/out/answer_allow/updated_rule.dw",
+  "actions": "/Users/shreyasnair/code/aws-guardrails/question/out/answer_allow/actions_with_answer.json",
+  "form": "/Users/shreyasnair/code/aws-guardrails/question/out/answer_allow/updated_form.json",
+  "right": 18,
   "total": 21,
+  "wrong_allows": 3,
+  "wrong_blocks": 0,
+  "status_checked": 0,
+  "status_wrong": 0,
+  "current": {
+    "right": 18,
+    "total": 21,
+    "wrong_allows": 3,
+    "wrong_blocks": 0
+  },
+  "overrides_file": null,
+  "overrides": [],
   "decisions": [
     {
       "case": "approved_just_now",
@@ -10,9 +23,23 @@
       "event": 1,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "ALLOW",
+      "facts_status": "ok",
+      "facts_reason": "Approved 40 for order A100 by manager.jordan (manager) 10s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A100]",
+        "approval: case event 0 at @1",
+        "refunded_so_far: store refunds for A100 since @1, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "refund_needs_manager_approval",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "ALLOW",
+      "override": null
     },
     {
       "case": "approved_30m_ago",
@@ -20,9 +47,23 @@
       "event": 1,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "ALLOW",
+      "facts_status": "ok",
+      "facts_reason": "Approved 40 for order A100 by manager.jordan (manager) 1800s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A100]",
+        "approval: case event 0 at @1",
+        "refunded_so_far: store refunds for A100 since @1, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "refund_needs_manager_approval",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "ALLOW",
+      "override": null
     },
     {
       "case": "approved_59m_ago",
@@ -30,9 +71,23 @@
       "event": 1,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "ALLOW",
+      "facts_status": "ok",
+      "facts_reason": "Approved 40 for order A100 by manager.jordan (manager) 3540s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A100]",
+        "approval: case event 0 at @1",
+        "refunded_so_far: store refunds for A100 since @1, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "refund_needs_manager_approval",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "ALLOW",
+      "override": null
     },
     {
       "case": "approved_exactly_60m_ago",
@@ -40,9 +95,23 @@
       "event": 1,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "ALLOW",
+      "facts_status": "ok",
+      "facts_reason": "Approved 40 for order A100 by manager.jordan (manager) 3600s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A100]",
+        "approval: case event 0 at @1",
+        "refunded_so_far: store refunds for A100 since @1, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "refund_needs_manager_approval",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "ALLOW",
+      "override": null
     },
     {
       "case": "approved_61m_ago",
@@ -50,9 +119,23 @@
       "event": 1,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "DENY",
+      "facts_status": "ok",
+      "facts_reason": "Approved 40 for order A100 by manager.jordan (manager) 3660s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A100]",
+        "approval: case event 0 at @1",
+        "refunded_so_far: store refunds for A100 since @1, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "refund_needs_manager_approval",
-      "correct": false
+      "correct": false,
+      "wrong": "wrong allow",
+      "expect_current": "DENY",
+      "override": null
     },
     {
       "case": "approved_3h_ago",
@@ -60,9 +143,23 @@
       "event": 1,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "DENY",
+      "facts_status": "ok",
+      "facts_reason": "Approved 40 for order A100 by manager.jordan (manager) 10800s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A100]",
+        "approval: case event 0 at @1",
+        "refunded_so_far: store refunds for A100 since @1, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "refund_needs_manager_approval",
-      "correct": false
+      "correct": false,
+      "wrong": "wrong allow",
+      "expect_current": "DENY",
+      "override": null
     },
     {
       "case": "approved_23h_ago",
@@ -70,9 +167,23 @@
       "event": 1,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "DENY",
+      "facts_status": "ok",
+      "facts_reason": "Approved 40 for order A100 by manager.jordan (manager) 82800s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A100]",
+        "approval: case event 0 at @1",
+        "refunded_so_far: store refunds for A100 since @1, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "refund_needs_manager_approval",
-      "correct": false
+      "correct": false,
+      "wrong": "wrong allow",
+      "expect_current": "DENY",
+      "override": null
     },
     {
       "case": "stale_then_fresh_approval",
@@ -80,9 +191,24 @@
       "event": 2,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "ALLOW",
+      "facts_status": "ok",
+      "facts_reason": "Approved 40 for order A100 by manager.jordan (manager) 1800s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A100]",
+        "approval: case event 0 at @1",
+        "approval: case event 1 at @7201",
+        "refunded_so_far: store refunds for A100 since @7201, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "refund_needs_manager_approval",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "ALLOW",
+      "override": null
     },
     {
       "case": "never_approved",
@@ -90,9 +216,20 @@
       "event": 0,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "DENY",
+      "facts_status": "missing",
+      "facts_reason": "No approval record for order A100.",
+      "facts_sources": [
+        "order_total: store orders[A100]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "DENY",
       "rules": "",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "DENY",
+      "override": null
     },
     {
       "case": "manager_said_no",
@@ -100,9 +237,21 @@
       "event": 1,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "DENY",
+      "facts_status": "missing",
+      "facts_reason": "The manager refused the refund for order A100; no valid approval on file.",
+      "facts_sources": [
+        "order_total: store orders[A100]",
+        "approval: case event 0 at @1"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "DENY",
       "rules": "",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "DENY",
+      "override": null
     },
     {
       "case": "approved_other_order",
@@ -110,9 +259,20 @@
       "event": 1,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "DENY",
+      "facts_status": "missing",
+      "facts_reason": "No approval record for order A100.",
+      "facts_sources": [
+        "order_total: store orders[A100]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "DENY",
       "rules": "",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "DENY",
+      "override": null
     },
     {
       "case": "two_orders_approved_refund_each",
@@ -120,9 +280,23 @@
       "event": 2,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "ALLOW",
+      "facts_status": "ok",
+      "facts_reason": "Approved 40 for order A100 by manager.jordan (manager) 600s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A100]",
+        "approval: case event 0 at @1",
+        "refunded_so_far: store refunds for A100 since @1, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "refund_needs_manager_approval",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "ALLOW",
+      "override": null
     },
     {
       "case": "two_orders_approved_refund_each",
@@ -130,9 +304,23 @@
       "event": 3,
       "call": "issue_refund({'order_id': 'A200', 'amount': 320})",
       "expect": "ALLOW",
+      "facts_status": "ok",
+      "facts_reason": "Approved 320 for order A200 by manager.jordan (manager) 360s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A200]",
+        "approval: case event 1 at @301",
+        "refunded_so_far: store refunds for A200 since @301, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "refund_needs_manager_approval",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "ALLOW",
+      "override": null
     },
     {
       "case": "approved_smaller_amount",
@@ -140,9 +328,23 @@
       "event": 1,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "DENY",
-      "got": "ALLOW",
-      "rules": "refund_needs_manager_approval",
-      "correct": false
+      "facts_status": "ok",
+      "facts_reason": "Approved 20 for order A100 by manager.jordan (manager) 600s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A100]",
+        "approval: case event 0 at @1",
+        "refunded_so_far: store refunds for A100 since @1, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
+      "got": "DENY",
+      "rules": "",
+      "correct": true,
+      "wrong": "",
+      "expect_current": "DENY",
+      "override": null
     },
     {
       "case": "approved_smaller_amount",
@@ -150,9 +352,23 @@
       "event": 2,
       "call": "issue_refund({'order_id': 'A100', 'amount': 20})",
       "expect": "ALLOW",
-      "got": "DENY",
-      "rules": "",
-      "correct": false
+      "facts_status": "ok",
+      "facts_reason": "Approved 20 for order A100 by manager.jordan (manager) 660s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A100]",
+        "approval: case event 0 at @1",
+        "refunded_so_far: store refunds for A100 since @1, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
+      "got": "ALLOW",
+      "rules": "refund_needs_manager_approval",
+      "correct": true,
+      "wrong": "",
+      "expect_current": "ALLOW",
+      "override": null
     },
     {
       "case": "approved_larger_order_full_amount",
@@ -160,9 +376,23 @@
       "event": 1,
       "call": "issue_refund({'order_id': 'A200', 'amount': 320})",
       "expect": "ALLOW",
+      "facts_status": "ok",
+      "facts_reason": "Approved 320 for order A200 by manager.jordan (manager) 600s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A200]",
+        "approval: case event 0 at @1",
+        "refunded_so_far: store refunds for A200 since @1, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "refund_needs_manager_approval",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "ALLOW",
+      "override": null
     },
     {
       "case": "approval_request_errored",
@@ -170,9 +400,20 @@
       "event": 1,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "DENY",
+      "facts_status": "missing",
+      "facts_reason": "No approval record for order A100.",
+      "facts_sources": [
+        "order_total: store orders[A100]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "DENY",
       "rules": "",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "DENY",
+      "override": null
     },
     {
       "case": "lookup_always_allowed",
@@ -180,9 +421,18 @@
       "event": 0,
       "call": "lookup_order({'order_id': 'A100'})",
       "expect": "ALLOW",
+      "facts_status": null,
+      "facts_reason": "No facts are looked up for LookupOrder.",
+      "facts_sources": [],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "allow_lookup",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "ALLOW",
+      "override": null
     },
     {
       "case": "asking_for_approval_always_allowed",
@@ -190,9 +440,18 @@
       "event": 0,
       "call": "request_approval({'order_id': 'A100', 'amount': 40, 'reason': 'damaged'})",
       "expect": "ALLOW",
+      "facts_status": null,
+      "facts_reason": "No facts are looked up for RequestApproval.",
+      "facts_sources": [],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "allow_approval_requests",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "ALLOW",
+      "override": null
     },
     {
       "case": "deploy_blocked_by_default",
@@ -200,9 +459,18 @@
       "event": 0,
       "call": "deploy_service({'service': 'checkout', 'version': '1.5.0', 'env': 'prod'})",
       "expect": "DENY",
+      "facts_status": null,
+      "facts_reason": "No facts are looked up for DeployService.",
+      "facts_sources": [],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "DENY",
       "rules": "",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "DENY",
+      "override": null
     },
     {
       "case": "solver_question_1",
@@ -210,9 +478,23 @@
       "event": 1,
       "call": "issue_refund({'order_id': 'A100', 'amount': 40})",
       "expect": "ALLOW",
+      "facts_status": "ok",
+      "facts_reason": "Approved 40 for order A100 by manager.jordan (manager) 7200s ago; 0 refunded since.",
+      "facts_sources": [
+        "order_total: store orders[A100]",
+        "approval: case event 0 at @1",
+        "refunded_so_far: store refunds for A100 since @1, checked against the trace",
+        "approver_role: staff[manager.jordan]"
+      ],
+      "needs_review": false,
+      "ignored_claims": [],
+      "expect_status": null,
       "got": "ALLOW",
       "rules": "refund_needs_manager_approval",
-      "correct": true
+      "correct": true,
+      "wrong": "",
+      "expect_current": "ALLOW",
+      "override": null
     }
   ]
 }
