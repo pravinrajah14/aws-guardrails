@@ -25,3 +25,9 @@ when {
     context.facts has refunded_on_order &&
     context.input.amount + context.facts.refunded_on_order > context.facts.order_total
 };
+
+// Store-wide: when the store's records disagree (approvals, or refunds against the trace), the context
+// engine attaches status "conflict" and no amounts. Block the refund under any rule file; a person reviews.
+@id("refund_blocked_on_conflict")
+forbid ( principal, action == Shop::Action::"IssueRefund", resource )
+when { context has facts && context.facts.status == "conflict" };
