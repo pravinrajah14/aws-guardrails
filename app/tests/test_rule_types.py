@@ -80,6 +80,6 @@ def test_durations(text, seconds, win):
     assert d["seconds"] == seconds and window(d["seconds"]) == win
 
 
-@pytest.mark.parametrize("text", ["recently", "per hour", "6pm on Fridays", "a manager", "3 months"])
+@pytest.mark.parametrize("text", ["recently", "per hour", "6pm on Fridays", "a manager", "3 months", "search and web", "a d"])
 def test_not_durations(text):
     assert find_durations(text) == []

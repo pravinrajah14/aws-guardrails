@@ -17,9 +17,11 @@ AMOUNT = re.compile(
 _WORDS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
           "seven": 7, "eight": 8, "nine": 9, "ten": 10, "twelve": 12}
 _UNITS = [("days?|d", 86400), ("hours?|hrs?|h", 3600), ("minutes?|mins?|m", 60), ("seconds?|secs?|s", 1)]
+_ALL_UNITS = "|".join(u for u, _ in _UNITS)
+_WORD_UNITS = "|".join(u.rsplit("|", 1)[0] for u, _ in _UNITS)  # no one-letter units after a word: "an d" is not a day
 DURATION = re.compile(
-    r"(?<![\w.])(\d+(?:\.\d+)?|" + "|".join(_WORDS) + r")\s*-?\s*("
-    + "|".join(u for u, _ in _UNITS) + r")\b",
+    rf"(?<![\w.])(?:(\d+(?:\.\d+)?)\s*-?\s*({_ALL_UNITS})"
+    rf"|({'|'.join(_WORDS)})[\s-]+({_WORD_UNITS}))\b",
     re.I,
 )
 
@@ -38,7 +40,7 @@ def find_durations(text):
     """Every duration in text: [{text, start, end, seconds}]. Fractions that are not whole seconds are skipped."""
     out = []
     for m in DURATION.finditer(text):
-        n, unit = m.group(1).lower(), m.group(2).lower()
+        n, unit = (m.group(1) or m.group(3)).lower(), (m.group(2) or m.group(4)).lower()
         count = Decimal(_WORDS[n]) if n in _WORDS else Decimal(n)
         size = next(s for u, s in _UNITS if re.fullmatch(u, unit))
         seconds = count * size
