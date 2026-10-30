@@ -13,3 +13,15 @@ permit ( principal, action == Shop::Action::"RunTests", resource );
 
 @id("allow_rollback")
 permit ( principal, action == Shop::Action::"Rollback", resource );
+
+// Store-wide invariant, whatever rule file is loaded: never refund more than the order total in all,
+// counting every completed refund on the order under any approval. The context engine attaches these
+// facts on every refund request whose order is in the store; with no facts this rule does not apply.
+@id("refund_within_order_total")
+forbid ( principal, action == Shop::Action::"IssueRefund", resource )
+when {
+    context has facts &&
+    context.facts has order_total &&
+    context.facts has refunded_on_order &&
+    context.input.amount + context.facts.refunded_on_order > context.facts.order_total
+};
