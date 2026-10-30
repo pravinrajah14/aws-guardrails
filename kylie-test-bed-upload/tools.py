@@ -10,7 +10,7 @@ TOOL_SPECS = {
     },
     "request_approval": {
         "action": "RequestApproval",
-        "description": "Ask a human manager to approve a refund for an order. Returns approved (true or false) and approved_amount, the amount the manager actually approved.",
+        "description": "Ask a human manager to approve a refund for an order. Returns approved (true or false) and approved_amount, the amount the manager actually approved. A refusal may include a reason.",
         "args": {"order_id": "str", "amount": "int", "reason": "str"},
     },
     "issue_refund": {
@@ -84,13 +84,19 @@ class MockWorld:
         order = self.orders.get(order_id)
         if order is None:
             raise ToolError(f"no order with id {order_id}")
-        if self.approval == "no" or not (0 < amount <= order["total"]):
+        # The manager sees every refund already made on the order and never approves past its total.
+        refunded = sum(r["amount"] for r in self.refunds if r["order_id"] == order_id)
+        granted = amount
+        if self.approval == "different":
+            granted = self.different_amount if self.different_amount is not None else amount // 2
+        if self.approval == "no" or amount <= 0:
             answer = {"approved": False, "approver": "manager.jordan", "approved_amount": 0}
-        elif self.approval == "different":
-            other = self.different_amount if self.different_amount is not None else amount // 2
-            answer = {"approved": True, "approver": "manager.jordan", "approved_amount": other}
+        elif max(amount, granted) + refunded > order["total"]:
+            answer = {"approved": False, "approver": "manager.jordan", "approved_amount": 0,
+                      "reason": f"order {order_id} totals {order['total']} and {refunded} was already refunded, "
+                                f"so at most {order['total'] - refunded} more can be approved"}
         else:
-            answer = {"approved": True, "approver": "manager.jordan", "approved_amount": amount}
+            answer = {"approved": True, "approver": "manager.jordan", "approved_amount": granted}
         self.approvals.append({"order_id": order_id, "asked": amount, **answer})
         return answer
 

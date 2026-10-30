@@ -5,7 +5,7 @@ namespace Shop {
   type LookupOrderOutput = { total: Long, status: String };
 
   type RequestApprovalInput = { order_id: String, amount: Long, reason: String };
-  type RequestApprovalOutput = { approved: Bool, approver: String, approved_amount: Long };
+  type RequestApprovalOutput = { approved: Bool, approver: String, approved_amount: Long, reason?: String };
 
   type IssueRefundInput = { order_id: String, amount: Long };
   type IssueRefundOutput = { refund_id: String, amount: Long };
