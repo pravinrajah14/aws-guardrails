@@ -1,0 +1,2482 @@
+[
+ {
+  "sentence": "No refunds over $5,000.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "No refunds over $5,000.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5,000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "No refunds over $5,000.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5,000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "No refunds over $5,000",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "No refunds over $5,000",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "No refunds over $5,000",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "no refunds over $5,000.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "no refunds over $5,000.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "no refunds over $5,000.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "Refunds over $5,000 are not allowed.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "Refunds over $5,000 are not allowed.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "Refunds over $5,000 are not allowed.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "Only refund if a manager approved it recently.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    },
+    {
+     "slot": "window",
+     "span": "recently",
+     "value": "recently"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Only refund if a manager approved it recently.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    },
+    {
+     "slot": "window",
+     "span": "recently",
+     "value": "recently"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Only refund if a manager approved it recently.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    },
+    {
+     "slot": "window",
+     "span": "recently",
+     "value": "recently"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Only refund if a manager approved it recently",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    },
+    {
+     "slot": "window",
+     "span": "recently",
+     "value": "recently"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Only refund if a manager approved it recently",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    },
+    {
+     "slot": "window",
+     "span": "recently",
+     "value": "recently"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Only refund if a manager approved it recently",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    },
+    {
+     "slot": "window",
+     "span": "recently",
+     "value": "recently"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "only refund if a manager approved it recently.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    },
+    {
+     "slot": "window",
+     "span": "recently",
+     "value": "recently"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "only refund if a manager approved it recently.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    },
+    {
+     "slot": "window",
+     "span": "recently",
+     "value": "recently"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "only refund if a manager approved it recently.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    },
+    {
+     "slot": "window",
+     "span": "recently",
+     "value": "recently"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Don't refund unless a manager recently approved it.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "recently",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Don't refund unless a manager recently approved it.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "recently",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Don't refund unless a manager recently approved it.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "recently",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "No production refunds over $500.50.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": [
+    {
+     "span": "production",
+     "field": "none"
+    }
+   ]
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "'production' limits the rule, but IssueRefund has no field it maps to; max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "No production refunds over $500.50.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": [
+    {
+     "span": "production",
+     "field": "none"
+    }
+   ]
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "'production' limits the rule, but IssueRefund has no field it maps to; max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "No production refunds over $500.50.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": [
+    {
+     "span": "production",
+     "field": "none"
+    }
+   ]
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "'production' limits the rule, but IssueRefund has no field it maps to; max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "No production refunds over $500.50",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": [
+    {
+     "span": "production",
+     "field": "none"
+    }
+   ]
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "'production' limits the rule, but IssueRefund has no field it maps to; max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "No production refunds over $500.50",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": [
+    {
+     "span": "production",
+     "field": "none"
+    }
+   ]
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "'production' limits the rule, but IssueRefund has no field it maps to; max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "No production refunds over $500.50",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": [
+    {
+     "span": "production",
+     "field": "none"
+    }
+   ]
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "'production' limits the rule, but IssueRefund has no field it maps to; max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "no production refunds over $500.50.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": [
+    {
+     "span": "no production",
+     "field": "env"
+    }
+   ]
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "'no production' limits the rule, but IssueRefund has no field it maps to; max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "no production refunds over $500.50.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": [
+    {
+     "span": "no production",
+     "field": "env"
+    }
+   ]
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "'no production' limits the rule, but IssueRefund has no field it maps to; max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "no production refunds over $500.50.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": [
+    {
+     "span": "no production",
+     "field": "env"
+    }
+   ]
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "'no production' limits the rule, but IssueRefund has no field it maps to; max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "Production refunds over $500.50 are not allowed.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "Production refunds over $500.50 are not allowed.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "Production refunds over $500.50 are not allowed.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "Refund up to $40 for order A100, subject to approval.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order A100",
+     "value": "A100"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "subject to approval",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'subject to approval' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Refund up to $40 for order A100, subject to approval.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order A100",
+     "value": "A100"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "subject to approval",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'subject to approval' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Refund up to $40 for order A100, subject to approval.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order A100",
+     "value": "A100"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "subject to approval",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'subject to approval' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Refund up to $40 for order A100, subject to approval",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order A100",
+     "value": "A100"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "subject to approval",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'subject to approval' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Refund up to $40 for order A100, subject to approval",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order A100",
+     "value": "A100"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "subject to approval",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'subject to approval' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Refund up to $40 for order A100, subject to approval",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order A100",
+     "value": "A100"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "subject to approval",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'subject to approval' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "refund up to $40 for order a100, subject to approval.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order a100",
+     "value": "a100"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "subject to approval",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'subject to approval' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "refund up to $40 for order a100, subject to approval.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order a100",
+     "value": "a100"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "subject to approval",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'subject to approval' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "refund up to $40 for order a100, subject to approval.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order a100",
+     "value": "a100"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "subject to approval",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'subject to approval' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Refunds for order A100 are capped at $40 and need approval.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order A100",
+     "value": "A100"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "window is required but the sentence does not state it"
+ },
+ {
+  "sentence": "Refunds for order A100 are capped at $40 and need approval.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order A100",
+     "value": "A100"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "window is required but the sentence does not state it"
+ },
+ {
+  "sentence": "Refunds for order A100 are capped at $40 and need approval.",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order A100",
+     "value": "A100"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "window is required but the sentence does not state it"
+ },
+ {
+  "sentence": "Don't let the agent read customers' SSNs",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule does not fit any of the supported rule types, as it does not involve deploying services, issuing refunds, requesting approvals, running tests, or deploying services.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule does not fit any of the supported rule types, as it does not involve deploying services, issuing refunds, requesting approvals, running tests, or deploying services. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Don't let the agent read customers' SSNs",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule does not fit any of the supported rule types, as it does not involve deploying services, issuing refunds, requesting approvals, running tests, or deploying services.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule does not fit any of the supported rule types, as it does not involve deploying services, issuing refunds, requesting approvals, running tests, or deploying services. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Don't let the agent read customers' SSNs",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule does not fit any of the supported rule types, as it does not involve deploying services, issuing refunds, requesting approvals, running tests, or deploying services.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule does not fit any of the supported rule types, as it does not involve deploying services, issuing refunds, requesting approvals, running tests, or deploying services. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Block deploys after 6pm on Fridays",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule specifies a time restriction for deploys, which is not covered by any of the supported rule types.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule specifies a time restriction for deploys, which is not covered by any of the supported rule types. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Block deploys after 6pm on Fridays",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule specifies a time restriction for deploys, which is not covered by any of the supported rule types.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule specifies a time restriction for deploys, which is not covered by any of the supported rule types. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Block deploys after 6pm on Fridays",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule specifies a time restriction for deploys, which is not covered by any of the supported rule types.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule specifies a time restriction for deploys, which is not covered by any of the supported rule types. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Only email customers who opted in",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This limits email actions, which none of the supported rule types cover.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This limits email actions, which none of the supported rule types cover. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Only email customers who opted in",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This limits email actions, which none of the supported rule types cover.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This limits email actions, which none of the supported rule types cover. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Only email customers who opted in",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This limits email actions, which none of the supported rule types cover.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This limits email actions, which none of the supported rule types cover. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Never copy private data to a public repo",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule does not match any of the supported rule types, as it does not involve deploying services, issuing refunds, looking up orders, requesting approvals, running tests, or rolling back deployments.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule does not match any of the supported rule types, as it does not involve deploying services, issuing refunds, looking up orders, requesting approvals, running tests, or rolling back deployments. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Never copy private data to a public repo",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule does not match any of the supported rule types, as it does not involve deploying services, issuing refunds, looking up orders, requesting approvals, running tests, or rolling back deployments.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule does not match any of the supported rule types, as it does not involve deploying services, issuing refunds, looking up orders, requesting approvals, running tests, or rolling back deployments. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Never copy private data to a public repo",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule does not match any of the supported rule types, as it does not involve deploying services, issuing refunds, looking up orders, requesting approvals, running tests, or rolling back deployments.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule does not match any of the supported rule types, as it does not involve deploying services, issuing refunds, looking up orders, requesting approvals, running tests, or rolling back deployments. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "At most 5 refunds per hour",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule limits the number of refunds per hour, which does not match any of the supported rule types.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule limits the number of refunds per hour, which does not match any of the supported rule types. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "At most 5 refunds per hour",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule limits the number of refunds per hour, which does not match any of the supported rule types.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule limits the number of refunds per hour, which does not match any of the supported rule types. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "At most 5 refunds per hour",
+  "temperature": 0,
+  "seed": 0,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule limits the number of refunds per hour, which does not match any of the supported rule types.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule limits the number of refunds per hour, which does not match any of the supported rule types. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "No refunds over $5,000.",
+  "temperature": 0.3,
+  "seed": 1,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "No refunds over $5,000.",
+  "temperature": 0.3,
+  "seed": 2,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "No refunds over $5,000.",
+  "temperature": 0.3,
+  "seed": 3,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$5,000",
+     "value": "$5,000"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": 5000
+   },
+   "verdict": "ok_so_far"
+  },
+  "verdict_reason": "every required value is stated and can be represented"
+ },
+ {
+  "sentence": "Only refund if a manager approved it recently.",
+  "temperature": 0.3,
+  "seed": 1,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "recently",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Only refund if a manager approved it recently.",
+  "temperature": 0.3,
+  "seed": 2,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    },
+    {
+     "slot": "window",
+     "span": "recently",
+     "value": "recently"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Only refund if a manager approved it recently.",
+  "temperature": 0.3,
+  "seed": 3,
+  "answer": {
+   "rule_type": "approval_required",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "approver_role",
+     "span": "a manager",
+     "value": "manager"
+    },
+    {
+     "slot": "window",
+     "span": "recently",
+     "value": "recently"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "approval_required",
+   "values": {
+    "approver_role": "manager"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'recently' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "No production refunds over $500.50.",
+  "temperature": 0.3,
+  "seed": 1,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": [
+    {
+     "span": "production",
+     "field": "env"
+    }
+   ]
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "'production' limits the rule, but IssueRefund has no field it maps to; max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "No production refunds over $500.50.",
+  "temperature": 0.3,
+  "seed": 2,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": [
+    {
+     "span": "production",
+     "field": "env"
+    }
+   ]
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "'production' limits the rule, but IssueRefund has no field it maps to; max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "No production refunds over $500.50.",
+  "temperature": 0.3,
+  "seed": 3,
+  "answer": {
+   "rule_type": "amount_cap",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$500.50",
+     "value": "$500.50"
+    }
+   ],
+   "vague_terms": [],
+   "qualifiers": [
+    {
+     "span": "production",
+     "field": "none"
+    }
+   ]
+  },
+  "signature": {
+   "rule_type": "amount_cap",
+   "values": {
+    "max_amount": "500.50"
+   },
+   "verdict": "needs_review"
+  },
+  "verdict_reason": "'production' limits the rule, but IssueRefund has no field it maps to; max_amount is $500.50, but amounts are whole dollars; it will not be rounded"
+ },
+ {
+  "sentence": "Refund up to $40 for order A100, subject to approval.",
+  "temperature": 0.3,
+  "seed": 1,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order A100",
+     "value": "A100"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "subject to approval",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'subject to approval' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Refund up to $40 for order A100, subject to approval.",
+  "temperature": 0.3,
+  "seed": 2,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order A100",
+     "value": "A100"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "subject to approval",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'subject to approval' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Refund up to $40 for order A100, subject to approval.",
+  "temperature": 0.3,
+  "seed": 3,
+  "answer": {
+   "rule_type": "capped_with_approval",
+   "action": "IssueRefund",
+   "unsupported_reason": "",
+   "slots": [
+    {
+     "slot": "max_amount",
+     "span": "$40",
+     "value": "$40"
+    },
+    {
+     "slot": "order_id",
+     "span": "order A100",
+     "value": "A100"
+    }
+   ],
+   "vague_terms": [
+    {
+     "span": "subject to approval",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": "capped_with_approval",
+   "values": {
+    "max_amount": 40,
+    "order_id": "a100"
+   },
+   "verdict": "needs_clarification"
+  },
+  "verdict_reason": "'subject to approval' is vague (it stands in for window)"
+ },
+ {
+  "sentence": "Don't let the agent read customers' SSNs",
+  "temperature": 0.3,
+  "seed": 1,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule does not fit any of the supported rule types, as it does not involve deploying services, issuing refunds, requesting approvals, running tests, deploying services, or rolling back deployments.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule does not fit any of the supported rule types, as it does not involve deploying services, issuing refunds, requesting approvals, running tests, deploying services, or rolling back deployments. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Don't let the agent read customers' SSNs",
+  "temperature": 0.3,
+  "seed": 2,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This limits reading SSNs, which none of the supported rule types cover.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This limits reading SSNs, which none of the supported rule types cover. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Don't let the agent read customers' SSNs",
+  "temperature": 0.3,
+  "seed": 3,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule does not fit any of the supported rule types, as it does not involve deploying services, issuing refunds, requesting approvals, running tests, deploying services, or looking up orders.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule does not fit any of the supported rule types, as it does not involve deploying services, issuing refunds, requesting approvals, running tests, deploying services, or looking up orders. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Block deploys after 6pm on Fridays",
+  "temperature": 0.3,
+  "seed": 1,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule does not fit any of the supported types as it does not guard a specific action, nor does it impose a condition on an action.",
+   "slots": [],
+   "vague_terms": [
+    {
+     "span": "6pm on Fridays",
+     "slot": "window"
+    }
+   ],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule does not fit any of the supported types as it does not guard a specific action, nor does it impose a condition on an action. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Block deploys after 6pm on Fridays",
+  "temperature": 0.3,
+  "seed": 2,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule specifies a time restriction for deploys, which is not covered by any of the supported rule types.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule specifies a time restriction for deploys, which is not covered by any of the supported rule types. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Block deploys after 6pm on Fridays",
+  "temperature": 0.3,
+  "seed": 3,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule specifies a time restriction for deploys, which is not covered by any of the supported rule types.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule specifies a time restriction for deploys, which is not covered by any of the supported rule types. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Only email customers who opted in",
+  "temperature": 0.3,
+  "seed": 1,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This limits email actions, which none of the supported rule types cover.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This limits email actions, which none of the supported rule types cover. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Only email customers who opted in",
+  "temperature": 0.3,
+  "seed": 2,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This limits email actions, which none of the supported rule types cover.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This limits email actions, which none of the supported rule types cover. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Only email customers who opted in",
+  "temperature": 0.3,
+  "seed": 3,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This limits email actions, which none of the supported rule types cover.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This limits email actions, which none of the supported rule types cover. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Never copy private data to a public repo",
+  "temperature": 0.3,
+  "seed": 1,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule does not match any of the supported rule types, as it does not involve deploying services, issuing refunds, looking up orders, requesting approvals, running tests, or rolling back deployments.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule does not match any of the supported rule types, as it does not involve deploying services, issuing refunds, looking up orders, requesting approvals, running tests, or rolling back deployments. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Never copy private data to a public repo",
+  "temperature": 0.3,
+  "seed": 2,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule does not match any of the supported rule types, as it does not guard a specific tool call.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule does not match any of the supported rule types, as it does not guard a specific tool call. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "Never copy private data to a public repo",
+  "temperature": 0.3,
+  "seed": 3,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule does not match any of the supported rule types, as it does not involve deploying services, issuing refunds, requesting approvals, looking up orders, running tests, or rolling back deployments.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule does not match any of the supported rule types, as it does not involve deploying services, issuing refunds, requesting approvals, looking up orders, running tests, or rolling back deployments. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "At most 5 refunds per hour",
+  "temperature": 0.3,
+  "seed": 1,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "The rule does not fit any of the supported types as it does not specify an action to guard, a monetary amount, a time window, or a service to deploy.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: The rule does not fit any of the supported types as it does not specify an action to guard, a monetary amount, a time window, or a service to deploy. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "At most 5 refunds per hour",
+  "temperature": 0.3,
+  "seed": 2,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This limits the number of refunds, which none of the supported rule types cover.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This limits the number of refunds, which none of the supported rule types cover. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ },
+ {
+  "sentence": "At most 5 refunds per hour",
+  "temperature": 0.3,
+  "seed": 3,
+  "answer": {
+   "rule_type": "unsupported",
+   "action": "none",
+   "unsupported_reason": "This rule limits the number of refunds, which does not match any of the supported rule types.",
+   "slots": [],
+   "vague_terms": [],
+   "qualifiers": []
+  },
+  "signature": {
+   "rule_type": null,
+   "values": {},
+   "verdict": "invalid"
+  },
+  "verdict_reason": "not a supported rule type: This rule limits the number of refunds, which does not match any of the supported rule types. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window)."
+ }
+]
