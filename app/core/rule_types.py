@@ -112,7 +112,7 @@ def slots_of(type_id):
 
 def refusal_text():
     return "We only support these rule types: " + "; ".join(
-        f"{t['id']} ({t['description']} e.g. \"{t['examples'][0]}\")" for t in RULE_TYPES)
+        f"{t['id']} ({t['description'].rstrip('.')})" for t in RULE_TYPES) + "."
 
 
 def fill(template, values):
