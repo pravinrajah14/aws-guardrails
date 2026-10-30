@@ -1,0 +1,138 @@
+{
+  "format": "kylie-store-action-list/v1",
+  "rule": "store-wide (policies/base.dw): a refund is blocked whenever the context engine reports a conflict",
+  "notes": "Part 2d conflict cases. Each refund would pass the hand-written rule (a matching approval is in the trace), so the base forbid refund_blocked_on_conflict is what decides. Score under the 1h generated rule (with its updated_form.json) and under rules/refund_recent_approval_1h.dw with --form set to that same form (without a form the engine cannot tell which approvals are current, so it cannot see approval conflicts). Every scored request should show facts conflict (review). Order A100 totals $40.",
+  "cases": [
+    {
+      "id": "store_has_refund_this_session_never_saw",
+      "why": "Conflicting refund records: the store has a $40 refund on A100 that is not in this session's trace",
+      "store_refunds": [
+        {
+          "order_id": "A100",
+          "refund_id": "R900",
+          "amount": 40,
+          "at": "5m"
+        }
+      ],
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY",
+          "expect_status": "conflict"
+        }
+      ]
+    },
+    {
+      "id": "two_fresh_approvals_20_and_40_refund_20",
+      "why": "Conflicting approvals: $20 and $40 inside the window; the refund matches one of them",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 20,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 20
+          }
+        },
+        {
+          "at": "5m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 20
+          },
+          "expect": "DENY",
+          "expect_status": "conflict"
+        }
+      ]
+    },
+    {
+      "id": "refused_then_approved_refund_40",
+      "why": "Conflicting approvals: a refusal and a $40 approval inside the window",
+      "events": [
+        {
+          "at": "0m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": false,
+            "approver": "manager.jordan",
+            "approved_amount": 0
+          }
+        },
+        {
+          "at": "5m",
+          "tool": "request_approval",
+          "kind": "response",
+          "input": {
+            "order_id": "A100",
+            "amount": 40,
+            "reason": "damaged on arrival"
+          },
+          "output": {
+            "approved": true,
+            "approver": "manager.jordan",
+            "approved_amount": 40
+          }
+        },
+        {
+          "at": "10m",
+          "tool": "issue_refund",
+          "input": {
+            "order_id": "A100",
+            "amount": 40
+          },
+          "expect": "DENY",
+          "expect_status": "conflict"
+        }
+      ]
+    }
+  ]
+}

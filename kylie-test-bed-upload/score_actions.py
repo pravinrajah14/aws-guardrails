@@ -29,9 +29,12 @@ def case_lines(gate, case):
     The store's records for the context engine come from the case itself: each request_approval
     response is an approval record, each issue_refund response a refund record, orders and staff
     are the store's defaults. An event with
-    kind "message" is free text (e.g. a claimed approval); it adds no trace line."""
+    kind "message" is free text (e.g. a claimed approval); it adds no trace line. A case's optional
+    "store_refunds" are refund records the store holds that this session never saw ({order_id,
+    refund_id, amount, at}); they add no trace line."""
     lines, scored, last_ts = [], [], -1
-    records = {"approvals": [], "refunds": [], "orders": MockWorld().orders, "staff": STAFF}
+    store_refunds = [{**r, "at": to_seconds(r["at"]) + 1} for r in case.get("store_refunds", [])]
+    records = {"approvals": [], "refunds": store_refunds, "orders": MockWorld().orders, "staff": STAFF}
     steps = []
     for i, ev in enumerate(case["events"]):
         ts = to_seconds(ev["at"]) + 1          # +1 so "0m" is a valid first timestamp
