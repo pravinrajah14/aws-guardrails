@@ -61,12 +61,13 @@ def run_one(task, args, run_number):
     rec.start_session(task["id"], task["prompt"], model.name, policy, SCHEMA)
     rec.log("store_setup", f"rules={args.rules} approval={approval}"
             + (f" different_amount={different}" if approval == "different" else "")
-            + f" prompt={args.prompt} repair={'off' if args.no_repair else 'on'} nudge={'off' if args.no_nudge else 'on'}",
+            + f" prompt={args.prompt} repair={'off' if args.no_repair else 'on'} nudge={'off' if args.no_nudge else 'on'}"
+            + f" claim_check={'off' if args.no_claim_check else 'on'}",
             rule_file=str(args.rules), base_file=str(args.base), approval=approval,
             different_amount=different, run=run_number,
             expect=task.get("expect_by_rule", {}).get(Path(args.rules).name, task["expect"]),
             prompt=args.prompt, repair=not args.no_repair, nudge=not args.no_nudge,
-            agent_sha256=file_hash("agent.py"))
+            claim_check=not args.no_claim_check, agent_sha256=file_hash("agent.py"))
 
     form, form_path = find_form(args.rules, getattr(args, "form", None))
     rec.log("rule_form", f"form={form_path or 'none'} (the context engine's window comes from it)",
@@ -81,7 +82,8 @@ def run_one(task, args, run_number):
 
     try:
         world, final = run_agent(model, task["prompt"], gate, rec, world=world, max_turns=args.max_turns,
-                                 prompt=args.prompt, repair=not args.no_repair, nudge=not args.no_nudge)
+                                 prompt=args.prompt, repair=not args.no_repair, nudge=not args.no_nudge,
+                                 claim_check=not args.no_claim_check)
     except Exception as e:
         rec.log("session_end", f"crashed: {e}", passed=False, error=repr(e))
         raise
@@ -101,6 +103,7 @@ def run_one(task, args, run_number):
         "allowed": sum(d["decision"] == "ALLOW" for d in decisions),
         "blocked": sum(d["decision"] != "ALLOW" for d in decisions),
         "guard_decisions": [f"{d['decision']} {d['tool']}({d['args']})" for d in decisions],
+        "claim_nudges": sum(e["kind"] == "claim_nudge" for e in events),
         "final_message": final[:160], "session": rec.dir.name,
         "failure_label": "", "failure_reason": "",   # filled in for Part 4 (rule / prompt / agent)
     }
@@ -111,7 +114,8 @@ def write_scorecard(rows, args):
     out = Path(getattr(args, "output_dir", None) or "results")
     out.mkdir(parents=True, exist_ok=True)
     meta = {"rules": str(args.rules), "base": str(args.base), "tasks": str(args.tasks), "model": args.model,
-            "prompt": args.prompt, "repair": not args.no_repair, "nudge": not args.no_nudge}
+            "prompt": args.prompt, "repair": not args.no_repair, "nudge": not args.no_nudge,
+            "claim_check": not args.no_claim_check}
     meta["sha256"] = {"rules": file_hash(args.rules), "base": file_hash(args.base),
                       "tasks": file_hash(args.tasks), "schema": file_hash(SCHEMA)}
     (out / f"agent_scorecard_{stamp}.json").write_text(json.dumps({"setup": meta, "runs": rows}, indent=2))
@@ -119,7 +123,8 @@ def write_scorecard(rows, args):
     lines = [
         f"# Agent scorecard ({stamp})", "",
         f"- Rule file: `{args.rules}`  |  Model: `{args.model}`  |  Tasks: `{args.tasks}`",
-        f"- Prompt: `{args.prompt}`  |  Malformed-reply repair: {'off' if args.no_repair else 'on'}  |  Nudge: {'off' if args.no_nudge else 'on'}",
+        f"- Prompt: `{args.prompt}`  |  Malformed-reply repair: {'off' if args.no_repair else 'on'}  |  Nudge: {'off' if args.no_nudge else 'on'}"
+        f"  |  Claim check: {'off' if args.no_claim_check else 'on'}",
         f"- **Passed {passed} of {len(rows)} runs**", "",
         "| Task | Run | Approval | Result | Allowed | Blocked | Why | Session | Failure label |",
         "|---|---|---|---|---|---|---|---|---|",
@@ -147,6 +152,7 @@ def main():
     p.add_argument("--prompt", choices=["current", "current-amount", "a3", "a3-original"], default="current", help="system prompt version")
     p.add_argument("--no-repair", action="store_true", help="turn off the malformed-reply message (Part 4 tests)")
     p.add_argument("--no-nudge", action="store_true", help="turn off the after-block nudge (Part 4 tests)")
+    p.add_argument("--no-claim-check", action="store_true", help="turn off the unbacked-claim message (Part 2e tests)")
     p.add_argument("--form", help="rule form for the context engine (default: updated_form.json next to --rules)")
     args = p.parse_args()
 

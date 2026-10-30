@@ -1,5 +1,6 @@
 """The agent loop: a local model picks tools, the gate checks each one, the recorder logs it all."""
 import json
+import re
 import urllib.error
 import urllib.request
 
@@ -119,11 +120,41 @@ class ScriptedModel:
 
 # ---------------------------------------------------------------- loop
 
+# ---------------------------------------------------------------- claim check
+
+# Words in a final message that say an action already happened, and the tool that must have
+# succeeded for that to be true. Part 2e: the model wrote "Refunding $25 ..." and stopped.
+CLAIMS = [
+    ("a refund", "issue_refund",
+     re.compile(r"\brefund(ing|ed)\b|\brefunds? (has been |have been |was |were |is )?(issued|processed)\b", re.I)),
+    ("a deploy", "deploy_service", re.compile(r"\bdeployed\b", re.I)),
+    ("a rollback", "rollback", re.compile(r"\brolled back\b", re.I)),
+]
+# A sentence with any of these is a refusal, a plan or a condition, not a claim that it happened.
+NOT_A_CLAIM = re.compile(
+    r"n't\b|\b(not|no|nothing|never|cannot|unable|denied|declined|refused|rejected|blocked|failed|without"
+    r"|if|once|until|unless|will|would|should|could|may|might|need|needs|pending|awaiting|waiting"
+    r"|before|about|whether|instead)\b", re.I)
+
+
+def claimed_actions(text):
+    """(action, tool) for every completed action the text claims, in CLAIMS order, no repeats."""
+    found = []
+    for sentence in re.split(r"(?<=[.!?;])\s+|\n+", text or ""):
+        if NOT_A_CLAIM.search(sentence):
+            continue
+        for action, tool, pattern in CLAIMS:
+            if pattern.search(sentence) and (action, tool) not in found:
+                found.append((action, tool))
+    return found
+
+
 def run_agent(model, task_text, gate, recorder, world=None, max_turns=10,
-              prompt="current", repair=True, nudge=True):
+              prompt="current", repair=True, nudge=True, claim_check=True):
     """prompt: which system prompt ("current" or "a3").
     repair: tell the model when its reply was a malformed tool call, and let it retry.
     nudge:  after a block, tell the model once that no human will reply.
+    claim_check: if a text-only reply claims an action no successful tool call backs, say so once per action.
     The switches exist so Part 4 can turn one fix off at a time and see if the failure comes back."""
     world = world or MockWorld()
     messages = [{"role": "system", "content": PROMPTS[prompt]}, {"role": "user", "content": task_text}]
@@ -133,6 +164,8 @@ def run_agent(model, task_text, gate, recorder, world=None, max_turns=10,
     last_blocked = False   # was the most recent tool call blocked by the policy?
     block_reason = ""
     empty_retries = 0
+    succeeded = set()       # tools that ran and returned a result in this session
+    claim_nudged = set()    # actions already questioned, so each is asked about at most once
 
     for turn in range(1, max_turns + 1):
         text, calls = model.chat(messages)
@@ -160,12 +193,23 @@ def run_agent(model, task_text, gate, recorder, world=None, max_turns=10,
                 recorder.log("nudge", note)
                 messages.append({"role": "user", "content": note})
                 continue
+            unbacked = [(a, t) for a, t in claimed_actions(text) if t not in succeeded and a not in claim_nudged]
+            if claim_check and unbacked and turn < max_turns:
+                action, tool = unbacked[0]
+                claim_nudged.add(action)
+                note = (f"Your last message says {action} happened, but no {tool} call succeeded in this session. "
+                        "If you meant to do it, call the tool now; otherwise say so.")
+                recorder.log("claim_nudge", note, action=action, tool=tool, text=text)
+                messages.append({"role": "user", "content": note})
+                continue
             recorder.log("agent_final", text[:200] or "(no message)", text=text)
             return world, text
 
         for call in calls:
             result_text = handle_call(call, gate, recorder, world)
             last_blocked = result_text.startswith("BLOCKED")
+            if not result_text.startswith(("BLOCKED", "ERROR")):
+                succeeded.add(call["name"])
             if last_blocked:
                 block_reason = result_text.split("Reason:", 1)[-1].strip()
             messages.append({"role": "tool", "content": result_text, "tool_name": call["name"]})
