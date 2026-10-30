@@ -227,7 +227,22 @@ def test_refunded_on_order_store_and_trace_disagree_is_a_conflict():
     records = {"approvals": [approval(200)], "refunds": [rec], "orders": ORDERS, "staff": STAFF}
     r = get_facts("IssueRefund", {"order_id": "A100", "amount": 10}, records, [], 600, H)
     assert r["status"] == "conflict" and r["review"] is True
-    assert r["facts"] == {"status": "conflict", "order_total": 40}
+    assert r["facts"] == {"status": "conflict"}
+
+
+def test_every_conflict_attaches_only_the_status():
+    rec, step = refund_done(100, 40)
+    undated, _ = refund_done(100, 40)
+    del undated["at"]
+    conflicts = [
+        facts([approval(0, approved_amount=20), approval(300, approved_amount=40)], now=600),
+        facts([approval(0, approved=False), approval(300)], now=600),
+        facts_with_refunds([approval(0)], [(rec, step)], now=600, store=[]),
+        facts_with_refunds([approval(0)], [], now=600, store=[undated]),
+    ]
+    for r in conflicts:
+        assert r["status"] == "conflict" and r["review"] is True
+        assert r["facts"] == {"status": "conflict"}
 
 
 def test_unknown_order_attaches_nothing():

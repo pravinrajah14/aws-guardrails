@@ -1,9 +1,10 @@
 """The context engine: before an action is checked, look up checked facts about it in the store.
 
 Dogwood still makes every decision. The engine only reads records and reports what they say,
-so a rule can test those facts. It never fills a gap with a guess: when the records are missing,
-stale or disagree, it attaches no approval facts (only the status and the order's facts), and
-Dogwood's deny-by-default blocks.
+so a rule can test those facts. It never fills a gap with a guess: when the records are missing
+or stale, it attaches no approval facts (only the status and the order's facts), and Dogwood's
+deny-by-default blocks. When the records disagree it attaches only status "conflict", with no
+amounts, and policies/base.dw forbids the refund under every rule file.
 
 Order facts (order_total, refunded_on_order) are attached on every IssueRefund whose order is in the
 store, with or without a rule form, so the store-wide invariant in policies/base.dw can always check them.
@@ -89,7 +90,7 @@ def refund_facts(args, records, steps, now, window):
         if store_all != trace_all:
             return result("conflict", f"Refunded on order {order_id}: store says {store_all}, this session's "
                           f"trace says {trace_all}. A person must review.",
-                          {"status": "conflict", **base}, sources, details, review=True)
+                          {"status": "conflict"}, sources, details, review=True)
         base["refunded_on_order"] = store_all
         sources.append(f"refunded_on_order: store refunds for {order_id}, checked against the trace")
 
@@ -128,7 +129,7 @@ def refund_facts(args, records, steps, now, window):
         shown = "; ".join(f"{'approved ' + str(a['approved_amount']) if a['approved'] else 'refused'} by "
                           f"{a['approver']} @{a['at']}" for a in current)
         return result("conflict", f"{len(current)} approval records for order {order_id} inside the window disagree "
-                      f"({shown}). A person must review.", {"status": "conflict", **base}, sources, details,
+                      f"({shown}). A person must review.", {"status": "conflict"}, sources, details,
                       review=True)
 
     newest = current[-1]
@@ -145,7 +146,7 @@ def refund_facts(args, records, steps, now, window):
     if undated:
         return result("conflict", f"Store refund record(s) {[r.get('refund_id') for r in undated]} for order "
                       f"{order_id} have no time, so it is unknown whether they used this approval. "
-                      "A person must review.", {"status": "conflict", **base}, sources, details, review=True)
+                      "A person must review.", {"status": "conflict"}, sources, details, review=True)
     store_total = sum(r["amount"] for r in store_refunds if r["at"] > newest["at"])
     trace_total = sum((s.get("output") or {}).get("amount", 0) for s in steps
                       if s.get("action") == "IssueRefund" and s["kind"] == "response"
@@ -155,7 +156,7 @@ def refund_facts(args, records, steps, now, window):
     if store_total != trace_total:
         return result("conflict", f"Refunded since the approval for order {order_id}: store says {store_total}, "
                       f"this session's trace says {trace_total}. A person must review.",
-                      {"status": "conflict", **base}, sources, details, review=True)
+                      {"status": "conflict"}, sources, details, review=True)
 
     facts = {"status": "ok", "approved_amount": newest["approved_amount"], "refunded_so_far": store_total, **base}
     person = records.get("staff", {}).get(newest["approver"])
