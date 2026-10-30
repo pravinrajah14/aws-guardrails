@@ -24,10 +24,11 @@ import re
 from collections import Counter
 from pathlib import Path
 
+from agent import claimed_actions
 from tools import STAFF
 
 # When each fix went in, for sessions recorded before runs logged their own settings.
-# (Newer sessions record prompt / repair / nudge in their store_setup event.)
+# (Newer sessions record prompt / repair / nudge in their store_setup event; claim_check from Part 2e.)
 REPAIR_MESSAGE_FROM = "session-20261021-205838"   # malformed-reply message added just before this run
 NEEDED_RERUNS = 3
 
@@ -71,6 +72,8 @@ def load_session(folder):
         "recorded_expect": setup.get("expect"),
         "refunds": [(r["order_id"], r["amount"]) for r in (check["data"].get("refunds", []) if check else [])],
         "deployed": (check["data"].get("deployed", {}) if check else {}),
+        "claim_check": setup.get("claim_check", False),   # sessions before Part 2e ran without it
+        "claim_check_off": setup.get("claim_check") is False,
         "policy": policy, "trace": trace, "recorded_flags": "prompt" in setup,
     }
 
@@ -242,6 +245,8 @@ def what_happened(s):
         return "asked_human", "stopped to ask a human for input, though none is in the loop" + (" (after a block)" if blocked else "")
     if blocked:
         return "gave_up", "gave up after being blocked"
+    if any(tool == "issue_refund" for _, tool in claimed_actions(final)) and not s["refunds"]:
+        return "unbacked_claim", "said it was refunding (or had refunded), then ended its turn without calling issue_refund"
     return "stopped", "stopped before finishing"
 
 
@@ -254,6 +259,7 @@ FIX_FOR = {   # which fix answers which failure, and how to tell if a run had it
                 lambda r: r["prompt"] in ("current", "a3") and r["nudge"]),
     "stopped": ("prompt lines on approved_amount", lambda r: r["prompt"] in ("current", "current-amount")),
     "wrong_amount": ("prompt line: ask for exactly the amount the task needs", lambda r: r["prompt"] == "current-amount"),
+    "unbacked_claim": ("claim check in the agent loop", lambda r: r["claim_check"]),
 }
 # The A4 prompt keeps every earlier fix, so a run on it has each of them on too.
 for key in ("false_claim",):
@@ -294,7 +300,8 @@ def main():
     for s in runs:
         s["mode"] = None if s["passed"] else what_happened(s)[0]
         # A deliberate experiment: a run made with a fix switched off on purpose (Part 4 controlled test).
-        s["experiment"] = s["recorded_flags"] and (s["prompt"] not in ("current", "current-amount") or not s["repair"] or not s["nudge"])
+        s["experiment"] = s["recorded_flags"] and (s["prompt"] not in ("current", "current-amount") or not s["repair"] or not s["nudge"]
+                                                 or s["claim_check_off"])
 
     rows, rescored = [], []
     for s in runs:
@@ -321,7 +328,7 @@ def main():
             else:
                 label, reason = "agent", f"{story}. Still happened in {len(reruns) - ok} of {len(reruns)} runs with the {fix} on."
         rows.append({"session": s["name"], "task": s["task"], "approval": s["approval"], "rules": s["rules"],
-                     "prompt": s["prompt"], "repair": s["repair"], "nudge": s["nudge"], "guard": f"{s['guard_right']}/{s['guard_total']}",
+                     "prompt": s["prompt"], "repair": s["repair"], "nudge": s["nudge"], "claim_check": s["claim_check"], "guard": f"{s['guard_right']}/{s['guard_total']}",
                      "label": label, "reason": reason})
 
     hollow = [s for s in runs if s["passed"] and not s["kinds"].get("policy_decision")]
@@ -340,24 +347,25 @@ def main():
           f"- Guard decisions checked against the plain-Python rule: **{all_right} of {all_decisions} correct**.",
           f"- Labels: **rule {counts['rule']}**, **prompt {counts['prompt']}**, **agent {counts['agent']}**"
           + (f", still pending reruns {counts['pending']}" if counts['pending'] else "") + ".", "",
-          "| Session | Task | Manager | Rule file | Prompt | Repair | Nudge | Guard right | Label | Reason |",
-          "|---|---|---|---|---|---|---|---|---|---|"]
+          "| Session | Task | Manager | Rule file | Prompt | Repair | Nudge | Claim check | Guard right | Label | Reason |",
+          "|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
         md.append(f"| {r['session'].replace('session-', '')} | {r['task']} | {r['approval']} | {r['rules']} | "
-                  f"{r['prompt']} | {'on' if r['repair'] else 'off'} | {'on' if r['nudge'] else 'off'} | {r['guard']} | **{r['label']}** | {r['reason']} |")
+                  f"{r['prompt']} | {'on' if r['repair'] else 'off'} | {'on' if r['nudge'] else 'off'} | {'on' if r['claim_check'] else 'off'} | {r['guard']} | **{r['label']}** | {r['reason']} |")
     groups = {}
     for s in runs:
         if s["recorded_flags"]:
-            key = (s["task"], s["rules"], s["prompt"], s["repair"], s["nudge"])
+            key = (s["task"], s["rules"], s["prompt"], s["repair"], s["nudge"], s["claim_check"])
             groups.setdefault(key, []).append(s)
     if groups:
         md += ["", "## Controlled test: one fix switched off at a time", "",
                "Same code, same day. If a failure comes back only when its fix is off, the fix is what solved it.", "",
-               "| Task | Rule file | Prompt | Repair | Nudge | Passed | What went wrong |", "|---|---|---|---|---|---|---|"]
-        for (task, rules, prompt, repair, nudge), g in sorted(groups.items()):
+               "| Task | Rule file | Prompt | Repair | Nudge | Claim check | Passed | Claim nudges | What went wrong |",
+               "|---|---|---|---|---|---|---|---|---|"]
+        for (task, rules, prompt, repair, nudge, claim_check), g in sorted(groups.items()):
             modes = Counter(s["mode"] for s in g if s["mode"])
-            md.append(f"| {task} | {rules} | {prompt} | {'on' if repair else '**off**'} | {'on' if nudge else '**off**'} | "
-                      f"{sum(s['passed'] for s in g)}/{len(g)} | {', '.join(f'{k.replace(chr(95), chr(32))} x{v}' for k, v in modes.items()) or '-'} |")
+            md.append(f"| {task} | {rules} | {prompt} | {'on' if repair else '**off**'} | {'on' if nudge else '**off**'} | {'on' if claim_check else '**off**'} | "
+                      f"{sum(s['passed'] for s in g)}/{len(g)} | {sum(len(s['kinds'].get('claim_nudge', [])) for s in g)} | {', '.join(f'{k.replace(chr(95), chr(32))} x{v}' for k, v in modes.items()) or '-'} |")
     if hollow:
         md += ["", "## Passed without doing anything", "",
                "Right end state, but the agent never acted (no tool calls), so the pass says nothing about the agent.", ""]
