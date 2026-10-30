@@ -120,7 +120,7 @@ def run(model_name=config.MODEL, out=None):
         base = next(r for r in rows if r["sentence"] == sentence)
         us = [once(sentence, 0.3, seed) for seed in SEEDS]
         sigs = [signature(u) for u in us]
-        seeded.append({"sentence": sentence, "sigs": sigs,
+        seeded.append({"sentence": sentence, "sigs": sigs, "shown": [shown(u) for u in us],
                        "same_as_t0": sum(s == base["sig"] for s in sigs),
                        "expected": sum(matches(s, u, expect) for s, u in zip(sigs, us))})
 
@@ -169,7 +169,7 @@ def write_report(out, model_name, rows, seeded, timing):
     ]
     for s in seeded:
         seen = []
-        for sig in s["sigs"]:
+        for sig in s["shown"]:
             text = " / ".join(_show(sig))
             if text not in seen:
                 seen.append(text)
@@ -190,8 +190,6 @@ def write_report(out, model_name, rows, seeded, timing):
         "",
         "- Values shown are from the first run, as typed. The lowercase variant of the A100 sentence states `a100`;",
         "  code keeps what the sentence says and does not fix the case.",
-        "- \"Same raw answer: NO\" on the first row is the very first call (model cold): its `value` field said",
-        "  `$5000` instead of `$5,000`. Code reads numbers from the span, so the result is the same.",
         "- Prompt changes made before this run, while trying the demo sentences by hand (no expected answer changed):",
         "  1. The model gave the whole sentence as the amount span, which hid \"production\" inside it. Code now",
         "     checks qualifiers and unassigned numbers against where the value itself sits, not the model's span;",
