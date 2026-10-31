@@ -1,0 +1,14 @@
+{
+  "terms": [
+    {"words": ["production", "prod", "live"], "field": "env", "value": "prod", "source": "converter/forms/prod_allowlist.json"},
+    {"words": ["staging"], "field": "env", "value": "staging", "source": "kylie-test-bed-upload/tools.py"},
+    {"words": ["manager", "managers", "manager's"], "field": "approver_role", "value": "manager", "source": "kylie-test-bed-upload/tools.py"},
+    {"words": ["support"], "field": "approver_role", "value": "support", "source": "kylie-test-bed-upload/tools.py"}
+  ],
+  "gaps": [
+    {"field": "approver_role", "term": "(not stated)", "value": "manager", "source": "kylie-test-bed-upload/tools.py", "why": "request_approval is the store's only way to approve, and it asks a human manager."}
+  ],
+  "patterns": [
+    {"regex": "A\\d+", "field": "order_id", "source": "kylie-test-bed-upload/tools.py"}
+  ]
+}

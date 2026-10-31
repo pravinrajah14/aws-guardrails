@@ -1,0 +1,250 @@
+[
+  {
+    "id": "allow_lookup",
+    "source": "4_rules/policies.dw",
+    "sentence": "Read-only and low-risk tools no rule restricts are always allowed.",
+    "type": "baseline",
+    "dogwood": "@id(\"allow_lookup\")\npermit (principal, action == Shop::Action::\"LookupOrder\", resource);",
+    "note": null,
+    "approximation": null,
+    "other_comments": null,
+    "reason": null
+  },
+  {
+    "id": "allow_approval_requests",
+    "source": "4_rules/policies.dw",
+    "sentence": "Read-only and low-risk tools no rule restricts are always allowed.",
+    "type": "baseline",
+    "dogwood": "@id(\"allow_approval_requests\")\npermit (principal, action == Shop::Action::\"RequestApproval\", resource);",
+    "note": null,
+    "approximation": null,
+    "other_comments": null,
+    "reason": null
+  },
+  {
+    "id": "allow_tests",
+    "source": "4_rules/policies.dw",
+    "sentence": "Read-only and low-risk tools no rule restricts are always allowed.",
+    "type": "baseline",
+    "dogwood": "@id(\"allow_tests\")\npermit (principal, action == Shop::Action::\"RunTests\", resource);",
+    "note": null,
+    "approximation": null,
+    "other_comments": null,
+    "reason": null
+  },
+  {
+    "id": "allow_rollback",
+    "source": "4_rules/policies.dw",
+    "sentence": "Read-only and low-risk tools no rule restricts are always allowed.",
+    "type": "baseline",
+    "dogwood": "@id(\"allow_rollback\")\npermit (principal, action == Shop::Action::\"Rollback\", resource);",
+    "note": null,
+    "approximation": null,
+    "other_comments": null,
+    "reason": null
+  },
+  {
+    "id": "R4",
+    "source": "4_rules/policies.dw",
+    "sentence": "A refund over $100 needs a manager's approval for that same order and that same amount, granted within the last hour.",
+    "type": "approval_required",
+    "dogwood": "@id(\"r4_refund_up_to_100\")\npermit (principal, action == Shop::Action::\"IssueRefund\", resource)\nwhen { context.input.amount <= 100 };\n\n@id(\"r4_refund_over_100_needs_approval\")\npermit (principal, action == Shop::Action::\"IssueRefund\", resource)\nwhen { context.input.amount > 100 }\nwhen temporal {\n    formerly within 1h Shop::Action::\"RequestApproval\"::response{\n        input.order_id: context.input.order_id,\n        input.amount: context.input.amount,\n        output.approved: true\n    }\n};",
+    "note": null,
+    "approximation": null,
+    "other_comments": "Two permits (OR): small refunds need nothing; larger ones need the approval. No approver-role check: Kylie's RequestApproval only returns an approver name, and the tool is \"ask a human manager\", so every approval is a manager's.",
+    "reason": null
+  },
+  {
+    "id": "R6",
+    "source": "4_rules/policies.dw",
+    "sentence": "A version may only go to production if its tests passed within the last 24 hours.",
+    "type": "deploy_needs_tests",
+    "dogwood": "@id(\"r6_deploy_staging\")\npermit (principal, action == Shop::Action::\"DeployService\", resource)\nwhen { context.input.env != \"prod\" };\n\n@id(\"r6_prod_deploy_needs_passing_tests\")\npermit (principal, action == Shop::Action::\"DeployService\", resource)\nwhen { context.input.env == \"prod\" }\nwhen temporal {\n    formerly within 24h Shop::Action::\"RunTests\"::response{\n        input.service: context.input.service,\n        input.version: context.input.version,\n        output.passed: true\n    }\n};",
+    "note": null,
+    "approximation": null,
+    "other_comments": "Staging is always allowed (as in Kylie's deploy_staging); prod needs passing tests.",
+    "reason": null
+  },
+  {
+    "id": "R10",
+    "source": "4_rules/policies.dw",
+    "sentence": "After a failed production deploy of a service, block further production deploys of that service until a rollback has completed.",
+    "type": "unsupported: no converter form kind",
+    "dogwood": "@id(\"r10_no_redeploy_after_failure_until_rollback\")\nforbid (principal, action == Shop::Action::\"DeployService\", resource)\nwhen { context.input.env == \"prod\" }\nwhen temporal {\n    !Shop::Action::\"Rollback\"::response{\n        input.service: context.input.service,\n        input.env: \"prod\"\n    }\n    since within 24h\n    Shop::Action::\"DeployService\"::error{\n        input.service: context.input.service,\n        input.env: \"prod\"\n    }\n};",
+    "note": null,
+    "approximation": null,
+    "other_comments": "Kylie's gate records a failed tool call as an `error` event, and a finished rollback as a `response` event.",
+    "reason": null
+  },
+  {
+    "id": "R1",
+    "source": "4_rules/policies.dw",
+    "sentence": "A single refund may not exceed $500.",
+    "type": "amount_cap",
+    "dogwood": "@id(\"r1_refund_max_500\")\nforbid (principal, action == Shop::Action::\"IssueRefund\", resource)\nwhen { context.input.amount > 500 };",
+    "note": null,
+    "approximation": null,
+    "other_comments": null,
+    "reason": null
+  },
+  {
+    "id": "R3",
+    "source": "4_rules/policies.dw",
+    "sentence": "Production deploys are only allowed for payments, search and web.",
+    "type": "deploy_allowlist",
+    "dogwood": "@id(\"r3_prod_deploy_allowlist\")\nforbid (principal, action == Shop::Action::\"DeployService\", resource)\nwhen {\n    context.input.env == \"prod\"\n    && !([\"payments\", \"search\", \"web\"].contains(context.input.service))\n};",
+    "note": "Kylie's mock world only has a \"checkout\" service, so this blocks her prod deploy task. That is the rule working as written.",
+    "approximation": null,
+    "other_comments": null,
+    "reason": null
+  },
+  {
+    "id": "R8",
+    "source": "4_rules/policies.dw",
+    "sentence": "No more than $1,000 may be refunded in a single day.",
+    "type": "unsupported: no converter form kind",
+    "dogwood": "@id(\"r8_refund_total_1000_per_24h\")\nforbid (principal, action == Shop::Action::\"IssueRefund\", resource)\nwhen temporal {\n    (sum a for (a: Long), (t: Timepoint). where (\n        formerly within 24h (Shop::Action::\"IssueRefund\"::request{ input.amount: a } && tp(t))\n    )) > 1000\n};",
+    "note": null,
+    "approximation": "Dogwood windows slide; \"a day\" is read as the last 24h.",
+    "other_comments": "Sums REQUEST amounts (incl. this one) so parallel calls cannot slip past.",
+    "reason": null
+  },
+  {
+    "id": "R9",
+    "source": "4_rules/policies.dw",
+    "sentence": "Never refund the same order twice.",
+    "type": "unsupported: no converter form kind",
+    "dogwood": "@id(\"r9_no_double_refund_24h\")\nforbid (principal, action == Shop::Action::\"IssueRefund\", resource)\nwhen temporal {\n    formerly within 24h Shop::Action::\"IssueRefund\"::response{\n        input.order_id: context.input.order_id\n    }\n};",
+    "note": null,
+    "approximation": "history is capped at 24h by default, so this only catches a repeat within the last 24h.",
+    "other_comments": "A `response` event means the refund went through (failures are `error` events).",
+    "reason": null
+  },
+  {
+    "id": "R2",
+    "source": "4_rules/policies.dw",
+    "sentence": "Refunds are only allowed for orders placed within the last 30 days.",
+    "type": "unsupported",
+    "dogwood": "forbid (principal, action == Shop::Action::\"IssueRefund\", resource)\nwhen { context.input.order_age_days > 30 };",
+    "note": null,
+    "approximation": null,
+    "other_comments": null,
+    "reason": "Needs IssueRefund input `order_age_days: Long`."
+  },
+  {
+    "id": "R5",
+    "source": "4_rules/policies.dw",
+    "sentence": "A production deploy needs an approval for that same service, version and environment, granted within the last 2 hours.",
+    "type": "unsupported",
+    "dogwood": null,
+    "note": null,
+    "approximation": null,
+    "other_comments": null,
+    "reason": "Needs a `RequestDeployApproval` tool (input service/version/env, output approved). As a permit it would also have to be merged with R6 into ONE prod-deploy permit (two permits would OR, letting either one alone through)."
+  },
+  {
+    "id": "R7",
+    "source": "4_rules/policies.dw",
+    "sentence": "No customer may receive more than 2 refunds in 24 hours.",
+    "type": "unsupported",
+    "dogwood": "forbid ... when temporal { (count for (t: Timepoint). where (formerly within 24h (\n    Shop::Action::\"IssueRefund\"::request{ input.customer_id: context.input.customer_id }\n    && tp(t)))) > 2 };",
+    "note": null,
+    "approximation": null,
+    "other_comments": null,
+    "reason": "Needs IssueRefund input `customer_id: String`."
+  },
+  {
+    "id": "form_refund_cap",
+    "source": "converter/forms/refund_cap.json",
+    "sentence": "A single refund may not exceed $500.",
+    "type": "amount_cap",
+    "form": {
+      "id": "refund_max_500",
+      "sentence": "A single refund may not exceed $500.",
+      "action": "IssueRefund",
+      "kind": "limit",
+      "field": "amount",
+      "max": 500
+    }
+  },
+  {
+    "id": "form_manager_approval",
+    "source": "converter/forms/manager_approval.json",
+    "sentence": "Only refund if a manager approved it recently.",
+    "type": "approval_required",
+    "form": {
+      "id": "refund_needs_manager_approval",
+      "sentence": "Only refund if a manager approved it recently.",
+      "action": "IssueRefund",
+      "kind": "requires_prior",
+      "requires": {
+        "action": "RequestApproval",
+        "within": "1h",
+        "same": [
+          "order_id"
+        ],
+        "output": {
+          "approved": true
+        },
+        "at_most": {
+          "amount": "approved_amount"
+        },
+        "spent_so_far": {
+          "amount": "refunded_so_far"
+        },
+        "approver_role": "manager"
+      }
+    }
+  },
+  {
+    "id": "form_prod_allowlist",
+    "source": "converter/forms/prod_allowlist.json",
+    "sentence": "Production deploys are only allowed for payments, search and web.",
+    "type": "deploy_allowlist",
+    "form": {
+      "id": "prod_deploy_allowlist",
+      "sentence": "Production deploys are only allowed for payments, search and web.",
+      "action": "DeployService",
+      "kind": "allowlist",
+      "field": "service",
+      "allowed": [
+        "payments",
+        "search",
+        "web"
+      ],
+      "only_when": {
+        "field": "env",
+        "op": "==",
+        "value": "prod"
+      }
+    }
+  },
+  {
+    "id": "form_prod_needs_tests",
+    "source": "converter/forms/prod_needs_tests.json",
+    "sentence": "A version may only go to production if its tests passed within the last 24 hours.",
+    "type": "deploy_needs_tests",
+    "form": {
+      "id": "prod_deploy_needs_passing_tests",
+      "sentence": "A version may only go to production if its tests passed within the last 24 hours.",
+      "action": "DeployService",
+      "kind": "requires_prior",
+      "only_when": {
+        "field": "env",
+        "op": "==",
+        "value": "prod"
+      },
+      "requires": {
+        "action": "RunTests",
+        "within": "24h",
+        "same": [
+          "service",
+          "version"
+        ],
+        "output": {
+          "passed": true
+        }
+      }
+    }
+  }
+]
