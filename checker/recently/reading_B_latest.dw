@@ -1,6 +1,4 @@
-// "Don't deploy to production if the tests failed recently."
-// Reading B: "recently" = the most recent run. Block only if the latest test
-// run on this commit failed, i.e. a failure with no passing run since it.
+// Don't deploy to production if the latest test run on this commit failed: a failure with no passing run since it.
 @id("deploy_allowed")
 permit (principal, action == Shop::Action::"Deploy", resource);
 

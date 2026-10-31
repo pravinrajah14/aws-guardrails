@@ -1,0 +1,29 @@
+{
+  "sentence": "Only refund if a manager approved it recently.",
+  "status": "ready",
+  "source": "question/forms/recently_1h.json; recently = 1h is the team's answer to the solver question, at most the approved amount",
+  "forms": [
+    {
+      "id": "reference_approval",
+      "action": "IssueRefund",
+      "kind": "requires_prior",
+      "requires": {
+        "action": "RequestApproval",
+        "within": "1h",
+        "same": [
+          "order_id"
+        ],
+        "output": {
+          "approved": true
+        },
+        "at_most": {
+          "amount": "approved_amount"
+        },
+        "spent_so_far": {
+          "amount": "refunded_so_far"
+        },
+        "approver_role": "manager"
+      }
+    }
+  ]
+}

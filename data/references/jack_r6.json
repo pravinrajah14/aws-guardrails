@@ -1,0 +1,28 @@
+{
+  "sentence": "A version may only go to production if its tests passed within the last 24 hours.",
+  "status": "ready",
+  "source": "4_rules/policies.dw R6",
+  "forms": [
+    {
+      "id": "reference_tests",
+      "action": "DeployService",
+      "kind": "requires_prior",
+      "only_when": {
+        "field": "env",
+        "op": "==",
+        "value": "prod"
+      },
+      "requires": {
+        "action": "RunTests",
+        "within": "24h",
+        "same": [
+          "service",
+          "version"
+        ],
+        "output": {
+          "passed": true
+        }
+      }
+    }
+  ]
+}

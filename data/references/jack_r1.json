@@ -1,0 +1,15 @@
+{
+  "sentence": "A single refund may not exceed $500.",
+  "status": "ready",
+  "source": "4_rules/policies.dw R1",
+  "forms": [
+    {
+      "id": "reference_limit",
+      "action": "IssueRefund",
+      "kind": "limit",
+      "field": "amount",
+      "max": 500,
+      "op": ">"
+    }
+  ]
+}

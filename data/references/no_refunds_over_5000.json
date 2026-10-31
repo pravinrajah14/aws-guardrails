@@ -1,0 +1,15 @@
+{
+  "sentence": "No refunds over $5,000.",
+  "status": "ready",
+  "source": "the sentence",
+  "forms": [
+    {
+      "id": "reference_limit",
+      "action": "IssueRefund",
+      "kind": "limit",
+      "field": "amount",
+      "max": 5000,
+      "op": ">"
+    }
+  ]
+}

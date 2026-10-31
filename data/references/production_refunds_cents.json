@@ -1,0 +1,6 @@
+{
+  "sentence": "No production refunds over $500.50.",
+  "status": "needs review",
+  "source": "IssueRefund has no env field, and amounts are whole dollars",
+  "forms": []
+}

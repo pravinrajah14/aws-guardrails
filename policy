@@ -18,11 +18,4 @@ if [[ -z "${DOGWOOD_CMD:-}" ]] && ! command -v dogwood >/dev/null 2>&1; then
   fi
 fi
 
-for candidate in "${GUARDRAILS_PYTHON:-}" "$root/.venv/bin/python" "$root/../context-engine-lab/.venv/bin/python" python3; do
-  if [[ -n "$candidate" ]] && "$candidate" -c 'import z3' >/dev/null 2>&1; then
-    exec "$candidate" "$root/run_pipeline.py" --stage "$stage" "$@"
-  fi
-done
-
-echo "Python with z3-solver is missing. See README.md." >&2
-exit 2
+exec uv run python "$root/run_pipeline.py" --stage "$stage" "$@"

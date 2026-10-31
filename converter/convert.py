@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
 """Compile structured rule forms into Dogwood policies."""
+
 import argparse
 import json
 import re
@@ -10,15 +10,15 @@ KINDS = {"limit", "allowlist", "requires_prior"}
 OPS = {">", ">=", "<", "<=", "==", "!="}
 WINDOW = re.compile(r"^[0-9]+(s|m|h)$")
 ID = re.compile(r"^[a-z][a-z0-9_]*$")
-TOP_KEYS = {"id", "sentence", "action", "kind", "only_when", "field", "max", "allowed", "requires"}
-REQ_KEYS = {"action", "within", "same", "output", "output_same"}
+LIMIT_OPS = {">", ">="}
+TOP_KEYS = {"id", "sentence", "action", "kind", "only_when", "field", "max", "op", "allowed", "requires"}
+REQ_KEYS = {"action", "event", "within", "same", "output", "output_same", "at_most", "spent_so_far", "approver_role"}
+REQ_EVENTS = {"request", "response"}
 
 
 class FormError(ValueError):
     pass
 
-
-# ------------------------------------------------------------------ schema
 
 def load_schema(path):
     """Light parse of the .cedarschema: namespace, and per action its input/output fields."""
@@ -27,23 +27,20 @@ def load_schema(path):
     if not ns:
         raise FormError(f"no namespace found in {path}")
     types = {}
-    for name, body in re.findall(r"type\s+(\w+)\s*=\s*\{(.*?)\}\s*;", text, re.S):
-        types[name] = dict(
-            (m.group(1), m.group(2).strip())
-            for m in re.finditer(r"(\w+)\??\s*:\s*([\w:]+)", body)
-        )
+    for name, body in re.findall(r"type\s+(\w+)\s*=\s*\{(.*?)\}\s*;", text, re.DOTALL):
+        types[name] = {m.group(1): m.group(2).strip() for m in re.finditer(r"(\w+)\??\s*:\s*([\w:]+)", body)}
     actions = {}
-    for name, body in re.findall(r'action\s+"(\w+)"\s+appliesTo\s*\{(.*?)\n\s*\}\s*;', text, re.S):
+    for name, body in re.findall(r'action\s+"(\w+)"\s+appliesTo\s*\{(.*?)\n\s*\}\s*;', text, re.DOTALL):
         inp = re.search(r"input\s*:\s*(\w+)", body)
         out = re.search(r"output\??\s*:\s*(\w+)", body)
+        facts = re.search(r"facts\??\s*:\s*(\w+)", body)
         actions[name] = {
             "input": types.get(inp.group(1), {}) if inp else {},
             "output": types.get(out.group(1), {}) if out else {},
+            "facts": types.get(facts.group(1), {}) if facts else {},
         }
     return ns.group(1), actions
 
-
-# ------------------------------------------------------------------ literals
 
 def lit(v):
     if isinstance(v, bool):
@@ -63,8 +60,6 @@ def check_value_type(v, cedar_type, where):
         raise FormError(f"{where}: {v!r} is not a {cedar_type}")
 
 
-# ------------------------------------------------------------------ validation
-
 def need(cond, msg):
     if not cond:
         raise FormError(msg)
@@ -81,54 +76,113 @@ def validate_form(f, actions):
     act = f["action"]
     need(act in actions, f"unknown action {act!r}; schema has {sorted(actions)}")
     inp = actions[act]["input"]
-
     if "only_when" in f:
-        c = f["only_when"]
-        need(set(c) == {"field", "op", "value"}, "only_when needs exactly field, op, value")
-        need(c["field"] in inp, f"only_when: {act} has no input field {c['field']!r}")
-        need(c["op"] in OPS, f"only_when: op must be one of {sorted(OPS)}")
-        check_value_type(c["value"], inp[c["field"]], "only_when")
-
-    kind = f["kind"]
-    if kind == "limit":
-        need("field" in f and "max" in f, "limit needs 'field' and 'max'")
-        need(f["field"] in inp, f"{act} has no input field {f['field']!r}")
-        need(inp[f["field"]] == "Long", f"limit field {f['field']!r} must be a Long")
-        need(isinstance(f["max"], int) and not isinstance(f["max"], bool), "'max' must be an integer")
-    elif kind == "allowlist":
-        need("field" in f and f.get("allowed"), "allowlist needs 'field' and a non-empty 'allowed'")
-        need(f["field"] in inp, f"{act} has no input field {f['field']!r}")
-        for v in f["allowed"]:
-            check_value_type(v, inp[f["field"]], "allowed")
+        _check_only_when(f["only_when"], act, inp)
+    if f["kind"] == "limit":
+        _check_limit(f, act, inp)
+    elif f["kind"] == "allowlist":
+        _check_allowlist(f, act, inp)
     else:
-        need("requires" in f, "requires_prior needs 'requires'")
-        r = f["requires"]
-        extra = set(r) - REQ_KEYS
-        need(not extra, f"requires: unknown field(s) {sorted(extra)}")
-        need("action" in r, "requires needs 'action'")
-        need(r["action"] in actions, f"requires: unknown action {r['action']!r}")
-        need("within" in r and WINDOW.match(str(r["within"])),
-             "requires needs 'within' like '1h' -- 'recently' must be a number")
-        prior = actions[r["action"]]
-        for fld in r.get("same", []):
-            need(fld in inp, f"same: {act} has no input field {fld!r}")
-            need(fld in prior["input"], f"same: {r['action']} has no input field {fld!r}")
-            need(inp[fld] == prior["input"][fld], f"same: {fld!r} has different types in {act} and {r['action']}")
-        for fld, val in r.get("output", {}).items():
-            need(fld in prior["output"], f"output: {r['action']} has no output field {fld!r}")
-            check_value_type(val, prior["output"][fld], f"output.{fld}")
-        for previous, current in r.get("output_same", {}).items():
-            need(previous in prior["output"], f"output_same: unknown prior output {previous!r}")
-            need(current in inp, f"output_same: unknown current input {current!r}")
-            need(prior["output"][previous] == inp[current], "output_same: field types differ")
-            need(previous not in r.get("output", {}), "output_same: output field also has a literal constraint")
-        need(r.get("same") or r.get("output") or r.get("output_same"), "requires needs a matching condition")
+        _check_requires(f, act, inp, actions)
 
 
-# ------------------------------------------------------------------ emit
+def _check_only_when(c, act, inp):
+    need(set(c) == {"field", "op", "value"}, "only_when needs exactly field, op, value")
+    need(c["field"] in inp, f"only_when: {act} has no input field {c['field']!r}")
+    need(c["op"] in OPS, f"only_when: op must be one of {sorted(OPS)}")
+    check_value_type(c["value"], inp[c["field"]], "only_when")
+
+
+def _check_limit(f, act, inp):
+    need("field" in f and "max" in f, "limit needs 'field' and 'max'")
+    need(f["field"] in inp, f"{act} has no input field {f['field']!r}")
+    need(inp[f["field"]] == "Long", f"limit field {f['field']!r} must be a Long")
+    need(isinstance(f["max"], int) and not isinstance(f["max"], bool), "'max' must be an integer")
+    need(f.get("op", ">") in LIMIT_OPS, f"limit 'op' must be one of {sorted(LIMIT_OPS)}")
+
+
+def _check_allowlist(f, act, inp):
+    need("field" in f and f.get("allowed"), "allowlist needs 'field' and a non-empty 'allowed'")
+    need(f["field"] in inp, f"{act} has no input field {f['field']!r}")
+    for v in f["allowed"]:
+        check_value_type(v, inp[f["field"]], "allowed")
+
+
+def _check_requires(f, act, inp, actions):
+    need("requires" in f, "requires_prior needs 'requires'")
+    r = f["requires"]
+    extra = set(r) - REQ_KEYS
+    need(not extra, f"requires: unknown field(s) {sorted(extra)}")
+    need("action" in r, "requires needs 'action'")
+    need(r.get("event", "response") in REQ_EVENTS, f"requires: event must be one of {sorted(REQ_EVENTS)}")
+    need(r.get("event") != "request" or not r.get("output"), "requires: a request has no output to match")
+    need(r["action"] in actions, f"requires: unknown action {r['action']!r}")
+    need(
+        "within" in r and WINDOW.match(str(r["within"])),
+        "requires needs 'within' like '1h' -- 'recently' must be a number",
+    )
+    _check_prior_fields(r, act, inp, actions[r["action"]])
+    _check_facts(r, act, inp, actions[act]["facts"])
+    need(
+        r.get("same") or r.get("output") or r.get("output_same") or r.get("at_most"),
+        "requires needs a matching condition",
+    )
+
+
+def _check_prior_fields(r, act, inp, prior):
+    for fld in r.get("same", []):
+        need(fld in inp, f"same: {act} has no input field {fld!r}")
+        need(fld in prior["input"], f"same: {r['action']} has no input field {fld!r}")
+        need(inp[fld] == prior["input"][fld], f"same: {fld!r} has different types in {act} and {r['action']}")
+    for fld, val in r.get("output", {}).items():
+        need(fld in prior["output"], f"output: {r['action']} has no output field {fld!r}")
+        check_value_type(val, prior["output"][fld], f"output.{fld}")
+    for previous, current in r.get("output_same", {}).items():
+        need(previous in prior["output"], f"output_same: unknown prior output {previous!r}")
+        need(current in inp, f"output_same: unknown current input {current!r}")
+        need(prior["output"][previous] == inp[current], "output_same: field types differ")
+        need(previous not in r.get("output", {}), "output_same: output field also has a literal constraint")
+
+
+def _check_facts(r, act, inp, facts):
+    for current, fact in r.get("at_most", {}).items():
+        need(current in inp, f"at_most: {act} has no input field {current!r}")
+        need(fact in facts, f"at_most: {act} has no checked fact {fact!r} (see the schema's facts type)")
+        need(inp[current] == "Long" and facts[fact] == "Long", "at_most: both fields must be Long")
+    for current, fact in r.get("spent_so_far", {}).items():
+        need(current in r.get("at_most", {}), f"spent_so_far: {current!r} has no at_most limit to count against")
+        need(fact in facts, f"spent_so_far: {act} has no checked fact {fact!r} (see the schema's facts type)")
+        need(facts[fact] == "Long", "spent_so_far: the fact must be Long")
+    if "approver_role" in r:
+        need(isinstance(r["approver_role"], str) and r["approver_role"], "approver_role must be a non-empty string")
+        need("approver_role" in facts, f"approver_role: {act} has no checked fact 'approver_role'")
+
 
 def condition(c):
     return f"context.input.{c['field']} {c['op']} {lit(c['value'])}"
+
+
+def facts_clause(r):
+    """Checks on the context engine's facts. The engine attaches facts only when it found them in
+    the store; when they are missing or unsure the 'has' tests fail and deny-by-default blocks."""
+    checks = []
+    for current, fact in r.get("at_most", {}).items():
+        # spent_so_far: what was already used against the same limit (e.g. refunded since the approval).
+        spent = r.get("spent_so_far", {}).get(current)
+        if spent:
+            checks += [
+                f"context.facts has {fact}",
+                f"context.facts has {spent}",
+                f"context.input.{current} + context.facts.{spent} <= context.facts.{fact}",
+            ]
+        else:
+            checks += [f"context.facts has {fact}", f"context.input.{current} <= context.facts.{fact}"]
+    if "approver_role" in r:
+        checks += ["context.facts has approver_role", f"context.facts.approver_role == {lit(r['approver_role'])}"]
+    if not checks:
+        return ""
+    checks = ["context has facts", 'context.facts.status == "ok"'] + checks
+    return "\nwhen {\n    " + " &&\n    ".join(checks) + "\n}"
 
 
 def snake(name):
@@ -145,7 +199,7 @@ def convert_form(f, ns):
     if f["kind"] in ("limit", "allowlist"):
         guards = [condition(f["only_when"])] if "only_when" in f else []
         if f["kind"] == "limit":
-            guards.append(f"context.input.{f['field']} > {f['max']}")
+            guards.append(f"context.input.{f['field']} {f.get('op', '>')} {f['max']}")
         else:
             allowed = ", ".join(lit(v) for v in f["allowed"])
             guards.append(f"!([{allowed}].contains(context.input.{f['field']}))")
@@ -157,18 +211,18 @@ def convert_form(f, ns):
     r = f["requires"]
     fields = [f"input.{x}: context.input.{x}" for x in r.get("same", [])]
     fields += [f"output.{k}: {lit(v)}" for k, v in r.get("output", {}).items()]
-    fields += [f"output.{previous}: context.input.{current}"
-               for previous, current in r.get("output_same", {}).items()]
+    fields += [f"output.{previous}: context.input.{current}" for previous, current in r.get("output_same", {}).items()]
     body = ",\n".join("        " + x for x in fields)
     when = ""
     if "only_when" in f:
         c = condition(f["only_when"])
         out.append(f'@id("{f["id"]}_not_applicable")\npermit {scope}\nwhen {{ !({c}) }};\n')
         when = f"\nwhen {{ {c} }}"
+    when += facts_clause(r)
     out.append(
         f'@id("{f["id"]}")\npermit {scope}{when}\n'
         f"when temporal {{\n"
-        f"    formerly within {r['within']} {ns}::Action::{json.dumps(r['action'])}::response{{\n"
+        f"    formerly within {r['within']} {ns}::Action::{json.dumps(r['action'])}::{r.get('event', 'response')}{{\n"
         f"{body}\n"
         f"    }}\n"
         f"}};"
@@ -184,9 +238,11 @@ def convert(forms, schema_path, baseline=False):
             validate_form(f, actions)
             need(f["id"] not in ids, f"duplicate id {f['id']!r}")
             if f["kind"] == "requires_prior":
-                need(f["action"] not in gated,
-                     f"{f['action']} already has a requires_prior rule ({gated.get(f['action'])}); "
-                     "two permits would OR together -- merge them into one form")
+                need(
+                    f["action"] not in gated,
+                    f"{f['action']} already has a requires_prior rule ({gated.get(f['action'])}); "
+                    "two permits would OR together -- merge them into one form",
+                )
                 gated[f["action"]] = f["id"]
         except FormError as e:
             raise FormError(f"{src}: {e}") from None
@@ -204,7 +260,10 @@ def convert(forms, schema_path, baseline=False):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("forms", nargs="+")
-    ap.add_argument("--schema", default=str(Path(__file__).parent.parent / "kylie-test-bed-upload" / "policies" / "schema.cedarschema"))
+    ap.add_argument(
+        "--schema",
+        default=str(Path(__file__).parent.parent / "kylie-test-bed-upload" / "policies" / "schema.cedarschema"),
+    )
     ap.add_argument("--baseline", action="store_true")
     ap.add_argument("-o", "--out")
     a = ap.parse_args()

@@ -1,0 +1,6 @@
+{
+  "sentence": "Only email customers who opted in.",
+  "status": "invalid",
+  "source": "the schema has no email action",
+  "forms": []
+}

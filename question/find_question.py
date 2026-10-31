@@ -1,7 +1,7 @@
 import argparse
 import json
-import re
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 from z3 import And, Bool, BoolVal, Int, IntVal, Length, Not, Optimize, Or, String, StringVal, sat
@@ -11,41 +11,24 @@ STORE = ROOT / "kylie-test-bed-upload"
 CONVERTER = ROOT / "converter"
 sys.path.insert(0, str(STORE))
 sys.path.insert(0, str(CONVERTER))
+sys.path.insert(0, str(ROOT))
 
+from context_engine import window_seconds
 from convert import convert, load_schema, validate_form
 from enforce import DogwoodGate, build_policy
 from score_actions import case_lines
-from tools import TOOL_SPECS
+from tools import STAFF, TOOL_SPECS
+
+from app.core.numbers import HOUR, MINUTE, how_long, window
 
 SCHEMA = STORE / "policies" / "schema.cedarschema"
 BASE = STORE / "policies" / "base.dw"
 ACTIONS = STORE / "tests" / "refund_recent_approval_actions.json"
-OUT = Path(__file__).resolve().parent / "out"
-UNITS = {"s": 1, "m": 60, "h": 3600}
-GRAINS = (3600, 60, 1)
+OUT_ROOT = ROOT / "pipeline-runs" / "question"
+GRAINS = (HOUR, MINUTE, 1)
 MAX_EVENTS = 3
 
 TOOL_FOR = {spec["action"]: name for name, spec in TOOL_SPECS.items()}
-
-
-def window_seconds(w):
-    return int(w[:-1]) * UNITS[w[-1]]
-
-
-def schema_types(path):
-    text = Path(path).read_text(encoding="utf-8")
-    types = {}
-    for name, body in re.findall(r"type\s+(\w+)\s*=\s*\{(.*?)\}\s*;", text, re.S):
-        types[name] = {m.group(1): m.group(2) for m in re.finditer(r"(\w+)\??\s*:\s*(\w+)", body)}
-    fields = {}
-    for name, body in re.findall(r'action\s+"(\w+)"\s+appliesTo\s*\{(.*?)\n\s*\}\s*;', text, re.S):
-        inp = re.search(r"input\s*:\s*(\w+)", body)
-        out = re.search(r"output\??\s*:\s*(\w+)", body)
-        fields[name] = {
-            "input": types.get(inp.group(1), {}) if inp else {},
-            "output": types.get(out.group(1), {}) if out else {},
-        }
-    return fields
 
 
 def make_var(name, cedar_type):
@@ -87,11 +70,13 @@ class History:
         self.request_action = request_action
         self.events = []
         for i in range(k):
-            self.events.append({
-                "t": Int(f"t{i}"),
-                "input": {f: make_var(f"e{i}_in_{f}", t) for f, t in fields[prior_action]["input"].items()},
-                "output": {f: make_var(f"e{i}_out_{f}", t) for f, t in fields[prior_action]["output"].items()},
-            })
+            self.events.append(
+                {
+                    "t": Int(f"t{i}"),
+                    "input": {f: make_var(f"e{i}_in_{f}", t) for f, t in fields[prior_action]["input"].items()},
+                    "output": {f: make_var(f"e{i}_out_{f}", t) for f, t in fields[prior_action]["output"].items()},
+                }
+            )
         self.now = Int("now")
         self.request = {f: make_var(f"req_{f}", t) for f, t in fields[request_action]["input"].items()}
 
@@ -120,17 +105,44 @@ def permits(form, h):
         cs = [h.gap(ev) >= 0, h.gap(ev) <= w]
         cs += [ev["input"][f] == h.request[f] for f in r.get("same", [])]
         cs += [ev["output"][k] == literal(v) for k, v in r.get("output", {}).items()]
-        cs += [ev["output"][previous] == h.request[current]
-               for previous, current in r.get("output_same", {}).items()]
+        cs += [ev["output"][previous] == h.request[current] for previous, current in r.get("output_same", {}).items()]
+        # Facts checks: the context engine reads the fact from the approval's output field of the
+        # same name, and the approver's role from the store's staff directory.
+        for current, fact in r.get("at_most", {}).items():
+            if fact not in ev["output"]:
+                sys.exit(f"at_most: the solver cannot model fact {fact!r}")
+            # spent_so_far (refunds already made against the approval) is 0 here: the solver's
+            # histories hold only earlier approvals, never a refund.
+            cs.append(h.request[current] <= ev["output"][fact])
+        if "approver_role" in r:
+            names = [n for n, s in STAFF.items() if s["role"] == r["approver_role"]]
+            cs.append(Or(*[ev["output"]["approver"] == StringVal(n) for n in names]) if names else BoolVal(False))
         matches.append(And(*cs))
     gated = Or(*matches)
     if "only_when" in form:
         c = form["only_when"]
         lhs, rhs = h.request[c["field"]], literal(c["value"])
-        cond = {">": lhs > rhs, ">=": lhs >= rhs, "<": lhs < rhs, "<=": lhs <= rhs,
-                "==": lhs == rhs, "!=": lhs != rhs}[c["op"]]
+        cond = {">": lhs > rhs, ">=": lhs >= rhs, "<": lhs < rhs, "<=": lhs <= rhs, "==": lhs == rhs, "!=": lhs != rhs}[
+            c["op"]
+        ]
         return Or(Not(cond), gated)
     return gated
+
+
+def time_only(form_a, form_b, h):
+    """When the two forms differ only in their window, the question should only vary time. Every
+    other field is held to the intended case: the earlier approval was for the amount asked, and
+    the request is for exactly that approved amount (at_most and spent_so_far then play no part)."""
+    rest = lambda f: {k: v for k, v in f["requires"].items() if k != "within"}
+    if rest(form_a) != rest(form_b) or form_a.get("only_when") != form_b.get("only_when"):
+        return []
+    cs = []
+    for ev in h.events:
+        for current, fact in form_a["requires"].get("at_most", {}).items():
+            cs.append(h.request[current] == ev["output"][fact])
+            if current in ev["input"]:
+                cs.append(ev["input"][current] == ev["output"][fact])
+    return cs
 
 
 def prefer_realistic(opt, h, pool):
@@ -156,6 +168,7 @@ def solve(form_a, form_b, fields, pool):
             opt = Optimize()
             opt.add(*h.shape())
             opt.add(a != b)
+            opt.add(*time_only(form_a, form_b, h))
             for ev in h.events:
                 opt.add(h.gap(ev) % grain == 0)
             prefer_realistic(opt, h, pool)
@@ -172,6 +185,7 @@ def disagreement_range(form_a, form_b, fields):
         opt = Optimize()
         opt.add(*h.shape())
         opt.add(permits(form_a, h) != permits(form_b, h))
+        opt.add(*time_only(form_a, form_b, h))
         g = h.gap(h.events[0])
         (opt.minimize if direction == "min" else opt.maximize)(g)
         if opt.check() != sat:
@@ -190,31 +204,15 @@ def py(model, v):
     return x.as_string()
 
 
-def at_label(seconds):
-    for unit, size in (("h", 3600), ("m", 60)):
-        if seconds % size == 0:
-            return f"{seconds // size}{unit}"
-    return f"{seconds}s"
-
-
-def how_long(seconds):
-    parts = []
-    for name, size in (("hour", 3600), ("minute", 60), ("second", 1)):
-        n, seconds = divmod(seconds, size)
-        if n:
-            parts.append(f"{n} {name}{'s' if n != 1 else ''}")
-    if not parts:
-        return "just now"
-    return (", ".join(parts[:-1]) + " and " + parts[-1]) if len(parts) > 1 else parts[0]
-
-
 def describe_prior(action, inp, out):
     if action == "RequestApproval":
         if not out.get("approved"):
             return f"A manager turned down a ${inp['amount']} refund for order {inp['order_id']}"
         if out.get("approved_amount", inp["amount"]) != inp["amount"]:
-            return (f"A manager approved ${out['approved_amount']} of a ${inp['amount']} refund request "
-                    f"for order {inp['order_id']}")
+            return (
+                f"A manager approved ${out['approved_amount']} of a ${inp['amount']} refund request "
+                f"for order {inp['order_id']}"
+            )
         return f"A manager approved a ${inp['amount']} refund for order {inp['order_id']}"
     if action == "RunTests":
         return f"Tests for {inp['service']} {inp['version']} {'passed' if out.get('passed') else 'failed'}"
@@ -239,16 +237,16 @@ def build_case(h, model):
         inp = {f: py(model, v) for f, v in ev["input"].items()}
         out = {f: py(model, v) for f, v in ev["output"].items()}
         prior.append((now - t, inp, out))
-        events.append({"at": at_label(t), "tool": TOOL_FOR[h.prior_action], "kind": "response",
-                       "input": inp, "output": out})
+        events.append(
+            {"at": window(t), "tool": TOOL_FOR[h.prior_action], "kind": "response", "input": inp, "output": out}
+        )
     req = {f: py(model, v) for f, v in h.request.items()}
-    events.append({"at": at_label(now), "tool": TOOL_FOR[h.request_action], "input": req})
+    events.append({"at": window(now), "tool": TOOL_FOR[h.request_action], "input": req})
     return {"id": "solver_question_1", "events": events}, prior, req
 
 
 def question_text(h, prior, req):
-    lines = [f"{describe_prior(h.prior_action, inp, out)} {how_long(ago)} ago."
-             for ago, inp, out in prior]
+    lines = [f"{describe_prior(h.prior_action, inp, out)} {how_long(ago)} ago." for ago, inp, out in prior]
     return " ".join(lines + [describe_request(h.request_action, req), "Allow or block?"])
 
 
@@ -256,7 +254,7 @@ def dogwood_verdict(form, case, workdir, tag):
     rule = workdir / f"rule_{tag}.dw"
     rule.write_text(convert([(tag, form)], str(SCHEMA)), encoding="utf-8")
     policy = build_policy(BASE, rule, workdir / f"policy_{tag}.dw")
-    gate = DogwoodGate(workdir, policy, SCHEMA)
+    gate = DogwoodGate(workdir, policy, SCHEMA, form=form)
     ok, msg = gate.validate()
     if not ok:
         sys.exit(f"{tag}: policy did not validate\n{msg}")
@@ -271,36 +269,55 @@ def dogwood_verdict(form, case, workdir, tag):
     return by_ts[scored[-1]["ts"]]
 
 
+def load_forms(path_a, path_b, actions):
+    """The two forms to compare, keyed "a" and "b", as (path, form)."""
+    forms = {}
+    for tag, path in (("a", path_a), ("b", path_b)):
+        form = json.loads(Path(path).read_text(encoding="utf-8"))
+        validate_form(form, actions)
+        if form["kind"] != "requires_prior":
+            sys.exit(f"{path}: only requires_prior forms are supported")
+        forms[tag] = (Path(path), form)
+    (_, fa), (_, fb) = forms["a"], forms["b"]
+    if (fa["action"], fa["requires"]["action"]) != (fb["action"], fb["requires"]["action"]):
+        sys.exit("the two forms must guard the same action with the same earlier action")
+    return forms
+
+
+def print_result(result, span, out):
+    print(result["question"])
+    print()
+    for tag in ("a", "b"):
+        v = result["versions"][tag]
+        print(f"  {v['form']} (within {v['within']}): {v['verdict']}  [confirmed by dogwood replay]")
+    if span:
+        print(
+            f"  The two versions disagree whenever the earlier event is more than "
+            f"{how_long(span[0] - 1)} and at most {how_long(span[1])} old."
+        )
+    print(f"\nSaved {out / 'question.json'}")
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("form_a", nargs="?", default=str(Path(__file__).parent / "forms" / "recently_1h.json"))
     p.add_argument("form_b", nargs="?", default=str(Path(__file__).parent / "forms" / "recently_24h.json"))
     p.add_argument("--actions", default=str(ACTIONS))
-    p.add_argument("--out", default=str(OUT))
+    p.add_argument("--out", help="New directory for the question (default: pipeline-runs/question/<timestamp>)")
     args = p.parse_args()
 
-    forms = {}
     _, conv_actions = load_schema(SCHEMA)
-    for tag, path in (("a", args.form_a), ("b", args.form_b)):
-        form = json.loads(Path(path).read_text(encoding="utf-8"))
-        validate_form(form, conv_actions)
-        if form["kind"] != "requires_prior":
-            sys.exit(f"{path}: only requires_prior forms are supported")
-        forms[tag] = (Path(path), form)
+    forms = load_forms(args.form_a, args.form_b, conv_actions)
     (pa, fa), (pb, fb) = forms["a"], forms["b"]
-    if (fa["action"], fa["requires"]["action"]) != (fb["action"], fb["requires"]["action"]):
-        sys.exit("the two forms must guard the same action with the same earlier action")
 
-    fields = schema_types(SCHEMA)
-    found = solve(fa, fb, fields, value_pool(args.actions))
+    found = solve(fa, fb, conv_actions, value_pool(args.actions))
     if found is None:
         sys.exit(f"no disagreement found with up to {MAX_EVENTS} earlier events: the two forms agree")
     h, model, ea, eb, grain = found
-    predicted = {"a": "ALLOW" if bool(model.eval(ea)) else "DENY",
-                 "b": "ALLOW" if bool(model.eval(eb)) else "DENY"}
+    predicted = {"a": "ALLOW" if bool(model.eval(ea)) else "DENY", "b": "ALLOW" if bool(model.eval(eb)) else "DENY"}
 
     case, prior, req = build_case(h, model)
-    out = Path(args.out)
+    out = Path(args.out) if args.out else OUT_ROOT / datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     work = out / "dogwood"
     work.mkdir(parents=True, exist_ok=True)
     actual = {tag: dogwood_verdict(forms[tag][1], case, work, tag) for tag in ("a", "b")}
@@ -308,7 +325,7 @@ def main():
         sys.exit(f"solver predicted {predicted} but dogwood returned {actual}; encoding does not match the rule")
 
     text = question_text(h, prior, req)
-    span = disagreement_range(fa, fb, fields) if len(h.events) == 1 else None
+    span = disagreement_range(fa, fb, conv_actions) if len(h.events) == 1 else None
     result = {
         "question": text,
         "rule": fa.get("sentence", ""),
@@ -316,22 +333,17 @@ def main():
             "a": {"form": pa.name, "within": fa["requires"]["within"], "verdict": actual["a"]},
             "b": {"form": pb.name, "within": fb["requires"]["within"], "verdict": actual["b"]},
         },
-        "solver": {"name": "z3", "earlier_events": len(h.events), "time_grain_seconds": grain,
-                   "disagree_when_seconds_ago": span},
+        "solver": {
+            "name": "z3",
+            "earlier_events": len(h.events),
+            "time_grain_seconds": grain,
+            "disagree_when_seconds_ago": span,
+        },
         "case": case,
     }
     (out / "question.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     (out / "question.txt").write_text(text + "\n", encoding="utf-8")
-
-    print(text)
-    print()
-    for tag in ("a", "b"):
-        v = result["versions"][tag]
-        print(f"  {v['form']} (within {v['within']}): {v['verdict']}  [confirmed by dogwood replay]")
-    if span:
-        print(f"  The two versions disagree whenever the earlier event is more than "
-              f"{how_long(span[0] - 1)} and at most {how_long(span[1])} old.")
-    print(f"\nSaved {out / 'question.json'}")
+    print_result(result, span, out)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,4 @@
-// "Don't deploy to production if the tests failed recently."
-// Reading A: "recently" = a fixed window. ANY failing run on this commit in
-// the last hour blocks the deploy, even if a later run passed.
+// Don't deploy to production if any test run on this commit failed in the last hour, even if a later run passed.
 @id("deploy_allowed")
 permit (principal, action == Shop::Action::"Deploy", resource);
 

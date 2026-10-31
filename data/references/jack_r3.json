@@ -1,0 +1,23 @@
+{
+  "sentence": "Production deploys are only allowed for payments, search and web.",
+  "status": "ready",
+  "source": "4_rules/policies.dw R3",
+  "forms": [
+    {
+      "id": "reference_allowlist",
+      "action": "DeployService",
+      "kind": "allowlist",
+      "field": "service",
+      "allowed": [
+        "payments",
+        "search",
+        "web"
+      ],
+      "only_when": {
+        "field": "env",
+        "op": "==",
+        "value": "prod"
+      }
+    }
+  ]
+}
