@@ -1,14 +1,16 @@
-// Action schema for the testbed's mock tools.
 // Each tool's arguments live under context.input; its result lives under context.output.
 namespace Shop {
   type LookupOrderInput = { order_id: String };
   type LookupOrderOutput = { total: Long, status: String };
 
   type RequestApprovalInput = { order_id: String, amount: Long, reason: String };
-  type RequestApprovalOutput = { approved: Bool, approver: String, approved_amount: Long };
+  type RequestApprovalOutput = { approved: Bool, approver: String, approved_amount: Long, reason?: String };
 
   type IssueRefundInput = { order_id: String, amount: Long };
   type IssueRefundOutput = { refund_id: String, amount: Long };
+  // Checked facts the context engine attaches to a refund request (context_engine.py).
+  type RefundFacts = { status: String, approved_amount?: Long, refunded_so_far?: Long, approver_role?: String, order_total?: Long,
+                      refunded_on_order?: Long };
 
   type RunTestsInput = { service: String, version: String };
   type RunTestsOutput = { passed: Bool };
@@ -34,7 +36,7 @@ namespace Shop {
   };
   action "IssueRefund" appliesTo {
     principal: [OAuthUser], resource: [Gateway],
-    context: { input: IssueRefundInput, output?: IssueRefundOutput, system: SystemContext }
+    context: { input: IssueRefundInput, facts?: RefundFacts, output?: IssueRefundOutput, system: SystemContext }
   };
   action "RunTests" appliesTo {
     principal: [OAuthUser], resource: [Gateway],

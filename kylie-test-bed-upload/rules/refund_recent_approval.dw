@@ -1,7 +1,4 @@
-// Assignment 4 rule: "Only refund if a manager approved it recently."
-// Hand-written stand-in until Jack's form -> Dogwood converter produces this file.
-// "Recently" = within 1 hour here (Part 3 compares 1h vs 24h).
-
+// Only refund if a manager approved it within the last hour.
 @id("refund_only_if_recently_approved")
 permit ( principal, action == Shop::Action::"IssueRefund", resource )
 when temporal {

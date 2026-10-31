@@ -1,10 +1,11 @@
 """Record hash-chained agent session events."""
+
 import hashlib
 import json
 import platform
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 GENESIS = "0" * 64
@@ -26,7 +27,7 @@ def event_hash(record):
 class Recorder:
     def __init__(self, root=".provenance", session_id=None):
         self.start = time.monotonic()
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S-%f")[:-3]  # ms, so back-to-back runs differ
+        stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S-%f")[:-3]  # ms, so back-to-back runs differ
         self.session_id = session_id or f"session-{stamp}"
         self.dir = Path(root) / self.session_id
         self.dir.mkdir(parents=True, exist_ok=False)
@@ -43,7 +44,7 @@ class Recorder:
         self.seq += 1
         record = {
             "seq": self.seq,
-            "time": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
+            "time": datetime.now(UTC).isoformat(timespec="milliseconds"),
             "elapsed_s": round(self.elapsed(), 3),
             "kind": kind,
             "summary": summary,
@@ -61,9 +62,15 @@ class Recorder:
 
     def start_session(self, task_name, task_text, model, policy, schema):
         return self.log(
-            "session_start", f"task '{task_name}' with model {model}",
-            task=task_name, task_text=task_text, model=model,
-            policy_file=str(policy), policy_sha256=file_hash(policy),
-            schema_file=str(schema), schema_sha256=file_hash(schema),
-            python=sys.version.split()[0], platform=platform.platform(),
+            "session_start",
+            f"task '{task_name}' with model {model}",
+            task=task_name,
+            task_text=task_text,
+            model=model,
+            policy_file=str(policy),
+            policy_sha256=file_hash(policy),
+            schema_file=str(schema),
+            schema_sha256=file_hash(schema),
+            python=sys.version.split()[0],
+            platform=platform.platform(),
         )

@@ -1,6 +1,4 @@
-// Base permissions the store always loads. Read-only and low-risk tools are allowed.
-// The rule file under test is added after these (see run_task.py --rules).
-// Deny by default: anything not permitted here or in the rule file is blocked.
+// Read-only and low-risk tools are always allowed.
 
 @id("allow_lookup")
 permit ( principal, action == Shop::Action::"LookupOrder", resource );
@@ -13,3 +11,18 @@ permit ( principal, action == Shop::Action::"RunTests", resource );
 
 @id("allow_rollback")
 permit ( principal, action == Shop::Action::"Rollback", resource );
+
+// Under any rule file, never refund more than the order total in all; with no facts this rule does not apply.
+@id("refund_within_order_total")
+forbid ( principal, action == Shop::Action::"IssueRefund", resource )
+when {
+    context has facts &&
+    context.facts has order_total &&
+    context.facts has refunded_on_order &&
+    context.input.amount + context.facts.refunded_on_order > context.facts.order_total
+};
+
+// Under any rule file, block the refund when the store's records disagree; a person reviews.
+@id("refund_blocked_on_conflict")
+forbid ( principal, action == Shop::Action::"IssueRefund", resource )
+when { context has facts && context.facts.status == "conflict" };

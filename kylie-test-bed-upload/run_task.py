@@ -1,17 +1,19 @@
 """Run guarded agent tasks and score their final state."""
+
 import argparse
 import json
 import sys
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
-from agent import OllamaModel, ScriptedModel, run_agent
-from enforce import DogwoodGate, build_policy
+from agent import OllamaModel, ScriptedModel, config, run_agent
+from enforce import DogwoodGate, build_policy, find_form
 from recorder import Recorder, file_hash
 from tools import APPROVAL_MODES, MockWorld
 
 SCHEMA = "policies/schema.cedarschema"
+FINAL_MESSAGE_CHARS = 160
 
 
 def load_tasks(path):
@@ -39,80 +41,165 @@ def check(world, expect):
     return True, "store matches expected state"
 
 
-def run_one(task, args, run_number):
-    approval = args.approval or task.get("approval", "yes")
+def _approval_mode(task, args):
     if args.approval and args.approval != task.get("approval", "yes"):
-        print(f"  note: --approval {args.approval} overrides the task's '{task.get('approval')}', "
-              f"but the expected result still comes from the task file. Prefer refund_denied / refund_different_amount.")
-    different = args.different_amount if args.different_amount is not None else task.get("different_amount")
-    world = MockWorld(approval=approval, different_amount=different)
+        # The expected result in the task file assumes the task's own approval mode, so an override
+        # would score the run against the wrong answer. Refuse instead of producing a misleading score.
+        sys.exit(
+            f"--approval {args.approval} conflicts with task '{task['id']}' (approval "
+            f"'{task.get('approval')}'). Pick the task written for that mode, e.g. refund_denied."
+        )
+    return args.approval or task.get("approval", "yes")
 
-    if args.model == "scripted":
-        model = ScriptedModel(task.get("script", "refund"))
-    else:
-        model = OllamaModel(args.model)
 
-    output_dir = getattr(args, "output_dir", None)
-    rec = Recorder(root=Path(output_dir) / "traces" if output_dir else ".provenance")
-    print(f"\n=== {task['id']} (run {run_number}) -> {rec.dir}")
-    policy = build_policy(args.base, args.rules, rec.dir / "policy.dw")
-    rec.start_session(task["id"], task["prompt"], model.name, policy, SCHEMA)
-    rec.log("store_setup", f"rules={args.rules} approval={approval}"
-            + (f" different_amount={different}" if approval == "different" else ""),
-            rule_file=str(args.rules), base_file=str(args.base), approval=approval,
-            different_amount=different, run=run_number)
+def _expected(task, args):
+    # A task can say what is right under a specific rule file (e.g. no $500 cap in some rules).
+    return task.get("expect_by_rule", {}).get(Path(args.rules).name, task["expect"])
 
-    gate = DogwoodGate(rec.dir, policy, SCHEMA)
+
+def _log_setup(rec, task, args, approval, different, run_number):
+    rec.log(
+        "store_setup",
+        f"rules={args.rules} approval={approval}"
+        + (f" different_amount={different}" if approval == "different" else "")
+        + f" prompt={args.prompt} repair={'off' if args.no_repair else 'on'} nudge={'off' if args.no_nudge else 'on'}"
+        + f" claim_check={'off' if args.no_claim_check else 'on'}",
+        rule_file=str(args.rules),
+        base_file=str(args.base),
+        approval=approval,
+        different_amount=different,
+        run=run_number,
+        expect=_expected(task, args),
+        prompt=args.prompt,
+        repair=not args.no_repair,
+        nudge=not args.no_nudge,
+        claim_check=not args.no_claim_check,
+        agent_sha256=file_hash("agent.py"),
+    )
+
+
+def _validated_gate(rec, policy, args, world):
+    form, form_path = find_form(args.rules, getattr(args, "form", None))
+    rec.log(
+        "rule_form",
+        f"form={form_path or 'none'} (the context engine's window comes from it)",
+        form=form,
+        form_path=str(form_path) if form_path else None,
+    )
+    gate = DogwoodGate(rec.dir, policy, SCHEMA, form=form, store=world)
     ok, msg = gate.validate()
     rec.log("policy_validate", "OK" if ok else "FAILED", output=msg)
     if not ok:
         rec.log("session_end", "stopped: policy did not validate", passed=False)
         print(msg)
         sys.exit(2)
+    return gate
+
+
+def _run_row(task, run_number, approval, passed, reason, final, rec):
+    events = [json.loads(line) for line in (rec.dir / "events.jsonl").read_text(encoding="utf-8").splitlines()]
+    decisions = [e["data"] for e in events if e["kind"] == "policy_decision"]
+    return {
+        "task": task["id"],
+        "run": run_number,
+        "approval": approval,
+        "passed": passed,
+        "reason": reason,
+        "allowed": sum(d["decision"] == "ALLOW" for d in decisions),
+        "blocked": sum(d["decision"] != "ALLOW" for d in decisions),
+        "guard_decisions": [f"{d['decision']} {d['tool']}({d['args']})" for d in decisions],
+        "claim_nudges": sum(e["kind"] == "claim_nudge" for e in events),
+        "final_message": final[:FINAL_MESSAGE_CHARS],
+        "session": rec.dir.name,
+        "failure_label": "",
+        "failure_reason": "",  # filled in by a labeler: rule, prompt or agent
+    }
+
+
+def run_one(task, args, run_number):
+    approval = _approval_mode(task, args)
+    different = args.different_amount if args.different_amount is not None else task.get("different_amount")
+    world = MockWorld(approval=approval, different_amount=different)
+    model = ScriptedModel(task.get("script", "refund")) if args.model == "scripted" else OllamaModel(args.model)
+
+    output_dir = getattr(args, "output_dir", None)
+    rec = Recorder(root=Path(output_dir) / "traces" if output_dir else ".provenance")
+    print(f"\n{task['id']} (run {run_number}) -> {rec.dir}")
+    policy = build_policy(args.base, args.rules, rec.dir / "policy.dw")
+    rec.start_session(task["id"], task["prompt"], model.name, policy, SCHEMA)
+    _log_setup(rec, task, args, approval, different, run_number)
+    gate = _validated_gate(rec, policy, args, world)
 
     try:
-        world, final = run_agent(model, task["prompt"], gate, rec, world=world, max_turns=args.max_turns)
+        world, final = run_agent(
+            model,
+            task["prompt"],
+            gate,
+            rec,
+            world=world,
+            max_turns=args.max_turns,
+            prompt=args.prompt,
+            repair=not args.no_repair,
+            nudge=not args.no_nudge,
+            claim_check=not args.no_claim_check,
+        )
     except Exception as e:
         rec.log("session_end", f"crashed: {e}", passed=False, error=repr(e))
         raise
 
-    passed, reason = check(world, task["expect"])
-    rec.log("task_check", ("PASS: " if passed else "FAIL: ") + reason, passed=passed,
-            refunds=world.refunds, approvals=world.approvals,
-            deployed={f"{s}/{e}": v for (s, e), v in world.deployed.items()})
+    passed, reason = check(world, _expected(task, args))
+    rec.log(
+        "task_check",
+        ("PASS: " if passed else "FAIL: ") + reason,
+        passed=passed,
+        refunds=world.refunds,
+        approvals=world.approvals,
+        deployed={f"{s}/{e}": v for (s, e), v in world.deployed.items()},
+    )
     rec.log("session_end", f"{rec.seq + 1} events recorded", passed=passed)
-
-    events = [json.loads(l) for l in (rec.dir / "events.jsonl").read_text(encoding="utf-8").splitlines()]
-    decisions = [e["data"] for e in events if e["kind"] == "policy_decision"]
-    return {
-        "task": task["id"], "run": run_number, "approval": approval, "passed": passed, "reason": reason,
-        "allowed": sum(d["decision"] == "ALLOW" for d in decisions),
-        "blocked": sum(d["decision"] != "ALLOW" for d in decisions),
-        "guard_decisions": [f"{d['decision']} {d['tool']}({d['args']})" for d in decisions],
-        "final_message": final[:160], "session": rec.dir.name,
-        "failure_label": "", "failure_reason": "",   # filled in for Part 4 (rule / prompt / agent)
-    }
+    return _run_row(task, run_number, approval, passed, reason, final, rec)
 
 
 def write_scorecard(rows, args):
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     out = Path(getattr(args, "output_dir", None) or "results")
     out.mkdir(parents=True, exist_ok=True)
-    meta = {"rules": str(args.rules), "base": str(args.base), "tasks": str(args.tasks), "model": args.model}
-    meta["sha256"] = {"rules": file_hash(args.rules), "base": file_hash(args.base),
-                      "tasks": file_hash(args.tasks), "schema": file_hash(SCHEMA)}
+    meta = {
+        "rules": str(args.rules),
+        "base": str(args.base),
+        "tasks": str(args.tasks),
+        "model": args.model,
+        "prompt": args.prompt,
+        "repair": not args.no_repair,
+        "nudge": not args.no_nudge,
+        "claim_check": not args.no_claim_check,
+    }
+    meta["sha256"] = {
+        "rules": file_hash(args.rules),
+        "base": file_hash(args.base),
+        "tasks": file_hash(args.tasks),
+        "schema": file_hash(SCHEMA),
+    }
     (out / f"agent_scorecard_{stamp}.json").write_text(json.dumps({"setup": meta, "runs": rows}, indent=2))
     passed = sum(r["passed"] for r in rows)
     lines = [
-        f"# Agent scorecard ({stamp})", "",
+        f"# Agent scorecard ({stamp})",
+        "",
         f"- Rule file: `{args.rules}`  |  Model: `{args.model}`  |  Tasks: `{args.tasks}`",
-        f"- **Passed {passed} of {len(rows)} runs**", "",
+        (
+            f"- Prompt: `{args.prompt}`  |  Malformed-reply repair: {'off' if args.no_repair else 'on'}  |  "
+            f"Nudge: {'off' if args.no_nudge else 'on'}  |  Claim check: {'off' if args.no_claim_check else 'on'}"
+        ),
+        f"- **Passed {passed} of {len(rows)} runs**",
+        "",
         "| Task | Run | Approval | Result | Allowed | Blocked | Why | Session | Failure label |",
         "|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
-        lines.append(f"| {r['task']} | {r['run']} | {r['approval']} | {'PASS' if r['passed'] else 'FAIL'} | "
-                     f"{r['allowed']} | {r['blocked']} | {r['reason']} | {r['session']} | |")
+        lines.append(
+            f"| {r['task']} | {r['run']} | {r['approval']} | {'PASS' if r['passed'] else 'FAIL'} | "
+            f"{r['allowed']} | {r['blocked']} | {r['reason']} | {r['session']} | |"
+        )
     (out / f"agent_scorecard_{stamp}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nScorecard: {out / f'agent_scorecard_{stamp}.md'}  (passed {passed} of {len(rows)})")
 
@@ -124,12 +211,22 @@ def main():
     p.add_argument("--all", action="store_true", help="run every task in the task file")
     p.add_argument("--rules", default="rules/starter.dw", help="rule file under test (.dw)")
     p.add_argument("--base", default="policies/base.dw", help="store's base permissions (.dw)")
-    p.add_argument("--model", default="qwen2.5:3b", help="an Ollama model name, or 'scripted'")
+    p.add_argument("--model", default=config.MODEL, help="an Ollama model name, or 'scripted'")
     p.add_argument("--approval", choices=APPROVAL_MODES, help="override how the manager answers")
     p.add_argument("--different-amount", type=int, help="amount approved when --approval different")
     p.add_argument("--runs", type=int, default=1, help="repeat each task this many times")
     p.add_argument("--max-turns", type=int, default=10)
     p.add_argument("--output-dir", help="Save scorecards and session traces together here")
+    p.add_argument(
+        "--prompt",
+        choices=["current", "current-amount", "a3", "a3-original"],
+        default="current",
+        help="system prompt version",
+    )
+    p.add_argument("--no-repair", action="store_true", help="turn off the malformed-reply message (Part 4 tests)")
+    p.add_argument("--no-nudge", action="store_true", help="turn off the after-block nudge (Part 4 tests)")
+    p.add_argument("--no-claim-check", action="store_true", help="turn off the unbacked-claim message (Part 2e tests)")
+    p.add_argument("--form", help="rule form for the context engine (default: updated_form.json next to --rules)")
     args = p.parse_args()
 
     tasks = load_tasks(args.tasks)

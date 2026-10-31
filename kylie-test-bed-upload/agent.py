@@ -1,10 +1,27 @@
 """The agent loop: a local model picks tools, the gate checks each one, the recorder logs it all."""
+
 import json
+import re
+import sys
 import urllib.error
 import urllib.request
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import ClassVar
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools import TOOL_SPECS, MockWorld, ToolError, check_args, ollama_tool_list
 
+from app.core import config
+
+CHAT_TIMEOUT_SECONDS = 300
+NANOSECONDS = 1e9
+MAX_EMPTY_RETRIES = 2
+MALFORMED_REPLY_NOTE = (
+    "Your last reply could not be read: it was not a valid tool call. "
+    "Call exactly one tool using the tool-calling format, or reply in plain text if you are done."
+)
 SYSTEM_PROMPT = (
     "You are a customer support and operations agent for an online store. "
     "Use the tools to do the task. Every tool call is checked by a policy engine before it runs; "
@@ -17,16 +34,37 @@ SYSTEM_PROMPT = (
     "When the task is done, or you cannot finish it, reply with a short summary and no tool call."
 )
 
+# Other prompts, kept so a run can test whether a line fixes a failure.
+# Without the two lines about refund_id and approved_amount:
+SYSTEM_PROMPT_A3 = SYSTEM_PROMPT.replace(
+    "A refund only happens when issue_refund returns a refund_id; never say a refund is done otherwise. "
+    "If the manager approves a different amount, refund only approved_amount. If the manager says no, do not refund. ",
+    "",
+)
+# Also without the two "work alone" lines:
+SYSTEM_PROMPT_A3_ORIGINAL = SYSTEM_PROMPT_A3.replace(
+    "You are working alone: no human will reply, so never ask the user a question. "
+    "If you need a manager's approval, call request_approval yourself with a short reason you write. ",
+    "",
+)
+# One more instruction, for the "asked for less than the task needs" failure:
+SYSTEM_PROMPT_AMOUNT = SYSTEM_PROMPT.replace(
+    "When the task is done,",
+    "Ask the manager to approve exactly the amount the task asks for; never lower it yourself. When the task is done,",
+)
+PROMPTS = {
+    "current": SYSTEM_PROMPT,
+    "current-amount": SYSTEM_PROMPT_AMOUNT,
+    "a3": SYSTEM_PROMPT_A3,
+    "a3-original": SYSTEM_PROMPT_A3_ORIGINAL,
+}
 
-# ---------------------------------------------------------------- models
 
 class OllamaModel:
-    """Talks to a model running in Ollama on this computer (http://localhost:11434)."""
-
-    def __init__(self, name, host="http://localhost:11434"):
+    def __init__(self, name=config.MODEL, host=config.OLLAMA_URL):
         self.name = name
         self.url = host.rstrip("/") + "/api/chat"
-        self.temperature = 0   # 0 = most repeatable; raised only when retrying an empty reply
+        self.calls = 0
 
     def chat(self, messages):
         body = {
@@ -34,17 +72,30 @@ class OllamaModel:
             "messages": messages,
             "tools": ollama_tool_list(),
             "stream": False,
-            "options": {"temperature": self.temperature},
+            "keep_alive": config.KEEP_ALIVE,
+            "options": {"temperature": config.TEMPERATURE, "num_ctx": config.NUM_CTX},
         }
-        req = urllib.request.Request(self.url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(
+            self.url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"}
+        )
         try:
-            with urllib.request.urlopen(req, timeout=300) as resp:
+            with urllib.request.urlopen(req, timeout=CHAT_TIMEOUT_SECONDS) as resp:
                 reply = json.loads(resp.read())
         except urllib.error.URLError as e:
             raise RuntimeError(f"Could not reach Ollama at {self.url}. Is the Ollama app running? ({e})")
         msg = reply.get("message", {})
-        self.last_raw = {"done_reason": reply.get("done_reason"), "content": (msg.get("content") or "")[:300],
-                         "tool_calls": msg.get("tool_calls"), "eval_count": reply.get("eval_count")}
+        load_seconds = reply.get("load_duration", 0) / NANOSECONDS
+        self.last_raw = {
+            "done_reason": reply.get("done_reason"),
+            "content": (msg.get("content") or "")[:300],
+            "tool_calls": msg.get("tool_calls"),
+            "eval_count": reply.get("eval_count"),
+            "prompt_eval_count": reply.get("prompt_eval_count"),
+            "load_seconds": round(load_seconds, 2),
+        }
+        for warning in config.call_warnings(reply.get("prompt_eval_count"), load_seconds, first_call=self.calls == 0):
+            print(f"warning: {warning}", file=sys.stderr, flush=True)
+        self.calls += 1
         calls = []
         for c in msg.get("tool_calls") or []:
             fn = c.get("function", {})
@@ -61,7 +112,7 @@ class OllamaModel:
 class ScriptedModel:
     """Follow fixed tool calls for explicitly labeled scripted runs."""
 
-    SCRIPTS = {
+    SCRIPTS: ClassVar[dict] = {
         "refund": [
             [("lookup_order", {"order_id": "A100"})],
             [("request_approval", {"order_id": "A100", "amount": 40, "reason": "blender arrived damaged"})],
@@ -101,41 +152,140 @@ class ScriptedModel:
         return "", [{"name": n, "args": a} for n, a in step]
 
 
-# ---------------------------------------------------------------- loop
+# Words in a final message that say an action already happened, and the tool that must have
+# succeeded for that to be true. The model has written "Refunding $25 ..." and stopped.
+CLAIMS = [
+    (
+        "a refund",
+        "issue_refund",
+        re.compile(
+            r"\brefund(ing|ed)\b|\brefunds? (has been |have been |was |were |is )?(issued|processed)\b", re.IGNORECASE
+        ),
+    ),
+    ("a deploy", "deploy_service", re.compile(r"\bdeployed\b", re.IGNORECASE)),
+    ("a rollback", "rollback", re.compile(r"\brolled back\b", re.IGNORECASE)),
+]
+# A sentence with any of these is a refusal, a plan or a condition, not a claim that it happened.
+NOT_A_CLAIM = re.compile(
+    r"n't\b|\b(not|no|nothing|never|cannot|unable|denied|declined|refused|rejected|blocked|failed|without"
+    r"|if|once|until|unless|will|would|should|could|may|might|need|needs|pending|awaiting|waiting"
+    r"|before|about|whether|instead)\b",
+    re.IGNORECASE,
+)
 
-def run_agent(model, task_text, gate, recorder, world=None, max_turns=10):
+
+def claimed_actions(text):
+    """(action, tool) for every completed action the text claims, in CLAIMS order, no repeats."""
+    found = []
+    for sentence in re.split(r"(?<=[.!?;])\s+|\n+", text or ""):
+        if NOT_A_CLAIM.search(sentence):
+            continue
+        for action, tool, pattern in CLAIMS:
+            if pattern.search(sentence) and (action, tool) not in found:
+                found.append((action, tool))
+    return found
+
+
+@dataclass
+class _LoopState:
+    nudged: bool = False
+    last_blocked: bool = False
+    block_reason: str = ""
+    empty_retries: int = 0
+    succeeded: set = field(default_factory=set)  # tools that ran and returned a result in this session
+    claim_nudged: set = field(default_factory=set)  # actions already questioned, so each is asked about at most once
+
+    def note_tool_result(self, tool, result_text):
+        self.last_blocked = result_text.startswith("BLOCKED")
+        if not result_text.startswith(("BLOCKED", "ERROR")):
+            self.succeeded.add(tool)
+        if self.last_blocked:
+            self.block_reason = result_text.split("Reason:", 1)[-1].strip()
+
+
+def _assistant_message(text, calls):
+    return {
+        "role": "assistant",
+        "content": text,
+        "tool_calls": [{"function": {"name": c["name"], "arguments": c["args"]}} for c in calls],
+    }
+
+
+def _note_after_text_reply(text, state, nudge, claim_check, recorder):
+    """The message to send back after a text-only reply, or None if the model's answer stands."""
+    # One nudge, only right after a block: small models often ask a human instead of using a tool.
+    if nudge and state.last_blocked and not state.nudged:
+        state.nudged = True
+        note = (
+            "No human will reply. Your last action was blocked: "
+            + state.block_reason
+            + " If a tool can satisfy that rule, call it now; otherwise stop and summarize."
+        )
+        recorder.log("nudge", note)
+        return note
+    unbacked = [(a, t) for a, t in claimed_actions(text) if t not in state.succeeded and a not in state.claim_nudged]
+    if claim_check and unbacked:
+        action, tool = unbacked[0]
+        state.claim_nudged.add(action)
+        note = (
+            f"Your last message says {action} happened, but no {tool} call succeeded in this session. "
+            "If you meant to do it, call the tool now; otherwise say so."
+        )
+        recorder.log("claim_nudge", note, action=action, tool=tool, text=text)
+        return note
+    return None
+
+
+def run_agent(
+    model,
+    task_text,
+    gate,
+    recorder,
+    world=None,
+    max_turns=10,
+    prompt="current",
+    repair=True,
+    nudge=True,
+    claim_check=True,
+):
+    """prompt: a key of PROMPTS.
+    repair: tell the model when its reply was a malformed tool call, and let it retry.
+    nudge:  after a block, tell the model once that no human will reply.
+    claim_check: if a text-only reply claims an action no successful tool call backs, say so once per action.
+    Each switch turns one fix off, to see if its failure comes back."""
     world = world or MockWorld()
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": task_text}]
+    messages = [{"role": "system", "content": PROMPTS[prompt]}, {"role": "user", "content": task_text}]
     recorder.log("user_task", task_text)
-    nudged = False
-    last_blocked = False   # was the most recent tool call blocked by the policy?
-    block_reason = ""
-    empty_retries = 0
+    gate.note_message("user", task_text)
+    state = _LoopState()
 
     for turn in range(1, max_turns + 1):
         text, calls = model.chat(messages)
         raw = getattr(model, "last_raw", None)
-        if not text and not calls and empty_retries < 2:
+        if repair and not text and not calls and state.empty_retries < MAX_EMPTY_RETRIES:
             # Empty reply: the model wrote tokens (see raw eval_count) but Ollama could not parse them
             # as text or a tool call, so it was a malformed tool call. Tell the model and ask again.
-            empty_retries += 1
-            recorder.log("empty_reply", f"turn {turn}: malformed reply (no text, no tool call), retrying ({empty_retries}/2)", raw=raw)
-            messages.append({"role": "user", "content":
-                "Your last reply could not be read: it was not a valid tool call. "
-                "Call exactly one tool using the tool-calling format, or reply in plain text if you are done."})
+            state.empty_retries += 1
+            recorder.log(
+                "empty_reply",
+                f"turn {turn}: malformed reply (no text, no tool call), retrying ({state.empty_retries}/{MAX_EMPTY_RETRIES})",
+                raw=raw,
+            )
+            messages.append({"role": "user", "content": MALFORMED_REPLY_NOTE})
             continue
-        recorder.log("model_turn", f"turn {turn}: {len(calls)} tool call(s)" + (f", said: {text[:80]!r}" if text else ""),
-                     turn=turn, text=text, tool_calls=calls, raw=raw)
-        messages.append({"role": "assistant", "content": text,
-                         "tool_calls": [{"function": {"name": c["name"], "arguments": c["args"]}} for c in calls]})
+        recorder.log(
+            "model_turn",
+            f"turn {turn}: {len(calls)} tool call(s)" + (f", said: {text[:80]!r}" if text else ""),
+            turn=turn,
+            text=text,
+            tool_calls=calls,
+            raw=raw,
+        )
+        messages.append(_assistant_message(text, calls))
 
         if not calls:
-            # One nudge, only right after a block: small models often ask a human instead of using a tool.
-            if last_blocked and not nudged and turn < max_turns:
-                nudged = True
-                note = ("No human will reply. Your last action was blocked: " + block_reason +
-                        " If a tool can satisfy that rule, call it now; otherwise stop and summarize.")
-                recorder.log("nudge", note)
+            note = _note_after_text_reply(text, state, nudge, claim_check, recorder) if turn < max_turns else None
+            if note:
                 messages.append({"role": "user", "content": note})
                 continue
             recorder.log("agent_final", text[:200] or "(no message)", text=text)
@@ -143,13 +293,38 @@ def run_agent(model, task_text, gate, recorder, world=None, max_turns=10):
 
         for call in calls:
             result_text = handle_call(call, gate, recorder, world)
-            last_blocked = result_text.startswith("BLOCKED")
-            if last_blocked:
-                block_reason = result_text.split("Reason:", 1)[-1].strip()
+            state.note_tool_result(call["name"], result_text)
             messages.append({"role": "tool", "content": result_text, "tool_name": call["name"]})
 
     recorder.log("agent_final", f"stopped after {max_turns} turns without finishing", text="")
     return world, ""
+
+
+def _log_decision(v, name, action, args, rule_text, recorder):
+    recorder.log(
+        "policy_decision",
+        f"{v['decision']} {name}({fmt_args(args)}) rules: {rule_text}" + (f" ({v['note']})" if v["note"] else ""),
+        tool=name,
+        action=action,
+        args=args,
+        **v,
+    )
+    if v["facts_status"]:
+        recorder.log(
+            "facts",
+            f"{v['facts_status']}: {v['facts_reason']}",
+            tool=name,
+            request_id=v["request_id"],
+            facts=v["facts"],
+            status=v["facts_status"],
+            sources=v["facts_sources"],
+        )
+    for claim in v["ignored_claims"]:
+        recorder.log("claim_ignored", f"ignored unverified claim, no approval record: {claim}", tool=name)
+    if v["needs_review"]:
+        recorder.log(
+            "needs_review", f"flagged for a person: {v['facts_reason']}", tool=name, request_id=v["request_id"]
+        )
 
 
 def handle_call(call, gate, recorder, world):
@@ -168,9 +343,7 @@ def handle_call(call, gate, recorder, world):
     action = TOOL_SPECS[name]["action"]
     v = gate.decide(action, args, recorder.elapsed())
     rule_text = ", ".join(v["rules"]) or "-"
-    recorder.log("policy_decision", f"{v['decision']} {name}({fmt_args(args)}) rules: {rule_text}"
-                 + (f" ({v['note']})" if v["note"] else ""),
-                 tool=name, action=action, args=args, **v)
+    _log_decision(v, name, action, args, rule_text, recorder)
 
     if v["decision"] != "ALLOW":
         recorder.log("blocked", f"{name} not run", tool=name, request_id=v["request_id"])
