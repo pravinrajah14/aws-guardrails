@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")"
+
+if ! command -v uv >/dev/null 2>&1; then
+  echo "uv is missing. Install it with: brew install uv" >&2
+  exit 2
+fi
+
+exec uv run python -m app.web.start "$@"

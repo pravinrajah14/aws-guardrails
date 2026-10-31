@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guardrails demo</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Guardrails demo</h1>
+    <nav role="tablist" aria-label="Sections">
+      <button role="tab" id="tab-write" aria-selected="true" aria-controls="write">Write policy</button>
+      <button role="tab" id="tab-check" aria-selected="false" aria-controls="check">Check and run</button>
+    </nav>
+    <p id="status" class="status" data-status="none" role="status" aria-live="polite">No rule yet</p>
+  </header>
+
+  <main id="write" role="tabpanel" aria-labelledby="tab-write">
+    <aside class="rail">
+      <ol id="steps" class="steps"></ol>
+      <p id="progress" class="progress" aria-live="polite"></p>
+      <div class="reset">
+        <button class="secondary" id="reset" type="button">Reset saved answers</button>
+        <div id="reset-confirm" hidden>
+          <p>Clear every saved answer? A backup file is written first.</p>
+          <button class="primary" id="reset-yes" type="button">Yes, reset</button>
+          <button class="secondary" id="reset-no" type="button">Cancel</button>
+        </div>
+        <p id="reset-result" class="progress" aria-live="polite"></p>
+      </div>
+    </aside>
+    <div class="work">
+      <form id="sentence-form">
+        <label for="sentence">Write a rule in plain English</label>
+        <textarea id="sentence" rows="2" required></textarea>
+        <div class="row">
+          <button type="submit" class="primary" id="go">Check this rule</button>
+          <div id="demos" class="demos" aria-label="Demo sentences"></div>
+        </div>
+      </form>
+
+      <section id="reading" hidden>
+        <p id="marked" class="marked"></p>
+        <ul class="legend" aria-label="What the marks mean">
+          <li><span class="mark stated">stated</span> in your sentence</li>
+          <li><span class="mark filled">filled</span> from a cited source</li>
+          <li><span class="mark asked">asked</span> of you</li>
+          <li><span class="mark review">flagged</span> for review</li>
+        </ul>
+        <p id="reading-line" class="reading-line"></p>
+      </section>
+
+      <p id="answer-error" class="error" role="alert" hidden></p>
+      <section id="questions" hidden><h2>Questions</h2><div id="question-list"></div></section>
+      <section id="reasons-box" hidden><h2 id="reasons-title">Why</h2><ul id="reasons"></ul></section>
+      <section id="summary-box" hidden><h2>In plain words</h2><p id="summary" class="summary"></p></section>
+      <section id="code-box" hidden><h2>Dogwood policy</h2><pre id="code"></pre></section>
+      <section id="validate-box" hidden><h2>Dogwood validate</h2><pre id="validate"></pre></section>
+      <section id="explain-box" hidden>
+        <h2>What Dogwood says it means</h2>
+        <pre id="literal"></pre>
+        <h2>Edge examples, replayed through Dogwood</h2>
+        <div id="examples"></div>
+      </section>
+      <details id="context-box" hidden>
+        <summary>Context this was read against</summary>
+        <div id="context"></div>
+      </details>
+    </div>
+  </main>
+
+  <main id="check" role="tabpanel" aria-labelledby="tab-check" hidden>
+    <div class="work wide">
+      <p id="no-policy" class="empty">Write a rule until its status is ready, and it will show up here.</p>
+      <div id="policy-view" hidden>
+        <section><h2>Current policy</h2><p id="check-summary" class="summary"></p><pre id="check-code"></pre></section>
+        <section><h2>Edge examples</h2><div id="check-examples"></div></section>
+        <section id="reference-box">
+          <h2>Check against the reference</h2>
+          <form id="reference-form" class="run-form">
+            <button class="secondary" id="reference-check" type="submit">Check this policy</button>
+            <label>Load a known bug <select id="bug"></select></label>
+            <button class="secondary" id="load-bug" type="button">Load this bug and check</button>
+          </form>
+          <p id="reference-progress" class="progress" aria-live="polite"></p>
+          <div id="reference-result"></div>
+        </section>
+        <section><h2>Confirmed cases</h2><div id="saved-cases"></div></section>
+        <section id="runner">
+          <h2>Run the agent</h2>
+          <form id="run-form" class="run-form">
+            <label>Task <select id="task"></select></label>
+            <fieldset>
+              <legend>The manager answers</legend>
+              <label><input type="radio" name="approval" value="yes" checked> Yes</label>
+              <label><input type="radio" name="approval" value="no"> No</label>
+              <label><input type="radio" name="approval" value="different"> A different amount:
+                <input type="number" id="different" min="1" value="25" aria-label="Different amount"></label>
+            </fieldset>
+            <button class="primary" id="run">Run the agent</button>
+          </form>
+          <p id="task-prompt" class="task-prompt"></p>
+          <p id="run-progress" class="progress" aria-live="polite"></p>
+          <ol id="run-steps" class="run-steps"></ol>
+          <div id="end-state" hidden>
+            <h3>The store afterward</h3>
+            <div id="state"></div>
+            <p><a id="log-link" target="_blank" rel="noopener">Open the run's log</a></p>
+          </div>
+          <h3>Earlier runs of this policy</h3>
+          <ul id="past-runs"></ul>
+        </section>
+        <details id="planted-box">
+          <summary>Every planted error in the checker</summary>
+          <button class="secondary" id="planted-run" type="button">Replay them through Dogwood</button>
+          <div id="planted"></div>
+        </details>
+      </div>
+    </div>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
