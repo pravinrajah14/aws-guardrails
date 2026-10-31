@@ -1,0 +1,1315 @@
+{
+ "mode": "heldout",
+ "model": "qwen2.5:7b",
+ "num_ctx": 2048,
+ "keep_alive": "2m",
+ "call_timeout_seconds": 60,
+ "seconds": 140.1,
+ "ollama_ps_start": "NAME          ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL                   \nqwen2.5:7b    845dbda0ea48    4.6 GB    100% GPU     2048       llamacpp    About a minute from now",
+ "ollama_ps_end": "NAME          ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL                   \nqwen2.5:7b    845dbda0ea48    4.6 GB    100% GPU     2048       llamacpp    About a minute from now",
+ "stopped": null,
+ "runs": [
+  {
+   "label": "held-out",
+   "sentence": "Refunds above $2,500 are not allowed.",
+   "expect": [
+    {
+     "rule_type": "amount_cap",
+     "values": {
+      "max_amount": 2500
+     },
+     "directions": {
+      "max_amount": "strict"
+     }
+    }
+   ],
+   "temperature": 0,
+   "seed": 0,
+   "expected": "amount_cap, blocked when > 2500",
+   "accept": [
+    {
+     "rule_type": "amount_cap",
+     "values": {
+      "max_amount": 2500
+     },
+     "directions": {
+      "max_amount": "strict"
+     }
+    }
+   ],
+   "answer": {
+    "rule_type": "amount_cap",
+    "action": "IssueRefund",
+    "unsupported_reason": "",
+    "slots": [
+     {
+      "slot": "max_amount",
+      "span": "$2,500",
+      "value": "$2,500"
+     }
+    ],
+    "vague_terms": [],
+    "qualifiers": []
+   },
+   "timing": {
+    "total": 10.46,
+    "load": 0.18,
+    "prompt": 0.89,
+    "prompt_tokens": 1284,
+    "answer": 8.52,
+    "answer_tokens": 81
+   },
+   "shown": {
+    "rule_type": "amount_cap",
+    "values": {
+     "max_amount": 2500
+    },
+    "directions": {
+     "max_amount": "strict"
+    },
+    "direction_text": {
+     "max_amount": "blocked when amount > 2500"
+    },
+    "qualifiers": [],
+    "unassigned": [],
+    "verdict": "ok_so_far"
+   },
+   "vague": [],
+   "verdict_reason": "every required value is stated and can be represented",
+   "examples_used": [
+    {
+     "id": "R1",
+     "type": "amount_cap",
+     "sentence": "A single refund may not exceed $500.",
+     "reason": null,
+     "score": 0.286,
+     "shared_words": [
+      "not",
+      "refund"
+     ]
+    },
+    {
+     "id": "R2",
+     "type": "unsupported",
+     "sentence": "Refunds are only allowed for orders placed within the last 30 days.",
+     "reason": "Needs IssueRefund input `order_age_days: Long`.",
+     "score": 0.2,
+     "shared_words": [
+      "allowed",
+      "refund"
+     ]
+    },
+    {
+     "id": "R9",
+     "type": "unsupported: no converter form kind",
+     "sentence": "Never refund the same order twice.",
+     "reason": null,
+     "score": 0.125,
+     "shared_words": [
+      "refund"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "held-out",
+   "sentence": "Never refund more than $750 on a single order.",
+   "expect": [
+    {
+     "rule_type": "amount_cap",
+     "values": {
+      "max_amount": 750
+     },
+     "directions": {
+      "max_amount": "strict"
+     }
+    }
+   ],
+   "temperature": 0,
+   "seed": 0,
+   "expected": "amount_cap, blocked when > 750",
+   "accept": [
+    {
+     "rule_type": "amount_cap",
+     "values": {
+      "max_amount": 750
+     },
+     "directions": {
+      "max_amount": "strict"
+     }
+    }
+   ],
+   "answer": {
+    "rule_type": "amount_cap",
+    "action": "IssueRefund",
+    "unsupported_reason": "",
+    "slots": [
+     {
+      "slot": "max_amount",
+      "span": "$750",
+      "value": "$750"
+     }
+    ],
+    "vague_terms": [],
+    "qualifiers": [
+     {
+      "span": "on a single order",
+      "field": "order_id"
+     }
+    ]
+   },
+   "timing": {
+    "total": 11.79,
+    "load": 0.09,
+    "prompt": 1.17,
+    "prompt_tokens": 1293,
+    "answer": 10.29,
+    "answer_tokens": 101
+   },
+   "shown": {
+    "rule_type": "amount_cap",
+    "values": {
+     "max_amount": 750
+    },
+    "directions": {
+     "max_amount": "strict"
+    },
+    "direction_text": {
+     "max_amount": "blocked when amount > 750"
+    },
+    "qualifiers": [
+     {
+      "text": "on a single order",
+      "field": "order_id",
+      "source": "model"
+     }
+    ],
+    "unassigned": [],
+    "verdict": "ok_so_far"
+   },
+   "vague": [],
+   "verdict_reason": "every required value is stated and can be represented",
+   "examples_used": [
+    {
+     "id": "R9",
+     "type": "unsupported: no converter form kind",
+     "sentence": "Never refund the same order twice.",
+     "reason": null,
+     "score": 0.375,
+     "shared_words": [
+      "never",
+      "order",
+      "refund"
+     ]
+    },
+    {
+     "id": "R8",
+     "type": "unsupported: no converter form kind",
+     "sentence": "No more than $1,000 may be refunded in a single day.",
+     "reason": null,
+     "score": 0.3,
+     "shared_words": [
+      "more",
+      "single",
+      "than"
+     ]
+    },
+    {
+     "id": "R7",
+     "type": "unsupported",
+     "sentence": "No customer may receive more than 2 refunds in 24 hours.",
+     "reason": "Needs IssueRefund input `customer_id: String`.",
+     "score": 0.273,
+     "shared_words": [
+      "more",
+      "refund",
+      "than"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "held-out",
+   "sentence": "A refund needs a manager's sign-off from the last 30 minutes.",
+   "expect": [
+    {
+     "rule_type": "approval_required",
+     "values": {
+      "approver_role": "manager",
+      "window": "30m"
+     }
+    }
+   ],
+   "temperature": 0,
+   "seed": 0,
+   "expected": "approval_required, manager, 30 minutes",
+   "accept": [
+    {
+     "rule_type": "approval_required",
+     "values": {
+      "approver_role": "manager",
+      "window": "30m"
+     }
+    }
+   ],
+   "answer": {
+    "rule_type": "approval_required",
+    "action": "IssueRefund",
+    "unsupported_reason": "",
+    "slots": [
+     {
+      "slot": "approver_role",
+      "span": "a manager",
+      "value": "manager"
+     },
+     {
+      "slot": "window",
+      "span": "the last 30 minutes",
+      "value": "30 minutes"
+     }
+    ],
+    "vague_terms": [],
+    "qualifiers": []
+   },
+   "timing": {
+    "total": 13.03,
+    "load": 0.02,
+    "prompt": 1.09,
+    "prompt_tokens": 1302,
+    "answer": 11.52,
+    "answer_tokens": 107
+   },
+   "shown": {
+    "rule_type": "approval_required",
+    "values": {
+     "window": "30m",
+     "approver_role": "manager"
+    },
+    "directions": {},
+    "direction_text": {},
+    "qualifiers": [],
+    "unassigned": [],
+    "verdict": "ok_so_far"
+   },
+   "vague": [],
+   "verdict_reason": "every required value is stated and can be represented",
+   "examples_used": [
+    {
+     "id": "R4",
+     "type": "approval_required",
+     "sentence": "A refund over $100 needs a manager's approval for that same order and that same amount, granted within the last hour.",
+     "reason": null,
+     "score": 0.267,
+     "shared_words": [
+      "last",
+      "manager",
+      "need",
+      "refund"
+     ]
+    },
+    {
+     "id": "form_manager_approval",
+     "type": "approval_required",
+     "sentence": "Only refund if a manager approved it recently.",
+     "reason": null,
+     "score": 0.182,
+     "shared_words": [
+      "manager",
+      "refund"
+     ]
+    },
+    {
+     "id": "R2",
+     "type": "unsupported",
+     "sentence": "Refunds are only allowed for orders placed within the last 30 days.",
+     "reason": "Needs IssueRefund input `order_age_days: Long`.",
+     "score": 0.154,
+     "shared_words": [
+      "last",
+      "refund"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "held-out",
+   "sentence": "Managers must approve refunds before they go out.",
+   "expect": [
+    {
+     "rule_type": "approval_required",
+     "values": {
+      "approver_role": "manager"
+     }
+    }
+   ],
+   "temperature": 0,
+   "seed": 0,
+   "expected": "approval_required, manager, window missing",
+   "accept": [
+    {
+     "rule_type": "approval_required",
+     "values": {
+      "approver_role": "manager"
+     }
+    }
+   ],
+   "answer": {
+    "rule_type": "approval_required",
+    "action": "IssueRefund",
+    "unsupported_reason": "",
+    "slots": [
+     {
+      "slot": "approver_role",
+      "span": "managers",
+      "value": "manager"
+     }
+    ],
+    "vague_terms": [
+     {
+      "span": "before they go out",
+      "slot": "window"
+     }
+    ],
+    "qualifiers": []
+   },
+   "timing": {
+    "total": 8.99,
+    "load": 0.25,
+    "prompt": 0.89,
+    "prompt_tokens": 1277,
+    "answer": 7.44,
+    "answer_tokens": 74
+   },
+   "shown": {
+    "rule_type": "approval_required",
+    "values": {
+     "approver_role": "manager"
+    },
+    "directions": {},
+    "direction_text": {},
+    "qualifiers": [],
+    "unassigned": [],
+    "verdict": "needs_clarification"
+   },
+   "vague": [
+    "before they go out"
+   ],
+   "verdict_reason": "'before they go out' is vague (it stands in for window)",
+   "examples_used": [
+    {
+     "id": "form_manager_approval",
+     "type": "approval_required",
+     "sentence": "Only refund if a manager approved it recently.",
+     "reason": null,
+     "score": 0.167,
+     "shared_words": [
+      "manager",
+      "refund"
+     ]
+    },
+    {
+     "id": "R4",
+     "type": "approval_required",
+     "sentence": "A refund over $100 needs a manager's approval for that same order and that same amount, granted within the last hour.",
+     "reason": null,
+     "score": 0.111,
+     "shared_words": [
+      "manager",
+      "refund"
+     ]
+    },
+    {
+     "id": "R1",
+     "type": "amount_cap",
+     "sentence": "A single refund may not exceed $500.",
+     "reason": null,
+     "score": 0.083,
+     "shared_words": [
+      "refund"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "held-out",
+   "sentence": "Refund at most $60 on order A200 once it's approved.",
+   "expect": [
+    {
+     "rule_type": "capped_with_approval",
+     "values": {
+      "max_amount": 60,
+      "order_id": "A200"
+     },
+     "directions": {
+      "max_amount": "allowed_max"
+     }
+    }
+   ],
+   "temperature": 0,
+   "seed": 0,
+   "expected": "capped_with_approval, allowed when <= 60, A200",
+   "accept": [
+    {
+     "rule_type": "capped_with_approval",
+     "values": {
+      "max_amount": 60,
+      "order_id": "A200"
+     },
+     "directions": {
+      "max_amount": "allowed_max"
+     }
+    }
+   ],
+   "answer": {
+    "rule_type": "capped_with_approval",
+    "action": "IssueRefund",
+    "unsupported_reason": "",
+    "slots": [
+     {
+      "slot": "max_amount",
+      "span": "$60",
+      "value": "$60"
+     },
+     {
+      "slot": "order_id",
+      "span": "order A200",
+      "value": "A200"
+     }
+    ],
+    "vague_terms": [],
+    "qualifiers": []
+   },
+   "timing": {
+    "total": 12.01,
+    "load": 0.02,
+    "prompt": 0.82,
+    "prompt_tokens": 1288,
+    "answer": 11.06,
+    "answer_tokens": 110
+   },
+   "shown": {
+    "rule_type": "capped_with_approval",
+    "values": {
+     "max_amount": 60,
+     "order_id": "A200"
+    },
+    "directions": {
+     "max_amount": "allowed_max"
+    },
+    "direction_text": {
+     "max_amount": "allowed when amount <= 60"
+    },
+    "qualifiers": [],
+    "unassigned": [],
+    "verdict": "needs_clarification"
+   },
+   "vague": [],
+   "verdict_reason": "window is required but the sentence does not state it",
+   "examples_used": [
+    {
+     "id": "R9",
+     "type": "unsupported: no converter form kind",
+     "sentence": "Never refund the same order twice.",
+     "reason": null,
+     "score": 0.25,
+     "shared_words": [
+      "order",
+      "refund"
+     ]
+    },
+    {
+     "id": "form_manager_approval",
+     "type": "approval_required",
+     "sentence": "Only refund if a manager approved it recently.",
+     "reason": null,
+     "score": 0.222,
+     "shared_words": [
+      "approved",
+      "refund"
+     ]
+    },
+    {
+     "id": "R2",
+     "type": "unsupported",
+     "sentence": "Refunds are only allowed for orders placed within the last 30 days.",
+     "reason": "Needs IssueRefund input `order_age_days: Long`.",
+     "score": 0.182,
+     "shared_words": [
+      "order",
+      "refund"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "held-out",
+   "sentence": "Production deploys are only allowed for payments and web.",
+   "expect": [
+    {
+     "rule_type": "deploy_allowlist",
+     "values": {
+      "services": [
+       "payments",
+       "web"
+      ]
+     },
+     "qualifiers": [
+      {
+       "text": "production",
+       "field": "env"
+      }
+     ]
+    }
+   ],
+   "temperature": 0,
+   "seed": 0,
+   "expected": "deploy_allowlist, payments and web, production",
+   "accept": [
+    {
+     "rule_type": "deploy_allowlist",
+     "values": {
+      "services": [
+       "payments",
+       "web"
+      ]
+     },
+     "qualifiers": [
+      {
+       "text": "production",
+       "field": "env"
+      }
+     ]
+    }
+   ],
+   "answer": {
+    "rule_type": "deploy_allowlist",
+    "action": "DeployService",
+    "unsupported_reason": "",
+    "slots": [
+     {
+      "slot": "services",
+      "span": "payments and web",
+      "value": "payments, web"
+     }
+    ],
+    "vague_terms": [],
+    "qualifiers": [
+     {
+      "span": "Production",
+      "field": "env"
+     }
+    ]
+   },
+   "timing": {
+    "total": 9.14,
+    "load": 0.02,
+    "prompt": 1.07,
+    "prompt_tokens": 1295,
+    "answer": 7.45,
+    "answer_tokens": 71
+   },
+   "shown": {
+    "rule_type": "deploy_allowlist",
+    "values": {},
+    "directions": {},
+    "direction_text": {},
+    "qualifiers": [
+     {
+      "text": "Production",
+      "field": "env",
+      "source": "model"
+     }
+    ],
+    "unassigned": [],
+    "verdict": "needs_clarification"
+   },
+   "vague": [],
+   "verdict_reason": "services is required but the sentence does not state it",
+   "examples_used": [
+    {
+     "id": "R3",
+     "type": "deploy_allowlist",
+     "sentence": "Production deploys are only allowed for payments, search and web.",
+     "reason": null,
+     "score": 0.857,
+     "shared_words": [
+      "allowed",
+      "deploy",
+      "only",
+      "payment",
+      "production",
+      "web"
+     ]
+    },
+    {
+     "id": "R2",
+     "type": "unsupported",
+     "sentence": "Refunds are only allowed for orders placed within the last 30 days.",
+     "reason": "Needs IssueRefund input `order_age_days: Long`.",
+     "score": 0.167,
+     "shared_words": [
+      "allowed",
+      "only"
+     ]
+    },
+    {
+     "id": "R6",
+     "type": "deploy_needs_tests",
+     "sentence": "A version may only go to production if its tests passed within the last 24 hours.",
+     "reason": null,
+     "score": 0.133,
+     "shared_words": [
+      "only",
+      "production"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "held-out",
+   "sentence": "Don't deploy to production unless tests passed in the past day.",
+   "expect": [
+    {
+     "rule_type": "deploy_needs_tests",
+     "values": {
+      "window": "24h"
+     },
+     "qualifiers": [
+      {
+       "text": "production",
+       "field": "env"
+      }
+     ]
+    }
+   ],
+   "temperature": 0,
+   "seed": 0,
+   "expected": "deploy_needs_tests, 1 day, production",
+   "accept": [
+    {
+     "rule_type": "deploy_needs_tests",
+     "values": {
+      "window": "24h"
+     },
+     "qualifiers": [
+      {
+       "text": "production",
+       "field": "env"
+      }
+     ]
+    }
+   ],
+   "answer": {
+    "rule_type": "deploy_needs_tests",
+    "action": "DeployService",
+    "unsupported_reason": "",
+    "slots": [
+     {
+      "slot": "window",
+      "span": "in the past day",
+      "value": "24 hours"
+     }
+    ],
+    "vague_terms": [],
+    "qualifiers": [
+     {
+      "span": "production",
+      "field": "env"
+     }
+    ]
+   },
+   "timing": {
+    "total": 12.65,
+    "load": 0.04,
+    "prompt": 1.21,
+    "prompt_tokens": 1296,
+    "answer": 10.93,
+    "answer_tokens": 98
+   },
+   "shown": {
+    "rule_type": "deploy_needs_tests",
+    "values": {},
+    "directions": {},
+    "direction_text": {},
+    "qualifiers": [
+     {
+      "text": "production",
+      "field": "env",
+      "source": "model"
+     }
+    ],
+    "unassigned": [],
+    "verdict": "needs_clarification"
+   },
+   "vague": [
+    "in the past day"
+   ],
+   "verdict_reason": "'in the past day' is vague (it stands in for window)",
+   "examples_used": [
+    {
+     "id": "R6",
+     "type": "deploy_needs_tests",
+     "sentence": "A version may only go to production if its tests passed within the last 24 hours.",
+     "reason": null,
+     "score": 0.176,
+     "shared_words": [
+      "passed",
+      "production",
+      "test"
+     ]
+    },
+    {
+     "id": "R3",
+     "type": "deploy_allowlist",
+     "sentence": "Production deploys are only allowed for payments, search and web.",
+     "reason": null,
+     "score": 0.143,
+     "shared_words": [
+      "deploy",
+      "production"
+     ]
+    },
+    {
+     "id": "R10",
+     "type": "unsupported: no converter form kind",
+     "sentence": "After a failed production deploy of a service, block further production deploys of that service until a rollback has completed.",
+     "reason": null,
+     "score": 0.111,
+     "shared_words": [
+      "deploy",
+      "production"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "held-out",
+   "sentence": "Refunds of $1,200 and up need to be blocked.",
+   "expect": [
+    {
+     "rule_type": "amount_cap",
+     "values": {
+      "max_amount": 1200
+     },
+     "directions": {
+      "max_amount": "inclusive"
+     }
+    },
+    {
+     "verdict": "needs_review"
+    }
+   ],
+   "temperature": 0,
+   "seed": 0,
+   "expected": "amount_cap, blocked when >= 1200, or needs review; never strict",
+   "never_direction": "strict",
+   "accept": [
+    {
+     "rule_type": "amount_cap",
+     "values": {
+      "max_amount": 1200
+     },
+     "directions": {
+      "max_amount": "inclusive"
+     }
+    },
+    {
+     "verdict": "needs_review"
+    }
+   ],
+   "answer": {
+    "rule_type": "unsupported",
+    "action": "none",
+    "unsupported_reason": "The rule does not specify a tool to guard, and the phrase 'need to be blocked' does not correspond to any of the supported actions.",
+    "slots": [],
+    "vague_terms": [],
+    "qualifiers": []
+   },
+   "timing": {
+    "total": 7.71,
+    "load": 0.07,
+    "prompt": 0.85,
+    "prompt_tokens": 1286,
+    "answer": 6.3,
+    "answer_tokens": 64
+   },
+   "shown": {
+    "rule_type": null,
+    "values": {},
+    "directions": {},
+    "direction_text": {},
+    "qualifiers": [],
+    "unassigned": [],
+    "verdict": "invalid"
+   },
+   "vague": [],
+   "verdict_reason": "not a supported rule type: The rule does not specify a tool to guard, and the phrase 'need to be blocked' does not correspond to any of the supported actions. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window).",
+   "examples_used": [
+    {
+     "id": "R4",
+     "type": "approval_required",
+     "sentence": "A refund over $100 needs a manager's approval for that same order and that same amount, granted within the last hour.",
+     "reason": null,
+     "score": 0.143,
+     "shared_words": [
+      "need",
+      "refund"
+     ]
+    },
+    {
+     "id": "R1",
+     "type": "amount_cap",
+     "sentence": "A single refund may not exceed $500.",
+     "reason": null,
+     "score": 0.125,
+     "shared_words": [
+      "refund"
+     ]
+    },
+    {
+     "id": "R9",
+     "type": "unsupported: no converter form kind",
+     "sentence": "Never refund the same order twice.",
+     "reason": null,
+     "score": 0.125,
+     "shared_words": [
+      "refund"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "held-out",
+   "sentence": "Only refund customers in California.",
+   "expect": [
+    {
+     "verdict": "invalid"
+    }
+   ],
+   "temperature": 0,
+   "seed": 0,
+   "expected": "refused",
+   "accept": [
+    {
+     "verdict": "invalid"
+    }
+   ],
+   "answer": {
+    "rule_type": "unsupported",
+    "action": "none",
+    "unsupported_reason": "This limits issuing refunds, which none of the supported rule types cover.",
+    "slots": [],
+    "vague_terms": [],
+    "qualifiers": []
+   },
+   "timing": {
+    "total": 6.55,
+    "load": 0.03,
+    "prompt": 1.14,
+    "prompt_tokens": 1291,
+    "answer": 5.1,
+    "answer_tokens": 49
+   },
+   "shown": {
+    "rule_type": null,
+    "values": {},
+    "directions": {},
+    "direction_text": {},
+    "qualifiers": [],
+    "unassigned": [],
+    "verdict": "invalid"
+   },
+   "vague": [],
+   "verdict_reason": "not a supported rule type: This limits issuing refunds, which none of the supported rule types cover. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window).",
+   "examples_used": [
+    {
+     "id": "form_manager_approval",
+     "type": "approval_required",
+     "sentence": "Only refund if a manager approved it recently.",
+     "reason": null,
+     "score": 0.25,
+     "shared_words": [
+      "only",
+      "refund"
+     ]
+    },
+    {
+     "id": "R2",
+     "type": "unsupported",
+     "sentence": "Refunds are only allowed for orders placed within the last 30 days.",
+     "reason": "Needs IssueRefund input `order_age_days: Long`.",
+     "score": 0.2,
+     "shared_words": [
+      "only",
+      "refund"
+     ]
+    },
+    {
+     "id": "R7",
+     "type": "unsupported",
+     "sentence": "No customer may receive more than 2 refunds in 24 hours.",
+     "reason": "Needs IssueRefund input `customer_id: String`.",
+     "score": 0.2,
+     "shared_words": [
+      "customer",
+      "refund"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "held-out",
+   "sentence": "Limit refunds to 3 per customer per week.",
+   "expect": [
+    {
+     "verdict": "invalid"
+    }
+   ],
+   "temperature": 0,
+   "seed": 0,
+   "expected": "refused",
+   "accept": [
+    {
+     "verdict": "invalid"
+    }
+   ],
+   "answer": {
+    "rule_type": "unsupported",
+    "action": "none",
+    "unsupported_reason": "This limits the number of refunds per customer, which none of the supported rule types cover.",
+    "slots": [],
+    "vague_terms": [],
+    "qualifiers": []
+   },
+   "timing": {
+    "total": 6.62,
+    "load": 0.04,
+    "prompt": 0.84,
+    "prompt_tokens": 1279,
+    "answer": 5.23,
+    "answer_tokens": 53
+   },
+   "shown": {
+    "rule_type": null,
+    "values": {},
+    "directions": {},
+    "direction_text": {},
+    "qualifiers": [],
+    "unassigned": [],
+    "verdict": "invalid"
+   },
+   "vague": [],
+   "verdict_reason": "not a supported rule type: This limits the number of refunds per customer, which none of the supported rule types cover. We only support these rule types: amount_cap (A single refund may not be larger than a fixed dollar amount); approval_required (A refund needs an earlier approval, given within a time window, for at least the refund amount); capped_with_approval (Refunds for one specific order are capped at a dollar amount and also need an approval); deploy_allowlist (Only the listed services may be deployed); deploy_needs_tests (A service version may only be deployed if its tests passed within a time window).",
+   "examples_used": [
+    {
+     "id": "R7",
+     "type": "unsupported",
+     "sentence": "No customer may receive more than 2 refunds in 24 hours.",
+     "reason": "Needs IssueRefund input `customer_id: String`.",
+     "score": 0.182,
+     "shared_words": [
+      "customer",
+      "refund"
+     ]
+    },
+    {
+     "id": "R1",
+     "type": "amount_cap",
+     "sentence": "A single refund may not exceed $500.",
+     "reason": null,
+     "score": 0.111,
+     "shared_words": [
+      "refund"
+     ]
+    },
+    {
+     "id": "R9",
+     "type": "unsupported: no converter form kind",
+     "sentence": "Never refund the same order twice.",
+     "reason": null,
+     "score": 0.111,
+     "shared_words": [
+      "refund"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "held-out",
+   "sentence": "Refunds over $1,000 need director approval.",
+   "expect": null,
+   "temperature": 0,
+   "seed": 0,
+   "expected": "report what it does (a threshold, plus approval, plus a role the store doesn't have)",
+   "report_only": true,
+   "answer": {
+    "rule_type": "approval_required",
+    "action": "IssueRefund",
+    "unsupported_reason": "",
+    "slots": [
+     {
+      "slot": "approver_role",
+      "span": "director",
+      "value": "director"
+     },
+     {
+      "slot": "window",
+      "span": "need director approval",
+      "value": "recently"
+     }
+    ],
+    "vague_terms": [],
+    "qualifiers": []
+   },
+   "timing": {
+    "total": 15.05,
+    "load": 1.55,
+    "prompt": 1.57,
+    "prompt_tokens": 1343,
+    "answer": 11.26,
+    "answer_tokens": 102
+   },
+   "shown": {
+    "rule_type": "approval_required",
+    "values": {
+     "approver_role": "director"
+    },
+    "directions": {},
+    "direction_text": {},
+    "qualifiers": [],
+    "unassigned": [
+     "$1,000"
+    ],
+    "verdict": "needs_review"
+   },
+   "vague": [],
+   "verdict_reason": "the sentence states '$1,000' but no slot uses it",
+   "examples_used": [
+    {
+     "id": "R4",
+     "type": "approval_required",
+     "sentence": "A refund over $100 needs a manager's approval for that same order and that same amount, granted within the last hour.",
+     "reason": null,
+     "score": 0.308,
+     "shared_words": [
+      "approval",
+      "need",
+      "over",
+      "refund"
+     ]
+    },
+    {
+     "id": "R5",
+     "type": "unsupported",
+     "sentence": "A production deploy needs an approval for that same service, version and environment, granted within the last 2 hours.",
+     "reason": "Needs a `RequestDeployApproval` tool (input service/version/env, output approved). As a permit it would also have to be merged with R6 into ONE prod-deploy permit (two permits would OR, letting either one alone through).",
+     "score": 0.133,
+     "shared_words": [
+      "approval",
+      "need"
+     ]
+    },
+    {
+     "id": "R1",
+     "type": "amount_cap",
+     "sentence": "A single refund may not exceed $500.",
+     "reason": null,
+     "score": 0.111,
+     "shared_words": [
+      "refund"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "held-out",
+   "sentence": "no refunds over 5k",
+   "expect": [
+    {
+     "rule_type": "amount_cap",
+     "values": {
+      "max_amount": 5000
+     }
+    },
+    {
+     "verdict": "needs_review"
+    }
+   ],
+   "temperature": 0,
+   "seed": 0,
+   "expected": "amount_cap at 5000, or needs review; never another number",
+   "only_amount": 5000,
+   "accept": [
+    {
+     "rule_type": "amount_cap",
+     "values": {
+      "max_amount": 5000
+     }
+    },
+    {
+     "verdict": "needs_review"
+    }
+   ],
+   "answer": {
+    "rule_type": "amount_cap",
+    "action": "IssueRefund",
+    "unsupported_reason": "",
+    "slots": [
+     {
+      "slot": "max_amount",
+      "span": "5k",
+      "value": "$5,000"
+     }
+    ],
+    "vague_terms": [],
+    "qualifiers": []
+   },
+   "timing": {
+    "total": 11.24,
+    "load": 0.11,
+    "prompt": 1.1,
+    "prompt_tokens": 1291,
+    "answer": 9.54,
+    "answer_tokens": 78
+   },
+   "shown": {
+    "rule_type": "amount_cap",
+    "values": {},
+    "directions": {},
+    "direction_text": {},
+    "qualifiers": [],
+    "unassigned": [
+     "5k"
+    ],
+    "verdict": "needs_review"
+   },
+   "vague": [
+    "5k"
+   ],
+   "verdict_reason": "the sentence states '5k' but no slot uses it",
+   "examples_used": [
+    {
+     "id": "R7",
+     "type": "unsupported",
+     "sentence": "No customer may receive more than 2 refunds in 24 hours.",
+     "reason": "Needs IssueRefund input `customer_id: String`.",
+     "score": 0.2,
+     "shared_words": [
+      "no",
+      "refund"
+     ]
+    },
+    {
+     "id": "R4",
+     "type": "approval_required",
+     "sentence": "A refund over $100 needs a manager's approval for that same order and that same amount, granted within the last hour.",
+     "reason": null,
+     "score": 0.143,
+     "shared_words": [
+      "over",
+      "refund"
+     ]
+    },
+    {
+     "id": "R1",
+     "type": "amount_cap",
+     "sentence": "A single refund may not exceed $500.",
+     "reason": null,
+     "score": 0.125,
+     "shared_words": [
+      "refund"
+     ]
+    }
+   ]
+  },
+  {
+   "label": "held-out",
+   "sentence": "No recent refunds over $5,000.",
+   "expect": null,
+   "temperature": 0,
+   "seed": 0,
+   "expected": "report what it does (this is the brief's own example)",
+   "report_only": true,
+   "answer": {
+    "rule_type": "amount_cap",
+    "action": "IssueRefund",
+    "unsupported_reason": "",
+    "slots": [
+     {
+      "slot": "max_amount",
+      "span": "$5,000",
+      "value": "$5,000"
+     }
+    ],
+    "vague_terms": [
+     {
+      "span": "recent",
+      "slot": "window"
+     }
+    ],
+    "qualifiers": []
+   },
+   "timing": {
+    "total": 13.7,
+    "load": 0.03,
+    "prompt": 0.93,
+    "prompt_tokens": 1296,
+    "answer": 12.49,
+    "answer_tokens": 101
+   },
+   "shown": {
+    "rule_type": "amount_cap",
+    "values": {
+     "max_amount": 5000
+    },
+    "directions": {
+     "max_amount": "strict"
+    },
+    "direction_text": {
+     "max_amount": "blocked when amount > 5000"
+    },
+    "qualifiers": [],
+    "unassigned": [],
+    "verdict": "needs_clarification"
+   },
+   "vague": [
+    "recent"
+   ],
+   "verdict_reason": "'recent' is vague",
+   "examples_used": [
+    {
+     "id": "R7",
+     "type": "unsupported",
+     "sentence": "No customer may receive more than 2 refunds in 24 hours.",
+     "reason": "Needs IssueRefund input `customer_id: String`.",
+     "score": 0.2,
+     "shared_words": [
+      "no",
+      "refund"
+     ]
+    },
+    {
+     "id": "R4",
+     "type": "approval_required",
+     "sentence": "A refund over $100 needs a manager's approval for that same order and that same amount, granted within the last hour.",
+     "reason": null,
+     "score": 0.143,
+     "shared_words": [
+      "over",
+      "refund"
+     ]
+    },
+    {
+     "id": "R1",
+     "type": "amount_cap",
+     "sentence": "A single refund may not exceed $500.",
+     "reason": null,
+     "score": 0.125,
+     "shared_words": [
+      "refund"
+     ]
+    }
+   ]
+  }
+ ]
+}

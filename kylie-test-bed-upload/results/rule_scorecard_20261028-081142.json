@@ -1,0 +1,178 @@
+{
+  "rules": "rules/refund_recent_approval_24h.dw",
+  "actions": "tests/recent_approval_24h_actions.json",
+  "right": 17,
+  "total": 17,
+  "decisions": [
+    {
+      "case": "c01",
+      "ts": 1801,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_only_if_recently_approved_24h",
+      "correct": true
+    },
+    {
+      "case": "c02",
+      "ts": 10801,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_only_if_recently_approved_24h",
+      "correct": true
+    },
+    {
+      "case": "c03",
+      "ts": 86401,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_only_if_recently_approved_24h",
+      "correct": true
+    },
+    {
+      "case": "c04",
+      "ts": 86437,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "c05",
+      "ts": 3601,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_only_if_recently_approved_24h",
+      "correct": true
+    },
+    {
+      "case": "c06",
+      "ts": 3637,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_only_if_recently_approved_24h",
+      "correct": true
+    },
+    {
+      "case": "c07_never_approved",
+      "ts": 2,
+      "event": 0,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "c09",
+      "ts": 1801,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "c10",
+      "ts": 1801,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "c11",
+      "ts": 2,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_only_if_recently_approved_24h",
+      "correct": true
+    },
+    {
+      "case": "c12",
+      "ts": 2592001,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "c14",
+      "ts": 360001,
+      "event": 2,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_only_if_recently_approved_24h",
+      "correct": true
+    },
+    {
+      "case": "c15",
+      "ts": 1801,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "c17",
+      "ts": 86041,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "refund_only_if_recently_approved_24h",
+      "correct": true
+    },
+    {
+      "case": "m01_manager_said_no",
+      "ts": 1801,
+      "event": 1,
+      "call": "issue_refund({'order_id': 'A200', 'amount': 90})",
+      "expect": "DENY",
+      "got": "DENY",
+      "rules": "",
+      "correct": true
+    },
+    {
+      "case": "m02_lookup_always_allowed",
+      "ts": 1,
+      "event": 0,
+      "call": "lookup_order({'order_id': 'A200'})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "allow_lookup",
+      "correct": true
+    },
+    {
+      "case": "m03_approval_request_always_allowed",
+      "ts": 1,
+      "event": 0,
+      "call": "request_approval({'order_id': 'A200', 'amount': 90, 'reason': 'customer request'})",
+      "expect": "ALLOW",
+      "got": "ALLOW",
+      "rules": "allow_approval_requests",
+      "correct": true
+    }
+  ]
+}

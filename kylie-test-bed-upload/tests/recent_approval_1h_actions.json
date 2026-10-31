@@ -1,0 +1,470 @@
+{
+ "format": "kylie-store-action-list/v1",
+ "rule": "recently = 1h",
+ "notes": "Expected answers hand-written by Camillia from the rule sentence (cases.json). Window is inclusive (Dogwood guide 04). Not expressible in the store: {\"c08\": \"approval by a non-manager: the store's approval always comes from 'manager.jordan' and the rule does not check approver\", \"c13\": \"same reason (needs a non-manager approver)\", \"c16\": \"deploy is not covered by this rule file; base.dw denies it by default\"}",
+ "cases": [
+  {
+   "id": "c01",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 90
+     }
+    },
+    {
+     "at": 1800,
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "ALLOW"
+    }
+   ]
+  },
+  {
+   "id": "c02",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 90
+     }
+    },
+    {
+     "at": 10800,
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "DENY"
+    }
+   ]
+  },
+  {
+   "id": "c03",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 90
+     }
+    },
+    {
+     "at": 86400,
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "DENY"
+    }
+   ]
+  },
+  {
+   "id": "c04",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 90
+     }
+    },
+    {
+     "at": 86436,
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "DENY"
+    }
+   ]
+  },
+  {
+   "id": "c05",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 90
+     }
+    },
+    {
+     "at": 3600,
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "ALLOW"
+    }
+   ]
+  },
+  {
+   "id": "c06",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 90
+     }
+    },
+    {
+     "at": 3636,
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "DENY"
+    }
+   ]
+  },
+  {
+   "id": "c07_never_approved",
+   "events": [
+    {
+     "at": "1s",
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "DENY"
+    }
+   ]
+  },
+  {
+   "id": "c09",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A100",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 90
+     }
+    },
+    {
+     "at": 1800,
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "DENY"
+    }
+   ]
+  },
+  {
+   "id": "c10",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 50,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 50
+     }
+    },
+    {
+     "at": 1800,
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "DENY"
+    }
+   ]
+  },
+  {
+   "id": "c11",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 90
+     }
+    },
+    {
+     "at": 1,
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "ALLOW"
+    }
+   ]
+  },
+  {
+   "id": "c12",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 90
+     }
+    },
+    {
+     "at": 2592000,
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "DENY"
+    }
+   ]
+  },
+  {
+   "id": "c14",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 90
+     }
+    },
+    {
+     "at": 359280,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 90
+     }
+    },
+    {
+     "at": 360000,
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "ALLOW"
+    }
+   ]
+  },
+  {
+   "id": "c15",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 200,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 200
+     }
+    },
+    {
+     "at": 1800,
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "DENY"
+    }
+   ]
+  },
+  {
+   "id": "c17",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 90
+     }
+    },
+    {
+     "at": 86040,
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "DENY"
+    }
+   ]
+  },
+  {
+   "id": "m01_manager_said_no",
+   "events": [
+    {
+     "at": 0,
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A200",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "output": {
+      "approved": false,
+      "approver": "manager.jordan",
+      "approved_amount": 0
+     }
+    },
+    {
+     "at": "30m",
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A200",
+      "amount": 90
+     },
+     "expect": "DENY"
+    }
+   ]
+  },
+  {
+   "id": "m02_lookup_always_allowed",
+   "events": [
+    {
+     "at": "0s",
+     "tool": "lookup_order",
+     "input": {
+      "order_id": "A200"
+     },
+     "expect": "ALLOW"
+    }
+   ]
+  },
+  {
+   "id": "m03_approval_request_always_allowed",
+   "events": [
+    {
+     "at": "0s",
+     "tool": "request_approval",
+     "input": {
+      "order_id": "A200",
+      "amount": 90,
+      "reason": "customer request"
+     },
+     "expect": "ALLOW"
+    }
+   ]
+  }
+ ]
+}

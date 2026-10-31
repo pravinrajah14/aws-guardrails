@@ -1,0 +1,74 @@
+{
+  "counts": {
+    "prompt": 5
+  },
+  "runs": 39,
+  "rows": [
+    {
+      "session": "session-20261030-002619-927",
+      "task": "refund_different_amount",
+      "approval": "different",
+      "rules": "updated_rule.dw",
+      "prompt": "current",
+      "repair": true,
+      "nudge": true,
+      "claim_check": false,
+      "guard": "2/2",
+      "label": "prompt",
+      "reason": "said it was refunding (or had refunded), then ended its turn without calling issue_refund. Fixed by the claim check in the agent loop: did not happen again in 8 runs with it on."
+    },
+    {
+      "session": "session-20261030-002635-466",
+      "task": "refund_different_amount",
+      "approval": "different",
+      "rules": "updated_rule.dw",
+      "prompt": "current",
+      "repair": true,
+      "nudge": true,
+      "claim_check": false,
+      "guard": "2/2",
+      "label": "prompt",
+      "reason": "said it was refunding (or had refunded), then ended its turn without calling issue_refund. Fixed by the claim check in the agent loop: did not happen again in 8 runs with it on."
+    },
+    {
+      "session": "session-20261030-002649-042",
+      "task": "refund_different_amount",
+      "approval": "different",
+      "rules": "updated_rule.dw",
+      "prompt": "current",
+      "repair": true,
+      "nudge": true,
+      "claim_check": false,
+      "guard": "2/2",
+      "label": "prompt",
+      "reason": "said it was refunding (or had refunded), then ended its turn without calling issue_refund. Fixed by the claim check in the agent loop: did not happen again in 8 runs with it on."
+    },
+    {
+      "session": "session-20261030-002659-402",
+      "task": "refund_different_amount",
+      "approval": "different",
+      "rules": "updated_rule.dw",
+      "prompt": "current",
+      "repair": true,
+      "nudge": true,
+      "claim_check": false,
+      "guard": "2/2",
+      "label": "prompt",
+      "reason": "said it was refunding (or had refunded), then ended its turn without calling issue_refund. Fixed by the claim check in the agent loop: did not happen again in 8 runs with it on."
+    },
+    {
+      "session": "session-20261030-002710-217",
+      "task": "refund_different_amount",
+      "approval": "different",
+      "rules": "updated_rule.dw",
+      "prompt": "current",
+      "repair": true,
+      "nudge": true,
+      "claim_check": false,
+      "guard": "2/2",
+      "label": "prompt",
+      "reason": "said it was refunding (or had refunded), then ended its turn without calling issue_refund. Fixed by the claim check in the agent loop: did not happen again in 8 runs with it on."
+    }
+  ],
+  "rescored": []
+}

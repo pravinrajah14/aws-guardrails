@@ -1,0 +1,12 @@
+[
+  {"sentence": "A single refund may not exceed $500.", "source": "R1, converter/forms/refund_cap.json",
+   "expect": {"rule_type": "amount_cap", "values": {"max_amount": 500}, "directions": {"max_amount": "allowed_max"}}},
+  {"sentence": "Production deploys are only allowed for payments, search and web.", "source": "R3, converter/forms/prod_allowlist.json",
+   "expect": {"rule_type": "deploy_allowlist", "values": {"services": ["payments", "search", "web"]}, "qualifiers": [{"text": "production", "field": "env"}]}},
+  {"sentence": "A refund over $100 needs a manager's approval for that same order and that same amount, granted within the last hour.", "source": "R4",
+   "expect": {"rule_type": "approval_required", "values": {"approver_role": "manager", "window": "1h"}}},
+  {"sentence": "A version may only go to production if its tests passed within the last 24 hours.", "source": "R6, converter/forms/prod_needs_tests.json",
+   "expect": {"rule_type": "deploy_needs_tests", "values": {"window": "24h"}, "qualifiers": [{"text": "production", "field": "env"}]}},
+  {"sentence": "Only refund if a manager approved it recently.", "source": "converter/forms/manager_approval.json; its form sets 1h, which the sentence doesn't state",
+   "expect": {"rule_type": "approval_required", "values": {"approver_role": "manager"}, "vague": "recently"}}
+]

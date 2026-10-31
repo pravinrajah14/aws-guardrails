@@ -1,0 +1,153 @@
+{
+ "format": "kylie-store-action-list/v1",
+ "rule": "store-wide invariant (policies/base.dw): refund plus refunded_on_order must fit the order total",
+ "notes": "Part 2c order-total cases. Approvals are put in directly as responses, so the user rule allows every refund and the base invariant refund_within_order_total is what decides. Score against the 1h generated rule (with its updated_form.json); order A100 totals $40.",
+ "cases": [
+  {
+   "id": "approve_40_refund_40_twice_on_40_order",
+   "why": "A second approval resets refunded_so_far, so the rule allows the second $40; the order-total invariant blocks it",
+   "events": [
+    {
+     "at": "0m",
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A100",
+      "amount": 40,
+      "reason": "damaged on arrival"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 40
+     }
+    },
+    {
+     "at": "10m",
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A100",
+      "amount": 40
+     },
+     "expect": "ALLOW",
+     "expect_status": "ok"
+    },
+    {
+     "at": "11m",
+     "tool": "issue_refund",
+     "kind": "response",
+     "input": {
+      "order_id": "A100",
+      "amount": 40
+     },
+     "output": {
+      "refund_id": "R001",
+      "amount": 40
+     }
+    },
+    {
+     "at": "20m",
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A100",
+      "amount": 40,
+      "reason": "damaged on arrival"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 40
+     }
+    },
+    {
+     "at": "30m",
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A100",
+      "amount": 40
+     },
+     "expect": "DENY",
+     "expect_status": "ok"
+    }
+   ]
+  },
+  {
+   "id": "approved_100_on_40_order_refund_25_15_then_1",
+   "why": "The approval ($100, put in directly) covers all three refunds; the invariant allows up to the $40 order total, then blocks $1 more",
+   "events": [
+    {
+     "at": "0m",
+     "tool": "request_approval",
+     "kind": "response",
+     "input": {
+      "order_id": "A100",
+      "amount": 100,
+      "reason": "damaged on arrival"
+     },
+     "output": {
+      "approved": true,
+      "approver": "manager.jordan",
+      "approved_amount": 100
+     }
+    },
+    {
+     "at": "10m",
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A100",
+      "amount": 25
+     },
+     "expect": "ALLOW",
+     "expect_status": "ok"
+    },
+    {
+     "at": "11m",
+     "tool": "issue_refund",
+     "kind": "response",
+     "input": {
+      "order_id": "A100",
+      "amount": 25
+     },
+     "output": {
+      "refund_id": "R001",
+      "amount": 25
+     }
+    },
+    {
+     "at": "20m",
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A100",
+      "amount": 15
+     },
+     "expect": "ALLOW",
+     "expect_status": "ok"
+    },
+    {
+     "at": "21m",
+     "tool": "issue_refund",
+     "kind": "response",
+     "input": {
+      "order_id": "A100",
+      "amount": 15
+     },
+     "output": {
+      "refund_id": "R002",
+      "amount": 15
+     }
+    },
+    {
+     "at": "30m",
+     "tool": "issue_refund",
+     "input": {
+      "order_id": "A100",
+      "amount": 1
+     },
+     "expect": "DENY",
+     "expect_status": "ok"
+    }
+   ]
+  }
+ ]
+}
