@@ -1,0 +1,23 @@
+[project]
+name = "aws-guardrails"
+version = "0.1.0"
+description = "Plain-English rules to Dogwood policies, checked in a fake store"
+requires-python = "==3.12.*"
+dependencies = [
+    "fastapi>=0.162.0",
+    "uvicorn>=0.54.0",
+    "z3-solver",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "httpx",
+    "pytest>=9.2.0",
+    "ruff>=0.17.3",
+]
+
+[tool.ruff]
+line-length = 120

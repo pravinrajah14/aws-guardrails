@@ -4,3 +4,10 @@
 __pycache__/
 *.pyc
 pipeline-runs/
+
+.provenance/
+.venv/
+question/out/
+data/answers.sqlite
+data/answers-backup-*.json
+docs/
