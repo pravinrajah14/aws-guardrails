@@ -102,6 +102,9 @@ details summary { cursor: pointer; font-weight: 600; }
 #context h3:first-child { margin-top: .75rem; }
 #context ul { margin: 0; padding-left: 1.1rem; font-size: .9rem; }
 #context .source { color: var(--muted); }
+#context mark.shared { background: var(--amber-wash); color: inherit; padding: 0 .1em; }
+#context .evidence ul { padding-left: 1rem; }
+#context .evidence details summary { font-weight: 400; }
 
 .run-form { display: flex; flex-wrap: wrap; gap: .8rem 1.5rem; align-items: end; }
 .run-form select { padding: .3rem; max-width: 22rem; display: block; margin-top: .2rem; }

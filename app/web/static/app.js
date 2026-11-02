@@ -21,6 +21,7 @@ const CHIP_WORDS = { running: "running", done: "done", waiting: "needs you", ski
 let steps = [];
 let current = { sentence: "", answers: {}, picks: {}, transient: {} };
 let currentPolicy = null;
+let contextExampleIds = new Set();
 let busy = false;
 
 async function* readEvents(response) {
@@ -100,13 +101,54 @@ function drawUnderstood(event) {
   $("reading-line").textContent = pieces.join(" ");
 }
 
+function withMarks(text, spans) {
+  const nodes = [];
+  let at = 0;
+  for (const [start, end] of spans) {
+    nodes.push(text.slice(at, start), el("mark", { class: "shared", text: text.slice(start, end) }));
+    at = end;
+  }
+  nodes.push(text.slice(at));
+  return nodes;
+}
+
+const contextRowId = (id) => `context-example-${id}`;
+
+function policyToggle(e) {
+  const toggle = el("details", {}, el("summary", { text: "Show its policy" }),
+    el("p", { class: "source-note", text: "For reference only; not copied into the new policy." }),
+    e.policy ? el("pre", { text: e.policy }) : el("p", { text: `No ${e.policy_kind} text was written for it.` }));
+  if (e.notes.length) toggle.append(el("p", { text: "Jack's notes:" }), el("ul", {}, ...e.notes.map((n) => el("li", { text: n }))));
+  return toggle;
+}
+
+function similarRulesTable(examples, sentence) {
+  const rows = examples.map((e) => el("tr", { id: contextRowId(e.id) },
+    el("td", {},
+      el("div", { class: "source", text: `${e.id}, ${e.source}` }),
+      el("div", {}, ...withMarks(e.sentence, e.sentence_marks)),
+      el("div", { class: "source" }, "Input: ", ...withMarks(sentence, e.input_marks))),
+    el("td", { text: e.unsupported_reason === null ? e.type : `unsupported: ${e.unsupported_reason}` }),
+    el("td", { text: e.weight }),
+    el("td", {}, el("ul", {}, ...e.used_for.map((u) => el("li", { text: u })))),
+    el("td", {}, policyToggle(e))));
+  return [
+    el("h3", { text: "Similar rules used as context" }),
+    el("table", { class: "evidence" },
+      el("thead", {}, el("tr", {}, ...["Example", "Rule type", "Weight", "Used for", "Policy"].map((h) => el("th", { text: h })))),
+      el("tbody", {}, ...rows)),
+    el("p", { class: "source-note", text: "These rules help pick the rule type and suggest missing values. The new policy is built from the rule type's template by the converter." }),
+  ];
+}
+
 function drawContext(context) {
   const group = (title, items) => (items.length ? [el("h3", { text: title }), el("ul", {}, ...items)] : []);
   const row = (main, source) => el("li", {}, main + " ", el("span", { class: "source", text: `(${source})` }));
+  contextExampleIds = new Set(context.examples.map((e) => e.id));
   $("context").replaceChildren(
     ...group("Schema fields", context.schema.map((t) => row(`${t.tool}: ${t.fields_used.join(", ")}`, t.source))),
     ...group("Glossary", context.glossary.map((g) => row(`"${g.text}" means ${g.field} = ${g.value}`, g.source))),
-    ...group("Similar examples, with weights", context.examples.map((e) => row(`${e.weight}: ${e.sentence}`, e.source))),
+    ...(context.examples.length ? similarRulesTable(context.examples, current.sentence) : []),
     ...group("Saved answers", context.saved_answers.map((a) => row(`${a.field}, "${a.term}" = ${a.value}`, `${a.answered_by}, ${a.answered_at}`)))
   );
   $("context-box").hidden = false;
@@ -119,7 +161,13 @@ function answer(field, value, picking) {
 }
 
 function evidenceTable(evidence) {
-  const rows = evidence.map((e) => el("tr", {}, el("td", { text: e.value }), el("td", { text: e.weight }), el("td", { text: e.sentence }), el("td", { text: e.note || "" }), el("td", { text: e.source })));
+  const link = (e) => {
+    if (!contextExampleIds.has(e.id)) return e.id;
+    const a = el("a", { href: `#${contextRowId(e.id)}` }, e.id);
+    a.addEventListener("click", () => { $("context-box").open = true; });
+    return a;
+  };
+  const rows = evidence.map((e) => el("tr", {}, el("td", { text: e.value }), el("td", { text: e.weight }), el("td", { text: e.sentence }), el("td", { text: e.note || "" }), el("td", {}, link(e), `, ${e.source}`)));
   return el("table", { class: "evidence" },
     el("thead", {}, el("tr", {}, ...["Value", "Weight", "Example", "Note", "Source"].map((h) => el("th", { text: h })))),
     el("tbody", {}, ...rows));
