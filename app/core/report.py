@@ -165,7 +165,7 @@ def _examples_table(runs):
         "",
         "## Examples put in the prompt",
         "",
-        "Score is shared words / all words of both sentences.",
+        "Score is the rarity of shared words / of all words of both sentences. Supported examples come first.",
         "",
         "| Sentence | Examples (id, score, shared words) |",
         "|---|---|",

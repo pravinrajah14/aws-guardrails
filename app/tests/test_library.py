@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from app.core import config, examples, glossary
+from app.core import config, examples, glossary, rule_types
 from app.web import server
 
 FORMS_DIR = config.REPO / "converter" / "forms"
@@ -76,6 +76,39 @@ def test_most_similar_ranks_by_word_overlap_without_repeats():
 def test_most_similar_never_picks_baseline_rules_and_can_find_nothing():
     assert examples.most_similar("xylophone") == []
     assert all(e["type"] != examples.BASELINE for e in examples.most_similar("tools are always allowed"))
+
+
+def test_rule_words_do_not_count_and_rare_words_count_more():
+    assert examples.words("No, never, only if you may not, unless you must or can or need.") == {"you"}
+    [top, *_] = examples.most_similar("Refunds may not exceed the approval.")
+    assert top["id"] == "R1" and top["shared_words"] == ["exceed", "refund"]
+
+
+DEMO_TYPES = {
+    "No refunds over $5,000.": {rule_types.AMOUNT_CAP},
+    "Only refund if a manager approved it recently.": {rule_types.APPROVAL_REQUIRED},
+    "No production refunds over $500.50.": {rule_types.AMOUNT_CAP},
+    "Refund up to $40 for order A100, subject to approval.": {
+        rule_types.CAPPED_WITH_APPROVAL,
+        rule_types.AMOUNT_CAP,
+        rule_types.APPROVAL_REQUIRED,
+    },
+    "Only email customers who opted in.": None,
+}
+
+
+@pytest.mark.parametrize("sentence", server.DEMO_SENTENCES)
+def test_demo_sentences_rank_supported_examples_first_and_their_own_type_in_the_top_three(sentence):
+    picked = examples.similar_others(sentence)
+    supported = [examples.is_supported(e) for e in picked]
+    assert supported == sorted(supported, reverse=True)
+    if DEMO_TYPES[sentence]:
+        assert DEMO_TYPES[sentence] & {e["type"] for e in picked}
+
+
+def test_unsupported_examples_only_fill_in_when_few_supported_ones_share_a_word():
+    assert all(examples.is_supported(e) for e in examples.similar_others("No refunds over $5,000."))
+    assert [e["id"] for e in examples.similar_others("Only email customers who opted in.")] == ["R7"]
 
 
 SLOTS = ("window", "approver_role", "max_amount", "services")
