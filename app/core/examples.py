@@ -13,6 +13,7 @@ BASELINE = "baseline"
 PICK_COUNT = 3
 WEIGHT_DIGITS = 3
 NOT_IN_SENTENCE = "chosen by a person for that rule, not stated in its sentence"
+_NOTE_KEYS = ("note", "approximation", "other_comments")
 _WORD = re.compile(r"[a-z]+")
 _PUNCTUATION = re.compile(r"[^\w\s]")
 _STOP_WORDS = frozenset(
@@ -29,6 +30,11 @@ def _stem(word):
 
 def words(text):
     return {_stem(w) for w in _WORD.findall(text.lower())} - _STOP_WORDS
+
+
+def word_spans(text, wanted):
+    """[start, end] of each word in text that is one of the wanted words once stemmed."""
+    return [[m.start(), m.end()] for m in _WORD.finditer(text.lower()) if _stem(m.group()) in wanted]
 
 
 def _sentence_key(sentence):
@@ -83,6 +89,24 @@ def most_similar(sentence, count=PICK_COUNT):
 
 def is_supported(example):
     return example["type"] in rule_types.supported_ids()
+
+
+def unsupported_reason(example):
+    """Why the converter can't build this example's rule; None when it can."""
+    if is_supported(example):
+        return None
+    return example["reason"] or example["type"].partition(": ")[2] or None
+
+
+def policy_of(example_id):
+    """The example's own Dogwood text, or its rule form for a converter form, and the notes kept with it."""
+    example = next(e for e in LIBRARY if e["id"] == example_id)
+    form = example.get("form")
+    return {
+        "policy": json.dumps(form, indent=2) if form else example.get("dogwood"),
+        "policy_kind": "rule form" if form else "Dogwood",
+        "notes": [example[k] for k in _NOTE_KEYS if example.get(k)],
+    }
 
 
 def similar_others(sentence, count=PICK_COUNT):

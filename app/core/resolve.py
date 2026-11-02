@@ -6,13 +6,14 @@ import sys
 
 from app.core import answers, config, examples, glossary, rule_types, signals
 from app.core.model import ModelError, OllamaModel
-from app.core.numbers import amount_json, find_amounts, find_durations, window
+from app.core.numbers import amount_json, find_amounts, find_durations, how_long, window
 from app.core.understand import INVALID, LIMIT_SCOPE, REVIEW, finish, readable, understand
 from converter.convert import load_schema
 
 NOT_STATED = "(not stated)"
 EACH_REFUND, A_TOTAL = "each refund", "a total"
 STATED, FILLED, ASKED, FLAGGED = "stated", "filled", "asked", "review"
+PICKS_TYPE = "shown to the model to help pick the rule type"
 
 
 class AnswerError(ValueError):
@@ -252,8 +253,41 @@ def _fields_used(rule_type):
     return used
 
 
+def _example_row(e, sentence):
+    shared = set(e["shared_words"])
+    return {
+        **e,
+        **examples.policy_of(e["id"]),
+        "sentence_marks": examples.word_spans(e["sentence"], shared),
+        "input_marks": examples.word_spans(sentence, shared),
+        "unsupported_reason": examples.unsupported_reason(e),
+        "used_for": [PICKS_TYPE],
+    }
+
+
+def _shown_value(field, value):
+    if field == "window":
+        return how_long(find_durations(value)[0]["seconds"])
+    if field == "max_amount":
+        return f"${value}"
+    return ", ".join(value) if isinstance(value, list) else str(value)
+
+
+def _mark_suggestions(rows, questions):
+    by_id = {row["id"]: row for row in rows}
+    for q in questions:
+        if q["proposal"] is None:
+            continue
+        for e in q["evidence"]:
+            if e["id"] in by_id:
+                by_id[e["id"]]["used_for"].append(f"suggested {q['field']}: {_shown_value(q['field'], e['value'])}")
+
+
 def build_context(u):
-    """What this sentence was read against, each item with where it came from."""
+    """What this sentence was read against, each item with where it came from.
+
+    The examples are the ones recorded with the model call, in the order the model saw them.
+    """
     schema = str(config.SCHEMA_PATH.relative_to(config.REPO))
     _, actions = load_schema(config.SCHEMA_PATH)
     tools = []
@@ -269,7 +303,7 @@ def build_context(u):
             {"text": h["text"], "field": h["field"], "value": h["value"], "source": h["source"]}
             for h in glossary.find_terms(u["sentence"])
         ],
-        "examples": examples.with_weights(examples.similar_others(u["sentence"])),
+        "examples": [_example_row(e, u["sentence"]) for e in examples.with_weights(u["examples_used"])],
         "saved_answers": answers.for_rule_type(u["rule_type"]) if u["rule_type"] else [],
     }
 
@@ -345,6 +379,7 @@ def resolve(sentence, model=None, given=None, picks=None):
     transient = _record_answers(u, given, picks, sentence)
     questions = _fill_gaps(u, given, transient) + _vague_without_a_slot(u)
     context["saved_answers"] = answers.for_rule_type(u["rule_type"])
+    _mark_suggestions(context["examples"], questions)
     finish(u)
     return {"understanding": u, "context": context, "questions": questions, "highlights": highlights(u, questions)}
 

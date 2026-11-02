@@ -205,3 +205,25 @@ def test_limit_op_defaults_to_strict_and_refuses_others():
     assert "amount >= 5" in convert([("x", {**form, "op": ">="})], config.SCHEMA_PATH)
     with pytest.raises(ValueError, match="'op'"):
         convert([("x", {**form, "op": "<"})], config.SCHEMA_PATH)
+
+
+class RecordingModel(FakeModel):
+    def complete(self, prompt):
+        self.shown = [e["id"] for e in prompt["examples"]]
+        return super().complete(prompt)
+
+
+@pytest.mark.parametrize("sentence", DEMO_ANSWERS)
+def test_the_context_table_lists_exactly_the_examples_sent_to_the_model_in_order(sentence):
+    model = RecordingModel()
+    events = list(flow.write_policy(sentence, model))
+    assert model.shown
+    assert [e["id"] for e in step(events, "Context")["context"]["examples"]] == model.shown
+
+
+def test_an_example_backing_a_suggested_value_says_so():
+    events, _ = run("Only refund if a manager approved it recently.")
+    rows = {e["id"]: e for e in step(events, "Context")["context"]["examples"]}
+    assert rows["R4"]["used_for"] == ["shown to the model to help pick the rule type", "suggested window: 1 hour"]
+    assert rows["R4"]["policy_kind"] == "Dogwood" and "r4_refund_up_to_100" in rows["R4"]["policy"]
+    assert rows["R9"]["unsupported_reason"] == "no converter form kind"
