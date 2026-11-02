@@ -1,7 +1,6 @@
-"""The example library, and picking the examples closest to a sentence by shared words weighted by rarity."""
+"""The example library, and picking the examples closest to a sentence by plain word overlap."""
 
 import json
-import math
 import re
 from pathlib import Path
 
@@ -19,8 +18,6 @@ _PUNCTUATION = re.compile(r"[^\w\s]")
 _STOP_WORDS = frozenset(
     {"a", "an", "the", "of", "to", "in", "on", "for", "at", "by", "as", "is", "are", "be", "it", "its", "and", "or"}
     | {"that", "this", "s", "from", "with", "their"}
-    # Rule words appear in rules of every type, so they say nothing about which rule a sentence is.
-    | {"no", "not", "never", "only", "if", "unless", "may", "must", "need", "needs", "can"}
 )
 
 
@@ -45,30 +42,15 @@ def same_sentence(a, b):
     return _sentence_key(a) == _sentence_key(b)
 
 
-def _rarity():
-    """Each word's weight, higher the fewer library sentences hold it (smoothed inverse document frequency)."""
-    sentences = {e["sentence"] for e in LIBRARY if e["type"] != BASELINE}
-    counts = {}
-    for sentence in sentences:
-        for word in words(sentence):
-            counts[word] = counts.get(word, 0) + 1
-    return lambda word: math.log((1 + len(sentences)) / (1 + counts.get(word, 0))) + 1
-
-
-def _score(ours, theirs, rarity):
-    return sum(map(rarity, ours & theirs)) / sum(map(rarity, ours | theirs))
-
-
 def most_similar(sentence, count=PICK_COUNT):
-    """The closest examples with their score (rarity of shared words / of all words of both), best first, no repeats."""
+    """The closest examples with their score (shared words / all words of both), best first, no repeated sentences."""
     ours = words(sentence)
-    rarity = _rarity()
     scored = []
     for example in LIBRARY:
         theirs = words(example["sentence"])
         shared = ours & theirs
         if example["type"] != BASELINE and shared:
-            scored.append((_score(ours, theirs, rarity), sorted(shared), example))
+            scored.append((len(shared) / len(ours | theirs), sorted(shared), example))
     picked, seen = [], set()
     for score, shared, example in sorted(scored, key=lambda s: -s[0]):
         if example["sentence"] not in seen and len(picked) < count:
@@ -110,13 +92,9 @@ def policy_of(example_id):
 
 
 def similar_others(sentence, count=PICK_COUNT):
-    """The examples shown to the model and on the page: supported ones first, unsupported only to fill up to count.
-
-    The sentence itself is left out, since an example can't be evidence for its own wording.
-    """
+    """most_similar without the sentence itself: an example can't be evidence for its own wording."""
     others = [e for e in most_similar(sentence, len(LIBRARY)) if not same_sentence(e["sentence"], sentence)]
-    supported = [e for e in others if is_supported(e)]
-    return (supported + [e for e in others if not is_supported(e)])[:count]
+    return others[:count]
 
 
 def with_weights(picked):
@@ -160,7 +138,6 @@ def _stated_in_sentence(sentence, slot, value):
 def stating(sentence, type_id, slot, count=PICK_COUNT):
     """Other library examples of this rule type that state this slot, closest first, with their value and weight."""
     ours = words(sentence)
-    rarity = _rarity()
     found = {}
     # Forms first, so a sentence that also has a form takes its value from the form.
     for example in sorted(LIBRARY, key=lambda e: "form" not in e):
@@ -168,7 +145,8 @@ def stating(sentence, type_id, slot, count=PICK_COUNT):
             continue
         form = example.get("form")
         value = _value_in_form(form, slot) if form else _value_in_sentence(example["sentence"], slot)
-        score = _score(ours, words(example["sentence"]), rarity)
+        theirs = words(example["sentence"])
+        score = len(ours & theirs) / len(ours | theirs)
         if value is not None and score > 0:
             found[example["sentence"]] = {
                 "id": example["id"],

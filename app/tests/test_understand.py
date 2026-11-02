@@ -647,7 +647,7 @@ def test_a_refused_sentence_does_not_report_its_numbers():
 
 def test_understanding_saves_the_examples_used():
     u = run("Only refund if a manager approved it recently.", answer("unsupported", "none"))
-    assert u["examples_used"][0]["id"] == "R4"
+    assert u["examples_used"][0]["id"] == "R2"
     assert 0 < u["examples_used"][0]["score"] < 1
     assert "refund" in u["examples_used"][0]["shared_words"]
 

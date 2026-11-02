@@ -226,4 +226,4 @@ def test_an_example_backing_a_suggested_value_says_so():
     rows = {e["id"]: e for e in step(events, "Context")["context"]["examples"]}
     assert rows["R4"]["used_for"] == ["shown to the model to help pick the rule type", "suggested window: 1 hour"]
     assert rows["R4"]["policy_kind"] == "Dogwood" and "r4_refund_up_to_100" in rows["R4"]["policy"]
-    assert rows["R9"]["unsupported_reason"] == "no converter form kind"
+    assert rows["R2"]["unsupported_reason"] == "Needs IssueRefund input `order_age_days: Long`."
