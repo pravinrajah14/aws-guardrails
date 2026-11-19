@@ -1,0 +1,11 @@
+// PRACTICE CANDIDATE (should PASS): same behavior as the correct rule, different rule name.
+
+@id("practice_same_meaning")
+permit ( principal, action == Shop::Action::"IssueRefund", resource )
+when temporal {
+    formerly within 1h Shop::Action::"RequestApproval"::response{
+        input.order_id: context.input.order_id,
+        output.approved: true,
+        output.approved_amount: context.input.amount
+    }
+};
