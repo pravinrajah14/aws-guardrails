@@ -1,7 +1,15 @@
-"""The example library, and picking the examples closest to a sentence by plain word overlap."""
+"""The example library, and picking the examples closest to a sentence.
+
+Two searches use the library, each with its own score:
+- the example score picks the past rules shown to the model (most_similar);
+- the evidence score picks the past rules that may suggest a missing value (stating).
+Both come from the active ranking, plain word overlap unless use_ranking swaps it (the ranking
+evaluation in ranking_eval/ does). Keeping them apart lets one change without the other.
+"""
 
 import json
 import re
+from contextlib import contextmanager
 from pathlib import Path
 
 from app.core import glossary, rule_types
@@ -42,15 +50,59 @@ def same_sentence(a, b):
     return _sentence_key(a) == _sentence_key(b)
 
 
+def overlap(a, b):
+    """Shared words / all words of both (Jaccard), and the shared words."""
+    ours, theirs = words(a), words(b)
+    shared = ours & theirs
+    return (len(shared) / len(ours | theirs) if shared else 0.0), sorted(shared)
+
+
+class WordOverlap:
+    """Today's ranking: both scores are plain word overlap, and evidence comes from the same rule type."""
+
+    name = "jaccard"
+
+    def example_scores(self, sentence, candidates):
+        """(score, example) for the candidates worth showing the model; any order."""
+        scored = []
+        for example in candidates:
+            score, shared = overlap(sentence, example["sentence"])
+            if shared:
+                scored.append((score, example))
+        return scored
+
+    def in_evidence_pool(self, example, query):
+        return example["type"] == query["rule_type"]
+
+    def evidence_scores(self, sentence, candidates, query):
+        """(score, example) for evidence candidates that already state the slot; a score of 0 drops one."""
+        return [(overlap(sentence, example["sentence"])[0], example) for example in candidates]
+
+
+_active = WordOverlap()
+
+
+@contextmanager
+def use_ranking(ranking):
+    """Rank with this object instead of word overlap, for the length of the block."""
+    global _active
+    before, _active = _active, ranking
+    try:
+        yield ranking
+    finally:
+        _active = before
+
+
+def active_ranking():
+    return _active
+
+
 def most_similar(sentence, count=PICK_COUNT):
-    """The closest examples with their score (shared words / all words of both), best first, no repeated sentences."""
-    ours = words(sentence)
-    scored = []
-    for example in LIBRARY:
-        theirs = words(example["sentence"])
-        shared = ours & theirs
-        if example["type"] != BASELINE and shared:
-            scored.append((len(shared) / len(ours | theirs), sorted(shared), example))
+    """The closest examples with their score, best first, no repeated sentences."""
+    candidates = [e for e in LIBRARY if e["type"] != BASELINE]
+    scored = [
+        (score, overlap(sentence, e["sentence"])[1], e) for score, e in _active.example_scores(sentence, candidates)
+    ]
     picked, seen = [], set()
     for score, shared, example in sorted(scored, key=lambda s: -s[0]):
         if example["sentence"] not in seen and len(picked) < count:
@@ -135,19 +187,29 @@ def _stated_in_sentence(sentence, slot, value):
     return _value_in_sentence(sentence, slot) == value
 
 
-def stating(sentence, type_id, slot, count=PICK_COUNT):
-    """Other library examples of this rule type that state this slot, closest first, with their value and weight."""
-    ours = words(sentence)
-    found = {}
+def stating(sentence, type_id, slot, count=PICK_COUNT, understanding=None):
+    """Other library examples in the evidence pool that state this slot, closest first, with their value and weight.
+
+    The pool is the active ranking's: today, the same rule type.
+    """
+    query = {"sentence": sentence, "rule_type": type_id, "slot": slot, "understanding": understanding}
+    stated, seen = [], set()
     # Forms first, so a sentence that also has a form takes its value from the form.
     for example in sorted(LIBRARY, key=lambda e: "form" not in e):
-        if example["type"] != type_id or example["sentence"] in found or same_sentence(example["sentence"], sentence):
+        if example["sentence"] in seen or same_sentence(example["sentence"], sentence):
+            continue
+        if not _active.in_evidence_pool(example, query):
             continue
         form = example.get("form")
         value = _value_in_form(form, slot) if form else _value_in_sentence(example["sentence"], slot)
-        theirs = words(example["sentence"])
-        score = len(ours & theirs) / len(ours | theirs)
-        if value is not None and score > 0:
+        if value is not None:
+            seen.add(example["sentence"])
+            stated.append((example, value))
+    values = {id(e): v for e, v in stated}
+    found = {}
+    for score, example in _active.evidence_scores(sentence, [e for e, _ in stated], query):
+        value = values[id(example)]
+        if score > 0:
             found[example["sentence"]] = {
                 "id": example["id"],
                 "source": example["source"],

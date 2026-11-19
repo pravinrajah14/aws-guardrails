@@ -213,7 +213,9 @@ def _fill_gaps(u, given, transient):
         if field in transient:
             _apply_value(u, gap, transient[field], ASKED, "from your answer; not saved, since it is an order id")
         elif not (_fill_from_saved(u, gap, given) or _fill_from_glossary(u, gap)) and gap["required"]:
-            evidence = [] if field == LIMIT_SCOPE else examples.stating(u["sentence"], u["rule_type"], field)
+            evidence = (
+                [] if field == LIMIT_SCOPE else examples.stating(u["sentence"], u["rule_type"], field, understanding=u)
+            )
             questions.append(_question(u, gap, evidence))
     return questions
 

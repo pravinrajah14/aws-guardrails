@@ -1,0 +1,23 @@
+{
+  "note": "Structure profile of every library policy, written by hand from its Dogwood or rule form (app/core/data/examples.json). action: the action the rule controls. prior: the earlier action it looks back at, or null. kinds: limit, allowlist, requires_prior, or other (a shape the converter has no form for). same: the fields that must match between the two actions. sets: the values the rule fixes, by name. scope: input conditions that narrow it (env). checked_by is null until a second person checks the profile against its Dogwood.",
+  "profiles": {
+    "allow_lookup": {"action": "LookupOrder", "prior": null, "kinds": ["baseline"], "same": [], "sets": {}, "scope": {}, "checked_by": null},
+    "allow_approval_requests": {"action": "RequestApproval", "prior": null, "kinds": ["baseline"], "same": [], "sets": {}, "scope": {}, "checked_by": null},
+    "allow_tests": {"action": "RunTests", "prior": null, "kinds": ["baseline"], "same": [], "sets": {}, "scope": {}, "checked_by": null},
+    "allow_rollback": {"action": "Rollback", "prior": null, "kinds": ["baseline"], "same": [], "sets": {}, "scope": {}, "checked_by": null},
+    "R4": {"action": "IssueRefund", "prior": "RequestApproval", "kinds": ["requires_prior", "limit"], "same": ["order_id", "amount"], "sets": {"window": "1h", "approver_role": "manager", "threshold": 100}, "scope": {}, "checked_by": null},
+    "R6": {"action": "DeployService", "prior": "RunTests", "kinds": ["requires_prior"], "same": ["service", "version"], "sets": {"window": "24h"}, "scope": {"env": "prod"}, "checked_by": null},
+    "R10": {"action": "DeployService", "prior": "Rollback", "kinds": ["other"], "same": ["service", "env"], "sets": {"window": "24h"}, "scope": {"env": "prod"}, "checked_by": null},
+    "R1": {"action": "IssueRefund", "prior": null, "kinds": ["limit"], "same": [], "sets": {"max_amount": 500}, "scope": {}, "checked_by": null},
+    "R3": {"action": "DeployService", "prior": null, "kinds": ["allowlist"], "same": [], "sets": {"services": ["payments", "search", "web"]}, "scope": {"env": "prod"}, "checked_by": null},
+    "R8": {"action": "IssueRefund", "prior": "IssueRefund", "kinds": ["other"], "same": [], "sets": {"total_amount": 1000, "window": "24h"}, "scope": {}, "checked_by": null},
+    "R9": {"action": "IssueRefund", "prior": "IssueRefund", "kinds": ["other"], "same": ["order_id"], "sets": {"window": "24h"}, "scope": {}, "checked_by": null},
+    "R2": {"action": "IssueRefund", "prior": null, "kinds": ["limit"], "same": [], "sets": {"order_age": "720h"}, "scope": {}, "checked_by": null},
+    "R5": {"action": "DeployService", "prior": "RequestDeployApproval", "kinds": ["requires_prior"], "same": ["service", "version", "env"], "sets": {"window": "2h"}, "scope": {"env": "prod"}, "checked_by": null},
+    "R7": {"action": "IssueRefund", "prior": "IssueRefund", "kinds": ["other"], "same": ["customer_id"], "sets": {"max_count": 2, "window": "24h"}, "scope": {}, "checked_by": null},
+    "form_refund_cap": {"action": "IssueRefund", "prior": null, "kinds": ["limit"], "same": [], "sets": {"max_amount": 500}, "scope": {}, "checked_by": null},
+    "form_manager_approval": {"action": "IssueRefund", "prior": "RequestApproval", "kinds": ["requires_prior"], "same": ["order_id", "amount"], "sets": {"window": "1h", "approver_role": "manager"}, "scope": {}, "checked_by": null},
+    "form_prod_allowlist": {"action": "DeployService", "prior": null, "kinds": ["allowlist"], "same": [], "sets": {"services": ["payments", "search", "web"]}, "scope": {"env": "prod"}, "checked_by": null},
+    "form_prod_needs_tests": {"action": "DeployService", "prior": "RunTests", "kinds": ["requires_prior"], "same": ["service", "version"], "sets": {"window": "24h"}, "scope": {"env": "prod"}, "checked_by": null}
+  }
+}

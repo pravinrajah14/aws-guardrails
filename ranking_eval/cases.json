@@ -1,0 +1,3102 @@
+{
+  "format": "ranking-eval-cases/v1",
+  "note": "Answer keys for the ranking evaluation (proposal: Structure-Based Ranking for Company Context). DRAFT: written by Claude, checked_by null until a second person checks each one; disputed keys are dropped until agreed. values: every value the rule needs. source: where it should come from (sentence, glossary, saved_answer, ask, unfilled), either one string or one per mode (isolated / realistic). suggest: for a value that should be asked, the suggestion the question should carry (null = no suggestion is right); defaults to the value. reference: the correct policy, as converter forms or Dogwood text. relevant: library ids the model should see (Recall@3, example score); evidence relevance is worked out from profiles.json. leave_out: library ids removed in isolated mode. hidden: held back until the final comparison.",
+  "cases": [
+    {
+      "id": "masked-R4-window",
+      "kind": "masked",
+      "sentence": "A refund over $100 needs a manager's approval for that same order and that same amount, granted recently.",
+      "based_on": [
+        "R4"
+      ],
+      "leave_out": [
+        "R4"
+      ],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "limit",
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "dogwood": "@id(\"r4_refund_up_to_100\")\npermit (principal, action == Shop::Action::\"IssueRefund\", resource)\nwhen { context.input.amount <= 100 };\n\n@id(\"r4_refund_over_100_needs_approval\")\npermit (principal, action == Shop::Action::\"IssueRefund\", resource)\nwhen { context.input.amount > 100 }\nwhen temporal {\n    formerly within 1h Shop::Action::\"RequestApproval\"::response{\n        input.order_id: context.input.order_id,\n        input.amount: context.input.amount,\n        output.approved: true\n    }\n};"
+      },
+      "notes": "R4 also lets refunds of $100 or less through with no approval. The tool's rule types can't say that, so check 1 (form kinds) and check 2 (reference R4) are expected to fail for every ranking; the case is here for the window suggestion. With R4 left out, form_manager_approval still says 1h.",
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "masked-R4-window-no-evidence",
+      "kind": "masked",
+      "sentence": "A refund over $100 needs a manager's approval for that same order and that same amount, granted recently.",
+      "based_on": [
+        "R4"
+      ],
+      "leave_out": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "limit",
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": {
+            "isolated": null,
+            "realistic": "1h"
+          }
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "dogwood": "@id(\"r4_refund_up_to_100\")\npermit (principal, action == Shop::Action::\"IssueRefund\", resource)\nwhen { context.input.amount <= 100 };\n\n@id(\"r4_refund_over_100_needs_approval\")\npermit (principal, action == Shop::Action::\"IssueRefund\", resource)\nwhen { context.input.amount > 100 }\nwhen temporal {\n    formerly within 1h Shop::Action::\"RequestApproval\"::response{\n        input.order_id: context.input.order_id,\n        input.amount: context.input.amount,\n        output.approved: true\n    }\n};"
+      },
+      "notes": "R4 also lets refunds of $100 or less through with no approval. The tool's rule types can't say that, so check 1 (form kinds) and check 2 (reference R4) are expected to fail for every ranking; the case is here for the window suggestion. Both approval rules are left out, so in isolated mode nothing can support a value: the right outcome is a question with no suggestion.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "masked-R4-window-lately",
+      "kind": "masked",
+      "sentence": "A refund over $100 needs a manager's approval for that same order and that same amount, granted lately.",
+      "based_on": [
+        "R4"
+      ],
+      "leave_out": [
+        "R4"
+      ],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "limit",
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "dogwood": "@id(\"r4_refund_up_to_100\")\npermit (principal, action == Shop::Action::\"IssueRefund\", resource)\nwhen { context.input.amount <= 100 };\n\n@id(\"r4_refund_over_100_needs_approval\")\npermit (principal, action == Shop::Action::\"IssueRefund\", resource)\nwhen { context.input.amount > 100 }\nwhen temporal {\n    formerly within 1h Shop::Action::\"RequestApproval\"::response{\n        input.order_id: context.input.order_id,\n        input.amount: context.input.amount,\n        output.approved: true\n    }\n};"
+      },
+      "notes": "R4 also lets refunds of $100 or less through with no approval. The tool's rule types can't say that, so check 1 (form kinds) and check 2 (reference R4) are expected to fail for every ranking; the case is here for the window suggestion.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "masked-manager-approval",
+      "kind": "masked",
+      "sentence": "Only refund if a manager approved it recently.",
+      "based_on": [
+        "form_manager_approval"
+      ],
+      "leave_out": [
+        "form_manager_approval"
+      ],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": "The library form's 1h was chosen by a person; with it left out, R4 still says 1h.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "masked-manager-approval-no-evidence",
+      "kind": "masked",
+      "sentence": "Only refund if a manager approved it recently.",
+      "based_on": [
+        "form_manager_approval"
+      ],
+      "leave_out": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": {
+            "isolated": null,
+            "realistic": "1h"
+          }
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "masked-R6-window",
+      "kind": "masked",
+      "sentence": "A version may only go to production if its tests passed recently.",
+      "based_on": [
+        "R6"
+      ],
+      "leave_out": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "expect": {
+        "action": "DeployService",
+        "prior": "RunTests",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "deploy_needs_tests"
+      },
+      "values": {
+        "window": {
+          "value": "24h",
+          "source": "ask",
+          "suggest": {
+            "isolated": null,
+            "realistic": "24h"
+          }
+        }
+      },
+      "relevant": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "DeployService",
+            "requires": {
+              "action": "RunTests",
+              "within": "24h",
+              "same": [
+                "service",
+                "version"
+              ],
+              "output": {
+                "passed": true
+              }
+            },
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": "R6 and its converter form share one sentence, so both are left out; nothing else in the library sets a tests window.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "masked-R6-window-shortly",
+      "kind": "masked",
+      "sentence": "A version may only go to production if its tests passed shortly before.",
+      "based_on": [
+        "R6"
+      ],
+      "leave_out": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "expect": {
+        "action": "DeployService",
+        "prior": "RunTests",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "deploy_needs_tests"
+      },
+      "values": {
+        "window": {
+          "value": "24h",
+          "source": "ask",
+          "suggest": {
+            "isolated": null,
+            "realistic": "24h"
+          }
+        }
+      },
+      "relevant": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "DeployService",
+            "requires": {
+              "action": "RunTests",
+              "within": "24h",
+              "same": [
+                "service",
+                "version"
+              ],
+              "output": {
+                "passed": true
+              }
+            },
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "masked-R1-cap",
+      "kind": "masked",
+      "sentence": "A single refund may not exceed a set amount.",
+      "based_on": [
+        "R1"
+      ],
+      "leave_out": [
+        "R1",
+        "form_refund_cap"
+      ],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": null,
+        "kinds": [
+          "limit"
+        ],
+        "rule_type": "amount_cap"
+      },
+      "values": {
+        "max_amount": {
+          "value": 500,
+          "source": "ask",
+          "suggest": {
+            "isolated": null,
+            "realistic": 500
+          }
+        }
+      },
+      "relevant": [
+        "R1",
+        "form_refund_cap"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "limit",
+            "action": "IssueRefund",
+            "field": "amount",
+            "max": 500,
+            "op": ">"
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "masked-R3-services",
+      "kind": "masked",
+      "sentence": "Production deploys are only allowed for certain services.",
+      "based_on": [
+        "R3"
+      ],
+      "leave_out": [
+        "R3",
+        "form_prod_allowlist"
+      ],
+      "expect": {
+        "action": "DeployService",
+        "prior": null,
+        "kinds": [
+          "allowlist"
+        ],
+        "rule_type": "deploy_allowlist"
+      },
+      "values": {
+        "services": {
+          "value": [
+            "payments",
+            "search",
+            "web"
+          ],
+          "source": "ask",
+          "suggest": {
+            "isolated": null,
+            "realistic": [
+              "payments",
+              "search",
+              "web"
+            ]
+          }
+        }
+      },
+      "relevant": [
+        "R3",
+        "form_prod_allowlist"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "allowlist",
+            "action": "DeployService",
+            "field": "service",
+            "allowed": [
+              "payments",
+              "search",
+              "web"
+            ],
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "para-signoff",
+      "kind": "paraphrase",
+      "sentence": "Refunds need a manager's sign-off, given recently.",
+      "based_on": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "para-reimburse-okayed",
+      "kind": "paraphrase",
+      "sentence": "Only reimburse a customer if a manager okayed it recently.",
+      "based_on": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": "'reimburse' and 'okayed' share no word with the library's refund rules.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "para-little-while",
+      "kind": "paraphrase",
+      "sentence": "Don't issue a refund unless a manager approved it a little while ago.",
+      "based_on": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "para-recent-approval",
+      "kind": "paraphrase",
+      "sentence": "Every refund needs recent manager approval.",
+      "based_on": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "para-authorization",
+      "kind": "paraphrase",
+      "sentence": "A refund may only go out after a manager's authorization, granted recently.",
+      "based_on": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "para-lately",
+      "kind": "paraphrase",
+      "sentence": "Refunds require approval from a manager, given lately.",
+      "based_on": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "para-sign-off-recent",
+      "kind": "paraphrase",
+      "sentence": "Before refunding, a manager has to sign off, and the sign-off must be recent.",
+      "based_on": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "para-money-back",
+      "kind": "paraphrase",
+      "sentence": "Customers only get their money back once a manager has approved it recently.",
+      "based_on": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "para-ship",
+      "kind": "paraphrase",
+      "sentence": "Only ship a version to production if its tests passed recently.",
+      "based_on": [
+        "R6"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": "RunTests",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "deploy_needs_tests"
+      },
+      "values": {
+        "window": {
+          "value": "24h",
+          "source": "ask",
+          "suggest": "24h"
+        }
+      },
+      "relevant": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "DeployService",
+            "requires": {
+              "action": "RunTests",
+              "within": "24h",
+              "same": [
+                "service",
+                "version"
+              ],
+              "output": {
+                "passed": true
+              }
+            },
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "para-green",
+      "kind": "paraphrase",
+      "sentence": "A release can go live only when its test suite was green recently.",
+      "based_on": [
+        "R6"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": "RunTests",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "deploy_needs_tests"
+      },
+      "values": {
+        "window": {
+          "value": "24h",
+          "source": "ask",
+          "suggest": "24h"
+        }
+      },
+      "relevant": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "DeployService",
+            "requires": {
+              "action": "RunTests",
+              "within": "24h",
+              "same": [
+                "service",
+                "version"
+              ],
+              "output": {
+                "passed": true
+              }
+            },
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "para-push",
+      "kind": "paraphrase",
+      "sentence": "Don't push a version to prod unless its tests passed lately.",
+      "based_on": [
+        "R6"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": "RunTests",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "deploy_needs_tests"
+      },
+      "values": {
+        "window": {
+          "value": "24h",
+          "source": "ask",
+          "suggest": "24h"
+        }
+      },
+      "relevant": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "DeployService",
+            "requires": {
+              "action": "RunTests",
+              "within": "24h",
+              "same": [
+                "service",
+                "version"
+              ],
+              "output": {
+                "passed": true
+              }
+            },
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "para-deployments",
+      "kind": "paraphrase",
+      "sentence": "Deployments to production need passing tests from recently.",
+      "based_on": [
+        "R6"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": "RunTests",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "deploy_needs_tests"
+      },
+      "values": {
+        "window": {
+          "value": "24h",
+          "source": "ask",
+          "suggest": "24h"
+        }
+      },
+      "relevant": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "DeployService",
+            "requires": {
+              "action": "RunTests",
+              "within": "24h",
+              "same": [
+                "service",
+                "version"
+              ],
+              "output": {
+                "passed": true
+              }
+            },
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "para-checks",
+      "kind": "paraphrase",
+      "sentence": "A version can be released to production only after its checks passed recently.",
+      "based_on": [
+        "R6"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": "RunTests",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "deploy_needs_tests"
+      },
+      "values": {
+        "window": {
+          "value": "24h",
+          "source": "ask",
+          "suggest": "24h"
+        }
+      },
+      "relevant": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "DeployService",
+            "requires": {
+              "action": "RunTests",
+              "within": "24h",
+              "same": [
+                "service",
+                "version"
+              ],
+              "output": {
+                "passed": true
+              }
+            },
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "para-usual-limit",
+      "kind": "paraphrase",
+      "sentence": "No single refund may be larger than the usual limit.",
+      "based_on": [
+        "R1"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": null,
+        "kinds": [
+          "limit"
+        ],
+        "rule_type": "amount_cap"
+      },
+      "values": {
+        "max_amount": {
+          "value": 500,
+          "source": "ask",
+          "suggest": 500
+        }
+      },
+      "relevant": [
+        "R1",
+        "form_refund_cap"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "limit",
+            "action": "IssueRefund",
+            "field": "amount",
+            "max": 500,
+            "op": ">"
+          }
+        ]
+      },
+      "notes": "500 is the company's only cap in the library; the key takes it as the right suggestion.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "para-standard-cap",
+      "kind": "paraphrase",
+      "sentence": "Refunds above our standard cap are not allowed.",
+      "based_on": [
+        "R1"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": null,
+        "kinds": [
+          "limit"
+        ],
+        "rule_type": "amount_cap"
+      },
+      "values": {
+        "max_amount": {
+          "value": 500,
+          "source": "ask",
+          "suggest": 500
+        }
+      },
+      "relevant": [
+        "R1",
+        "form_refund_cap"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "limit",
+            "action": "IssueRefund",
+            "field": "amount",
+            "max": 500,
+            "op": ">"
+          }
+        ]
+      },
+      "notes": "500 is the company's only cap in the library; the key takes it as the right suggestion.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "para-normal-max",
+      "kind": "paraphrase",
+      "sentence": "Never reimburse more than the normal maximum in one refund.",
+      "based_on": [
+        "R1"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": null,
+        "kinds": [
+          "limit"
+        ],
+        "rule_type": "amount_cap"
+      },
+      "values": {
+        "max_amount": {
+          "value": 500,
+          "source": "ask",
+          "suggest": 500
+        }
+      },
+      "relevant": [
+        "R1",
+        "form_refund_cap"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "limit",
+            "action": "IssueRefund",
+            "field": "amount",
+            "max": 500,
+            "op": ">"
+          }
+        ]
+      },
+      "notes": "500 is the company's only cap in the library; the key takes it as the right suggestion.",
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "para-set-limit",
+      "kind": "paraphrase",
+      "sentence": "A refund can't be bigger than the set limit.",
+      "based_on": [
+        "R1"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": null,
+        "kinds": [
+          "limit"
+        ],
+        "rule_type": "amount_cap"
+      },
+      "values": {
+        "max_amount": {
+          "value": 500,
+          "source": "ask",
+          "suggest": 500
+        }
+      },
+      "relevant": [
+        "R1",
+        "form_refund_cap"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "limit",
+            "action": "IssueRefund",
+            "field": "amount",
+            "max": 500,
+            "op": ">"
+          }
+        ]
+      },
+      "notes": "500 is the company's only cap in the library; the key takes it as the right suggestion.",
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "para-usual-services",
+      "kind": "paraphrase",
+      "sentence": "Only our usual services may be released to production.",
+      "based_on": [
+        "R3"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": null,
+        "kinds": [
+          "allowlist"
+        ],
+        "rule_type": "deploy_allowlist"
+      },
+      "values": {
+        "services": {
+          "value": [
+            "payments",
+            "search",
+            "web"
+          ],
+          "source": "ask",
+          "suggest": [
+            "payments",
+            "search",
+            "web"
+          ]
+        }
+      },
+      "relevant": [
+        "R3",
+        "form_prod_allowlist"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "allowlist",
+            "action": "DeployService",
+            "field": "service",
+            "allowed": [
+              "payments",
+              "search",
+              "web"
+            ],
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "para-approved-apps",
+      "kind": "paraphrase",
+      "sentence": "Production deploys are limited to the approved apps.",
+      "based_on": [
+        "R3"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": null,
+        "kinds": [
+          "allowlist"
+        ],
+        "rule_type": "deploy_allowlist"
+      },
+      "values": {
+        "services": {
+          "value": [
+            "payments",
+            "search",
+            "web"
+          ],
+          "source": "ask",
+          "suggest": [
+            "payments",
+            "search",
+            "web"
+          ]
+        }
+      },
+      "relevant": [
+        "R3",
+        "form_prod_allowlist"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "allowlist",
+            "action": "DeployService",
+            "field": "service",
+            "allowed": [
+              "payments",
+              "search",
+              "web"
+            ],
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "para-standard-set",
+      "kind": "paraphrase",
+      "sentence": "Only the standard set of services can go live.",
+      "based_on": [
+        "R3"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": null,
+        "kinds": [
+          "allowlist"
+        ],
+        "rule_type": "deploy_allowlist"
+      },
+      "values": {
+        "services": {
+          "value": [
+            "payments",
+            "search",
+            "web"
+          ],
+          "source": "ask",
+          "suggest": [
+            "payments",
+            "search",
+            "web"
+          ]
+        }
+      },
+      "relevant": [
+        "R3",
+        "form_prod_allowlist"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "allowlist",
+            "action": "DeployService",
+            "field": "service",
+            "allowed": [
+              "payments",
+              "search",
+              "web"
+            ],
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "near-staging-tests",
+      "kind": "near_miss",
+      "sentence": "A version may only go to staging if its tests passed recently.",
+      "based_on": [
+        "R6"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": "RunTests",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "deploy_needs_tests"
+      },
+      "values": {
+        "window": {
+          "value": "24h",
+          "source": "ask",
+          "suggest": null
+        }
+      },
+      "relevant": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "DeployService",
+            "requires": {
+              "action": "RunTests",
+              "within": "24h",
+              "same": [
+                "service",
+                "version"
+              ],
+              "output": {
+                "passed": true
+              }
+            },
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "staging"
+            }
+          }
+        ]
+      },
+      "notes": "JUDGEMENT: R6's 24h is for production; the key says a staging rule should not borrow it (question, no suggestion). The 24h reference value is only so a policy can be built after the question is answered.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "near-deploy-approval",
+      "kind": "near_miss",
+      "sentence": "A production deploy needs a manager's approval for that same service and version, granted recently.",
+      "based_on": [],
+      "leave_out": [],
+      "expect": {
+        "refuse": true,
+        "action": "DeployService",
+        "prior": "RequestDeployApproval",
+        "kinds": null,
+        "rule_type": "unsupported"
+      },
+      "values": {},
+      "relevant": [
+        "R5"
+      ],
+      "reference": null,
+      "notes": "Like R5: the store has no deploy-approval tool, so the tool should refuse; R4's 1h must not leak in.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "near-order-age",
+      "kind": "near_miss",
+      "sentence": "Refunds are only allowed for orders placed recently.",
+      "based_on": [],
+      "leave_out": [],
+      "expect": {
+        "refuse": true,
+        "action": "IssueRefund",
+        "prior": null,
+        "kinds": null,
+        "rule_type": "unsupported"
+      },
+      "values": {},
+      "relevant": [
+        "R2"
+      ],
+      "reference": null,
+      "notes": "Like R2: needs an order-age input the store doesn't have; 'recently' here is about the order, not an approval.",
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "near-twice",
+      "kind": "near_miss",
+      "sentence": "Never refund the same order twice in a short time.",
+      "based_on": [],
+      "leave_out": [],
+      "expect": {
+        "refuse": true,
+        "action": "IssueRefund",
+        "prior": "IssueRefund",
+        "kinds": null,
+        "rule_type": "unsupported"
+      },
+      "values": {},
+      "relevant": [
+        "R9"
+      ],
+      "reference": null,
+      "notes": "Like R9: no converter form for a repeat check.",
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "near-daily-total",
+      "kind": "near_miss",
+      "sentence": "No more than a set amount may be refunded in a single day.",
+      "based_on": [],
+      "leave_out": [],
+      "expect": {
+        "refuse": true,
+        "action": "IssueRefund",
+        "prior": "IssueRefund",
+        "kinds": null,
+        "rule_type": "unsupported"
+      },
+      "values": {},
+      "relevant": [
+        "R8"
+      ],
+      "reference": null,
+      "notes": "Like R8: a total over time, which the tool can't enforce; R1's 500 is a per-refund cap and must not be suggested.",
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "near-per-customer",
+      "kind": "near_miss",
+      "sentence": "No customer may receive many refunds in a short time.",
+      "based_on": [],
+      "leave_out": [],
+      "expect": {
+        "refuse": true,
+        "action": "IssueRefund",
+        "prior": "IssueRefund",
+        "kinds": null,
+        "rule_type": "unsupported"
+      },
+      "values": {},
+      "relevant": [
+        "R7"
+      ],
+      "reference": null,
+      "notes": "Like R7: needs a customer id.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "near-rollback",
+      "kind": "near_miss",
+      "sentence": "After a failed production deploy, block deploys of that service until a rollback finishes.",
+      "based_on": [],
+      "leave_out": [],
+      "expect": {
+        "refuse": true,
+        "action": "DeployService",
+        "prior": "Rollback",
+        "kinds": null,
+        "rule_type": "unsupported"
+      },
+      "values": {},
+      "relevant": [
+        "R10"
+      ],
+      "reference": null,
+      "notes": "Like R10: no converter form.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "near-approval-day",
+      "kind": "near_miss",
+      "sentence": "Refunds need a manager's approval given within the last day.",
+      "based_on": [
+        "R4"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "24h",
+          "source": "sentence"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "24h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": "Stated 24h next to the library's 1h: the model must not copy the example's value.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "near-tests-hour",
+      "kind": "near_miss",
+      "sentence": "A version may only go to production if its tests passed within the last hour.",
+      "based_on": [
+        "R6"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": "RunTests",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "deploy_needs_tests"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "DeployService",
+            "requires": {
+              "action": "RunTests",
+              "within": "1h",
+              "same": [
+                "service",
+                "version"
+              ],
+              "output": {
+                "passed": true
+              }
+            },
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "near-cap-50",
+      "kind": "near_miss",
+      "sentence": "A single refund may not exceed $50.",
+      "based_on": [
+        "R1"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": null,
+        "kinds": [
+          "limit"
+        ],
+        "rule_type": "amount_cap"
+      },
+      "values": {
+        "max_amount": {
+          "value": 50,
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R1",
+        "form_refund_cap"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "limit",
+            "action": "IssueRefund",
+            "field": "amount",
+            "max": 50,
+            "op": ">"
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "near-payments-only",
+      "kind": "near_miss",
+      "sentence": "Production deploys are only allowed for payments.",
+      "based_on": [
+        "R3"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": null,
+        "kinds": [
+          "allowlist"
+        ],
+        "rule_type": "deploy_allowlist"
+      },
+      "values": {
+        "services": {
+          "value": [
+            "payments"
+          ],
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R3",
+        "form_prod_allowlist"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "allowlist",
+            "action": "DeployService",
+            "field": "service",
+            "allowed": [
+              "payments"
+            ],
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "near-support-approval",
+      "kind": "near_miss",
+      "sentence": "Refunds need support's approval, given recently.",
+      "based_on": [
+        "R4"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": null
+        },
+        "approver_role": {
+          "value": "support",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "support"
+            }
+          }
+        ]
+      },
+      "notes": "JUDGEMENT: every library approval window is a manager's; the key says a support approval should not borrow it (question, no suggestion). 1h is only so a policy can be built.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "near-R4-30m",
+      "kind": "near_miss",
+      "sentence": "A refund needs a manager's approval for that same order, granted within the last 30 minutes.",
+      "based_on": [
+        "R4"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "30m",
+          "source": "sentence"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "30m",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "near-staging-list",
+      "kind": "near_miss",
+      "sentence": "Staging deploys are only allowed for payments, search and web.",
+      "based_on": [
+        "R3"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": null,
+        "kinds": [
+          "allowlist"
+        ],
+        "rule_type": "deploy_allowlist"
+      },
+      "values": {
+        "services": {
+          "value": [
+            "payments",
+            "search",
+            "web"
+          ],
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R3",
+        "form_prod_allowlist"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "allowlist",
+            "action": "DeployService",
+            "field": "service",
+            "allowed": [
+              "payments",
+              "search",
+              "web"
+            ],
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "staging"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "near-tests-2h",
+      "kind": "near_miss",
+      "sentence": "A version may only go to production if its tests passed within the last 2 hours.",
+      "based_on": [
+        "R6"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": "RunTests",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "deploy_needs_tests"
+      },
+      "values": {
+        "window": {
+          "value": "2h",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "DeployService",
+            "requires": {
+              "action": "RunTests",
+              "within": "2h",
+              "same": [
+                "service",
+                "version"
+              ],
+              "output": {
+                "passed": true
+              }
+            },
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": "R5 also says 2 hours, for a deploy approval; a match on the number alone is a coincidence.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "ask-approved-recently",
+      "kind": "should_ask",
+      "sentence": "Only refund if it was approved recently.",
+      "based_on": [
+        "R4"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": {
+            "isolated": "unfilled",
+            "realistic": "glossary"
+          }
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "ask-needs-approval",
+      "kind": "should_ask",
+      "sentence": "Refunds need approval.",
+      "based_on": [
+        "R4"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": {
+            "isolated": "unfilled",
+            "realistic": "glossary"
+          }
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "ask-no-recent",
+      "kind": "should_ask",
+      "sentence": "No refunds without a recent approval.",
+      "based_on": [
+        "R4"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": {
+            "isolated": "unfilled",
+            "realistic": "glossary"
+          }
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "ask-manager-every",
+      "kind": "should_ask",
+      "sentence": "A manager must approve every refund.",
+      "based_on": [
+        "R4"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "ask-manager-first",
+      "kind": "should_ask",
+      "sentence": "Refunds need a manager's approval first.",
+      "based_on": [
+        "R4"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "approval_required"
+      },
+      "values": {
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "ask-tests-passed",
+      "kind": "should_ask",
+      "sentence": "A version may only go to production if its tests passed.",
+      "based_on": [
+        "R6"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": "RunTests",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "deploy_needs_tests"
+      },
+      "values": {
+        "window": {
+          "value": "24h",
+          "source": "ask",
+          "suggest": "24h"
+        }
+      },
+      "relevant": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "DeployService",
+            "requires": {
+              "action": "RunTests",
+              "within": "24h",
+              "same": [
+                "service",
+                "version"
+              ],
+              "output": {
+                "passed": true
+              }
+            },
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "ask-tests-first",
+      "kind": "should_ask",
+      "sentence": "Deploys need their tests to pass first.",
+      "based_on": [
+        "R6"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": "RunTests",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "deploy_needs_tests"
+      },
+      "values": {
+        "window": {
+          "value": "24h",
+          "source": "ask",
+          "suggest": "24h"
+        }
+      },
+      "relevant": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "DeployService",
+            "requires": {
+              "action": "RunTests",
+              "within": "24h",
+              "same": [
+                "service",
+                "version"
+              ],
+              "output": {
+                "passed": true
+              }
+            }
+          }
+        ]
+      },
+      "notes": "No environment named, so the reference applies to every environment.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "ask-tests-not-long",
+      "kind": "should_ask",
+      "sentence": "Production deploys need tests that passed not too long ago.",
+      "based_on": [
+        "R6"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": "RunTests",
+        "kinds": [
+          "requires_prior"
+        ],
+        "rule_type": "deploy_needs_tests"
+      },
+      "values": {
+        "window": {
+          "value": "24h",
+          "source": "ask",
+          "suggest": "24h"
+        }
+      },
+      "relevant": [
+        "R6",
+        "form_prod_needs_tests"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "requires_prior",
+            "action": "DeployService",
+            "requires": {
+              "action": "RunTests",
+              "within": "24h",
+              "same": [
+                "service",
+                "version"
+              ],
+              "output": {
+                "passed": true
+              }
+            },
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "ask-cap-certain",
+      "kind": "should_ask",
+      "sentence": "Refunds over a certain amount are blocked.",
+      "based_on": [
+        "R1"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": null,
+        "kinds": [
+          "limit"
+        ],
+        "rule_type": "amount_cap"
+      },
+      "values": {
+        "max_amount": {
+          "value": 500,
+          "source": "ask",
+          "suggest": 500
+        }
+      },
+      "relevant": [
+        "R1",
+        "form_refund_cap"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "limit",
+            "action": "IssueRefund",
+            "field": "amount",
+            "max": 500,
+            "op": ">"
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "ask-capped",
+      "kind": "should_ask",
+      "sentence": "Refunds are capped.",
+      "based_on": [
+        "R1"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": null,
+        "kinds": [
+          "limit"
+        ],
+        "rule_type": "amount_cap"
+      },
+      "values": {
+        "max_amount": {
+          "value": 500,
+          "source": "ask",
+          "suggest": 500
+        }
+      },
+      "relevant": [
+        "R1",
+        "form_refund_cap"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "limit",
+            "action": "IssueRefund",
+            "field": "amount",
+            "max": 500,
+            "op": ">"
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "ask-cap-limit",
+      "kind": "should_ask",
+      "sentence": "Refunds bigger than the limit need to be blocked.",
+      "based_on": [
+        "R1"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": null,
+        "kinds": [
+          "limit"
+        ],
+        "rule_type": "amount_cap"
+      },
+      "values": {
+        "max_amount": {
+          "value": 500,
+          "source": "ask",
+          "suggest": 500
+        }
+      },
+      "relevant": [
+        "R1",
+        "form_refund_cap"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "limit",
+            "action": "IssueRefund",
+            "field": "amount",
+            "max": 500,
+            "op": ">"
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "ask-some-services",
+      "kind": "should_ask",
+      "sentence": "Production deploys are only allowed for some services.",
+      "based_on": [
+        "R3"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": null,
+        "kinds": [
+          "allowlist"
+        ],
+        "rule_type": "deploy_allowlist"
+      },
+      "values": {
+        "services": {
+          "value": [
+            "payments",
+            "search",
+            "web"
+          ],
+          "source": "ask",
+          "suggest": [
+            "payments",
+            "search",
+            "web"
+          ]
+        }
+      },
+      "relevant": [
+        "R3",
+        "form_prod_allowlist"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "allowlist",
+            "action": "DeployService",
+            "field": "service",
+            "allowed": [
+              "payments",
+              "search",
+              "web"
+            ],
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "ask-certain-services",
+      "kind": "should_ask",
+      "sentence": "Only certain services may go to production.",
+      "based_on": [
+        "R3"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "DeployService",
+        "prior": null,
+        "kinds": [
+          "allowlist"
+        ],
+        "rule_type": "deploy_allowlist"
+      },
+      "values": {
+        "services": {
+          "value": [
+            "payments",
+            "search",
+            "web"
+          ],
+          "source": "ask",
+          "suggest": [
+            "payments",
+            "search",
+            "web"
+          ]
+        }
+      },
+      "relevant": [
+        "R3",
+        "form_prod_allowlist"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "allowlist",
+            "action": "DeployService",
+            "field": "service",
+            "allowed": [
+              "payments",
+              "search",
+              "web"
+            ],
+            "only_when": {
+              "field": "env",
+              "op": "==",
+              "value": "prod"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": true,
+      "checked_by": null
+    },
+    {
+      "id": "ask-capped-order",
+      "kind": "should_ask",
+      "sentence": "Refund up to $40 for order A100, subject to approval.",
+      "based_on": [
+        "R4"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "limit",
+          "requires_prior"
+        ],
+        "rule_type": "capped_with_approval"
+      },
+      "values": {
+        "max_amount": {
+          "value": 40,
+          "source": "sentence"
+        },
+        "order_id": {
+          "value": "A100",
+          "source": "sentence"
+        },
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": {
+            "isolated": "unfilled",
+            "realistic": "glossary"
+          }
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "limit",
+            "action": "IssueRefund",
+            "field": "amount",
+            "max": 40,
+            "op": ">",
+            "only_when": {
+              "field": "order_id",
+              "op": "==",
+              "value": "A100"
+            }
+          },
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "only_when": {
+              "field": "order_id",
+              "op": "==",
+              "value": "A100"
+            },
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": "JUDGEMENT: no library rule is capped_with_approval, so today's same-type evidence finds nothing; the key takes the company's refund-approval window (1h) as the right suggestion.",
+      "hidden": false,
+      "checked_by": null
+    },
+    {
+      "id": "ask-capped-a300",
+      "kind": "should_ask",
+      "sentence": "Refund at most $200 on order A300 once a manager approves it.",
+      "based_on": [
+        "R4"
+      ],
+      "leave_out": [],
+      "expect": {
+        "action": "IssueRefund",
+        "prior": "RequestApproval",
+        "kinds": [
+          "limit",
+          "requires_prior"
+        ],
+        "rule_type": "capped_with_approval"
+      },
+      "values": {
+        "max_amount": {
+          "value": 200,
+          "source": "sentence"
+        },
+        "order_id": {
+          "value": "A300",
+          "source": "sentence"
+        },
+        "window": {
+          "value": "1h",
+          "source": "ask",
+          "suggest": "1h"
+        },
+        "approver_role": {
+          "value": "manager",
+          "source": "sentence"
+        }
+      },
+      "relevant": [
+        "R4",
+        "form_manager_approval"
+      ],
+      "reference": {
+        "forms": [
+          {
+            "kind": "limit",
+            "action": "IssueRefund",
+            "field": "amount",
+            "max": 200,
+            "op": ">",
+            "only_when": {
+              "field": "order_id",
+              "op": "==",
+              "value": "A300"
+            }
+          },
+          {
+            "kind": "requires_prior",
+            "action": "IssueRefund",
+            "only_when": {
+              "field": "order_id",
+              "op": "==",
+              "value": "A300"
+            },
+            "requires": {
+              "action": "RequestApproval",
+              "within": "1h",
+              "same": [
+                "order_id"
+              ],
+              "output": {
+                "approved": true
+              },
+              "at_most": {
+                "amount": "approved_amount"
+              },
+              "spent_so_far": {
+                "amount": "refunded_so_far"
+              },
+              "approver_role": "manager"
+            }
+          }
+        ]
+      },
+      "notes": null,
+      "hidden": false,
+      "checked_by": null
+    }
+  ]
+}

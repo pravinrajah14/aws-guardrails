@@ -16,6 +16,10 @@ On macOS with Homebrew:
 
 It checks that everything is there, warms up the model, and opens http://127.0.0.1:8000. Once a rule is ready, the Check and run tab lets you run the agent against it. Run `./demo --fresh` to run it with no saved answers.
 
+## Ranking evaluation
+
+`uv run python -m ranking_eval.quiz --smoke` runs the rule quiz that compares ways of ranking the example library. See [ranking_eval/README.md](ranking_eval/README.md).
+
 ## Known Problems
 - Stuck on "Waiting for Ollama": run `brew services restart ollama`, then `./demo` again.
 - "dogwood not found": open a new terminal, or run `source "$HOME/.cargo/env"`.

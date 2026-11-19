@@ -1,0 +1,4 @@
+{
+  "note": "Saved answers loaded in realistic mode, so runs don't depend on anyone's own data/answers.sqlite. Empty for now: a fresh install. Rows use the columns of app/core/answers.py: rule_type, field, term, value, sentence.",
+  "answers": []
+}

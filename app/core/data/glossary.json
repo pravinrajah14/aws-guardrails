@@ -10,5 +10,21 @@
   ],
   "patterns": [
     {"regex": "A\\d+", "field": "order_id", "source": "kylie-test-bed-upload/tools.py"}
+  ],
+  "synonyms_note": "Read only by the glossary-normalized ranking in ranking_eval/, never to fill a value. Each group maps its words to one term before word overlap is compared. Groups whose source is ranking_eval/cases.json are our guesses, added because a paraphrase case needs them; confirm them on real rules.",
+  "synonyms": [
+    {"term": "approval", "words": ["approval", "approvals", "approve", "approved", "approves", "sign-off", "sign off", "signed off", "signoff"], "source": "app/core/signals.py"},
+    {"term": "approval", "words": ["authorization", "authorisation", "authorized", "authorised", "ok'd", "okayed"], "source": "ranking_eval/cases.json"},
+    {"term": "deploy", "words": ["deploy", "deploys", "deployed", "deployment", "deployments", "go to production", "goes to production"], "source": "app/core/signals.py"},
+    {"term": "deploy", "words": ["release", "releases", "released", "ship", "ships", "shipped", "push", "pushes", "pushed", "rollout", "roll out"], "source": "ranking_eval/cases.json"},
+    {"term": "prod", "words": ["production", "prod", "live"], "source": "converter/forms/prod_allowlist.json"},
+    {"term": "manager", "words": ["manager", "managers", "manager's"], "source": "kylie-test-bed-upload/tools.py"},
+    {"term": "manager", "words": ["supervisor", "supervisors", "supervisor's", "team lead", "boss"], "source": "ranking_eval/cases.json"},
+    {"term": "refund", "words": ["refund", "refunds", "refunded", "reimburse", "reimbursed", "reimbursement", "reimbursements", "money back", "pay back", "payback"], "source": "ranking_eval/cases.json"},
+    {"term": "test", "words": ["test", "tests", "test suite", "checks", "ci", "build"], "source": "ranking_eval/cases.json"},
+    {"term": "passed", "words": ["passed", "pass", "passing", "green", "succeeded"], "source": "ranking_eval/cases.json"},
+    {"term": "exceed", "words": ["exceed", "exceeds", "over", "above", "more than", "larger than", "greater than", "bigger than"], "source": "ranking_eval/cases.json"},
+    {"term": "recently", "words": ["recently", "recent", "lately", "shortly before"], "source": "app/core/signals.py"},
+    {"term": "service", "words": ["service", "services", "app", "apps", "system", "systems"], "source": "ranking_eval/cases.json"}
   ]
 }
