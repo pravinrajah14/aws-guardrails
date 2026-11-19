@@ -1,0 +1,84 @@
+{
+  "test": "wrong_window_24h",
+  "scenarios": "tests/refund_recent_approval_actions.json",
+  "correct_rule": "rules/refund_recent_approval.dw",
+  "candidate_rule": "rules/practice/wrong_window_24h.dw",
+  "candidate_validates": true,
+  "decisions": 10,
+  "wrong_allows": 2,
+  "wrong_blocks": 0,
+  "errors": 0,
+  "passed": false,
+  "rows": [
+    {
+      "case": "approved_30m_ago",
+      "ts": 1801,
+      "correct": "ALLOW",
+      "candidate": "ALLOW",
+      "result": "same"
+    },
+    {
+      "case": "approved_59m_ago",
+      "ts": 3541,
+      "correct": "ALLOW",
+      "candidate": "ALLOW",
+      "result": "same"
+    },
+    {
+      "case": "approved_61m_ago",
+      "ts": 3661,
+      "correct": "DENY",
+      "candidate": "ALLOW",
+      "result": "WRONG ALLOW"
+    },
+    {
+      "case": "approved_3h_ago",
+      "ts": 10801,
+      "correct": "DENY",
+      "candidate": "ALLOW",
+      "result": "WRONG ALLOW"
+    },
+    {
+      "case": "never_approved",
+      "ts": 1,
+      "correct": "DENY",
+      "candidate": "DENY",
+      "result": "same"
+    },
+    {
+      "case": "manager_said_no",
+      "ts": 601,
+      "correct": "DENY",
+      "candidate": "DENY",
+      "result": "same"
+    },
+    {
+      "case": "approved_other_order",
+      "ts": 601,
+      "correct": "DENY",
+      "candidate": "DENY",
+      "result": "same"
+    },
+    {
+      "case": "approved_smaller_amount",
+      "ts": 601,
+      "correct": "DENY",
+      "candidate": "DENY",
+      "result": "same"
+    },
+    {
+      "case": "approved_smaller_amount",
+      "ts": 661,
+      "correct": "ALLOW",
+      "candidate": "ALLOW",
+      "result": "same"
+    },
+    {
+      "case": "lookup_always_allowed",
+      "ts": 1,
+      "correct": "ALLOW",
+      "candidate": "ALLOW",
+      "result": "same"
+    }
+  ]
+}

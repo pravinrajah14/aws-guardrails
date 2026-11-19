@@ -1,0 +1,12 @@
+// PRACTICE CANDIDATE (deliberately wrong): the tool read "recently" as 24 hours instead of 1 hour.
+// compare_rules.py should FAIL this with wrong allows on the 61m and 3h scenarios.
+
+@id("practice_wrong_window_24h")
+permit ( principal, action == Shop::Action::"IssueRefund", resource )
+when temporal {
+    formerly within 24h Shop::Action::"RequestApproval"::response{
+        input.order_id: context.input.order_id,
+        output.approved: true,
+        output.approved_amount: context.input.amount
+    }
+};
