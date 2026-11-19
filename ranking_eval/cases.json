@@ -2006,7 +2006,7 @@
         "window": {
           "value": "1h",
           "source": "ask",
-          "suggest": null
+          "suggest": "1h"
         },
         "approver_role": {
           "value": "support",
@@ -2042,7 +2042,7 @@
           }
         ]
       },
-      "notes": "JUDGEMENT: every library approval window is a manager's; the key says a support approval should not borrow it (question, no suggestion). 1h is only so a policy can be built.",
+      "notes": "Decided (Jack, 2026-11-19): a support approval takes the company's refund-approval window, so 1h is the right suggestion even though every library approval is a manager's.",
       "hidden": false,
       "checked_by": null
     },

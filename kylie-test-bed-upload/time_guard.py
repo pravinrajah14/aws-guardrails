@@ -11,11 +11,12 @@ Run (same setup as score_actions.py):
 Options:
     --rounds 20   how many times to repeat every check (default 20)
 """
+
 import argparse
 import json
 import statistics
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from enforce import DogwoodGate, build_policy
@@ -31,7 +32,7 @@ def main():
     args = p.parse_args()
 
     cases = json.loads(Path(args.actions).read_text(encoding="utf-8"))["cases"]
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     work = Path(".provenance") / f"timing-{stamp}"
     work.mkdir(parents=True, exist_ok=True)
     policy = build_policy(args.base, args.rules, work / "policy.dw")

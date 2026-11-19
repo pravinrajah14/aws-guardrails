@@ -18,11 +18,12 @@ If the candidate rule does not even pass `dogwood validate`, the test fails righ
 Scenarios use the same format as score_actions.py. "expect" labels are not needed here:
 the correct rule is the answer key. Set DOGWOOD_CMD the same way as for the other scripts.
 """
+
 import argparse
 import json
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from enforce import DogwoodGate, build_policy
@@ -33,11 +34,11 @@ TS = re.compile(r"^@(\d+) ")
 
 def decisions(gate, cases):
     """Run every case through one rule. Returns {(case_id, ts): "ALLOW" | "DENY" | "ERROR"}."""
-    out, calls = {}, {}
+    out = {}
     for case in cases:
         lines, _ = case_lines(gate, case)
         requests = [l for l in lines if "::request(" in l]
-        ran, verdicts, problem = gate.replay(lines)
+        ran, verdicts, _problem = gate.replay(lines)
         by_ts = {v["ts"]: v["decision"] for v in verdicts}
         for line in requests:
             ts = int(TS.match(line).group(1))
@@ -56,7 +57,7 @@ def main():
 
     name = args.name or Path(args.candidate).stem
     cases = json.loads(Path(args.scenarios).read_text(encoding="utf-8"))["cases"]
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     work = Path(".provenance") / f"compare-{stamp}"
 
     gates = {}
@@ -89,18 +90,29 @@ def main():
 
     passed = cand_valid and wrong_allows == wrong_blocks == errors == 0
     summary = {
-        "test": name, "scenarios": args.scenarios, "correct_rule": args.correct,
-        "candidate_rule": args.candidate, "candidate_validates": cand_valid,
-        "decisions": len(rows), "wrong_allows": wrong_allows, "wrong_blocks": wrong_blocks,
-        "errors": errors, "passed": passed, "rows": rows,
+        "test": name,
+        "scenarios": args.scenarios,
+        "correct_rule": args.correct,
+        "candidate_rule": args.candidate,
+        "candidate_validates": cand_valid,
+        "decisions": len(rows),
+        "wrong_allows": wrong_allows,
+        "wrong_blocks": wrong_blocks,
+        "errors": errors,
+        "passed": passed,
+        "rows": rows,
     }
 
-    md = [f"# Rule comparison: {name} ({stamp})", "",
-          f"- Correct rule: `{args.correct}`  |  Candidate rule: `{args.candidate}`",
-          f"- Scenarios: `{args.scenarios}` ({len(cases)} cases, {len(rows)} decisions)",
-          f"- Candidate passes dogwood validate: {'yes' if cand_valid else '**NO**'}",
-          f"- Wrong allows: **{wrong_allows}**  |  Wrong blocks: **{wrong_blocks}**  |  Errors: {errors}",
-          f"- **Result: {'PASS' if passed else 'FAIL'}**", ""]
+    md = [
+        f"# Rule comparison: {name} ({stamp})",
+        "",
+        f"- Correct rule: `{args.correct}`  |  Candidate rule: `{args.candidate}`",
+        f"- Scenarios: `{args.scenarios}` ({len(cases)} cases, {len(rows)} decisions)",
+        f"- Candidate passes dogwood validate: {'yes' if cand_valid else '**NO**'}",
+        f"- Wrong allows: **{wrong_allows}**  |  Wrong blocks: **{wrong_blocks}**  |  Errors: {errors}",
+        f"- **Result: {'PASS' if passed else 'FAIL'}**",
+        "",
+    ]
     if not cand_valid:
         md += ["Validate output:", "```", cand_msg[:1500], "```", ""]
     md += ["| Case | Time | Correct rule | Tool's rule | Result |", "|---|---|---|---|---|"]
