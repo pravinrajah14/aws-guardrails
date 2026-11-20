@@ -487,6 +487,7 @@ def main(argv=None):
                         "ranking": pair.name,
                         "example": ex_name,
                         "evidence": ev_name,
+                        "evidence_pool": evidence_r.pool,
                         "mode": mode,
                         "cases": len(cases),
                         "seconds": round(time.perf_counter() - start, 1),

@@ -167,3 +167,28 @@ def test_an_approval_with_no_role_in_isolated_mode_fails_check_2_without_crashin
     g = quiz.grade(c, record)
     assert g["works"] is False
     assert "edge examples could not be built" in g["works_detail"]
+
+
+def test_only_the_baseline_keeps_the_same_rule_type_pool():
+    from ranking_eval.rankings import CANDIDATES, SAME_ACTION, SAME_TYPE
+
+    assert {r.name: r.pool for r in CANDIDATES if r.pool == SAME_TYPE} == {"jaccard": SAME_TYPE}
+    assert all(r.pool == SAME_ACTION for r in CANDIDATES if r.name != "jaccard")
+
+
+def test_the_same_action_pool_finds_evidence_a_rule_type_has_none_of():
+    sentence = "Refund up to $40 for order A100, subject to approval."
+    found = {}
+    for name in ("jaccard", "jaccard-action"):
+        ranking = BY_NAME[name]()
+        with examples.use_ranking(Pair(BY_NAME["jaccard"](), ranking)):
+            found[name] = {e["id"]: e["value"] for e in examples.stating(sentence, "capped_with_approval", "window")}
+    assert found["jaccard"] == {}
+    assert found["jaccard-action"] == {"form_manager_approval": "1h", "R4": "1h"}
+
+
+def test_jaccard_action_only_runs_in_the_evidence_score():
+    args = quiz.argparse.Namespace(pass_="example", example=None, evidence="jaccard")
+    assert "jaccard-action" not in {ex for ex, _ in quiz.pairs_for(args)}
+    args = quiz.argparse.Namespace(pass_="evidence", example=None, evidence=None)
+    assert ("jaccard", "jaccard-action") in quiz.pairs_for(args)

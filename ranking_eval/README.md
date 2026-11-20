@@ -33,12 +33,13 @@ The tool searches the library twice. Since this branch, each search has its own 
 
 | Ranking | Example score | Evidence score | Evidence pool |
 |---|---|---|---|
-| `jaccard` | word overlap (today) | word overlap | same rule type (today) |
-| `bm25` | Okapi BM25 over the library: rare shared words count more | BM25 | same rule type |
-| `glossary` | word overlap after mapping synonyms to one term (`synonyms` in `glossary.json`) | same | same rule type |
+| `jaccard` (baseline) | word overlap (today) | word overlap | same rule type (today) |
+| `jaccard-action` | *(same as jaccard, so not run)* | word overlap | same action and prior action |
+| `bm25` | Okapi BM25 over the library: rare shared words count more | BM25 | same action and prior action |
+| `glossary` | word overlap after mapping synonyms to one term (`synonyms` in `glossary.json`) | same | same action and prior action |
 | `structural` | profile match: action, prior action, form kind, matching fields, values set | profile match | same action and prior action |
 | `hybrid` | structure filter, then BM25 | BM25 | same action and prior action |
-| `embeddings` | cosine similarity of `nomic-embed-text` vectors | same | same rule type |
+| `embeddings` | cosine similarity of `nomic-embed-text` vectors | same | same action and prior action |
 | `behavioral` | *(can't: needs the model's reading)* | structural top 5, reranked by how alike the two policies decide the same histories | same action and prior action |
 
 Three reference rows sit beside them. They aren't candidates:
@@ -49,7 +50,7 @@ Three reference rows sit beside them. They aren't candidates:
 | `random` | A seeded shuffle: how much ordering matters at all |
 | `none` | No examples and no suggestions: the floor |
 
-Text rankings keep today's pool, so comparing them changes only the score. Structure rankings use the same-action pool, which never looks at a rule type.
+**Evidence pool.** The pool is which past rules may suggest a value. Two rules are in the same pool when they control the same action and look back at the same earlier action: `IssueRefund` after `RequestApproval` (R4 and the manager-approval form), or `DeployService` after `RunTests` (R6). The pool never looks at a rule type. Only the baseline keeps today's same-rule-type pool. Comparing `jaccard` with `jaccard-action` shows what the pool change does on its own, and every row below `jaccard-action` differs from it only in its score. The pool ignores conditions like the environment, so a staging tests rule and a production one share a pool.
 
 **Behavioral** sets the open slot to the same placeholder in both policies. It replays only histories that don't depend on how long ago something happened, so a candidate can't agree with the draft just because it was filled with the candidate's own value.
 

@@ -128,6 +128,8 @@ def leaderboard(by_run, runs_meta, mode, hidden):
         broke, _ = regressions(base_records, {r["case"]: r for r in recs}) if name != BASELINE else ([], [])
         meta = runs_meta.get((name, mode), {})
         label = f"**{name}** (baseline)" if name == BASELINE else name
+        if meta.get("evidence_pool"):
+            label += f" · pool: {meta['evidence_pool']}"
         if name.split("+")[1] in REFERENCE_NAMES:
             label += " *(reference)*"
         if s["errors"]:
@@ -261,6 +263,10 @@ def write(out, cases):
             "and this ranking did not; any entry there blocks the change."
         ),
         "- Time is wall-clock for the run; model calls are real calls, cached ones were answered from earlier runs.",
+        (
+            "- Pool: which past rules may suggest a value. The baseline keeps today's (same rule type); every other "
+            "ranking uses the same action and prior action, so jaccard-action shows the pool change on its own."
+        ),
         "",
     ]
     summaries_by_mode = {}

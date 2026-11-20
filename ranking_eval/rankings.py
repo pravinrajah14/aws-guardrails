@@ -6,9 +6,11 @@ Every ranking has the interface app.core.examples expects (see WordOverlap there
   evidence_scores(sentence, candidates, query)   -> [(score, example)]   how close each one is; 0 drops it
 The query carries the sentence, the rule type the model picked, the open slot and the model's understanding.
 
-Text rankings (jaccard, bm25, glossary, embeddings) keep today's evidence pool, the same rule type, so a
-comparison between them changes one thing: the score. Structure-based rankings (structural, hybrid,
-behavioral) use the same-action, same-prior-action pool instead, which never looks at a rule type.
+Evidence pool: every ranking keeps only past rules with the same action and the same prior action as the
+open rule (structure.same_frame), which never looks at a rule type. The one exception is the baseline,
+jaccard, which keeps today's pool, the same rule type. jaccard-action is the same word overlap with the
+same-action pool, so jaccard vs jaccard-action shows what the pool change alone does, and every other row
+differs from jaccard-action only in its score.
 """
 
 import hashlib
@@ -36,22 +38,44 @@ def tokens(text):
     return [w for w in found if w not in examples._STOP_WORDS]
 
 
+SAME_TYPE, SAME_ACTION = "same rule type", "same action and prior action"
+
+
 class Ranking(WordOverlap):
-    """A ranking with a name, the slots it can fill, and a clock for the time it spends."""
+    """A ranking with a name, the slots it can fill, its evidence pool, and a clock for the time it spends."""
 
     name = "base"
     slots = ("example", "evidence")
     reference = False  # a reference row (oracle, random, none), not a candidate
+    pool = SAME_ACTION
 
     def __init__(self):
         self.seconds = 0.0
+
+    def in_evidence_pool(self, example, query):
+        if self.pool == SAME_TYPE:
+            return super().in_evidence_pool(example, query)
+        return structure.same_frame(query_profile(query), structure.library_profile(example["id"]))
 
     def set_case(self, case, library, mode):
         """Called before each quiz case; only the oracle needs it."""
 
 
 class Jaccard(Ranking):
+    """Today's ranking, unchanged: word overlap, evidence from the same rule type. The baseline."""
+
     name = "jaccard"
+    pool = SAME_TYPE
+
+
+class JaccardAction(Ranking):
+    """Word overlap with the same-action pool: the pool change on its own.
+
+    Its example score is jaccard's, so it only runs in the evidence score.
+    """
+
+    name = "jaccard-action"
+    slots = ("evidence",)
 
 
 class BM25(Ranking):
@@ -146,9 +170,6 @@ class Structural(Ranking):
                 scored.append((s + self.TIE_BREAK * examples.overlap(sentence, e["sentence"])[0], e))
         return scored
 
-    def in_evidence_pool(self, example, query):
-        return structure.same_frame(query_profile(query), structure.library_profile(example["id"]))
-
     def evidence_scores(self, sentence, candidates, query):
         q = query_profile(query)
         return [
@@ -174,9 +195,6 @@ class Hybrid(BM25):
                 kept = [e for e in kept if structure.library_profile(e["id"])["prior"] == query["prior"]]
             candidates = kept
         return super().example_scores(sentence, candidates)
-
-    def in_evidence_pool(self, example, query):
-        return structure.same_frame(query_profile(query), structure.library_profile(example["id"]))
 
 
 class Embeddings(Ranking):
@@ -330,6 +348,10 @@ class NoExamples(Ranking):
 
     name = "none"
     reference = True
+    pool = None
+
+    def in_evidence_pool(self, example, query):
+        return False
 
     def example_scores(self, sentence, candidates):
         return []
@@ -360,6 +382,7 @@ class Oracle(Ranking):
 
     name = "oracle"
     reference = True
+    pool = "the answer key's relevant rules"
 
     def __init__(self):
         super().__init__()
@@ -383,7 +406,7 @@ class Oracle(Ranking):
         return [(1.0, e) for e in candidates]
 
 
-CANDIDATES = [Jaccard, BM25, GlossaryOverlap, Structural, Hybrid, Embeddings, Behavioral]
+CANDIDATES = [Jaccard, JaccardAction, BM25, GlossaryOverlap, Structural, Hybrid, Embeddings, Behavioral]
 REFERENCES = [Oracle, RandomRanking, NoExamples]
 BY_NAME = {r.name: r for r in CANDIDATES + REFERENCES}
 
