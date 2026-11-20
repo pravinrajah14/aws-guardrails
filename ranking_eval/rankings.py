@@ -24,7 +24,7 @@ from collections import Counter
 from copy import deepcopy
 from pathlib import Path
 
-from app.core import config, examples, generate, glossary
+from app.core import config, examples, generate
 from app.core.examples import WordOverlap
 from ranking_eval import replay, structure
 
@@ -111,43 +111,6 @@ class BM25(Ranking):
     def evidence_scores(self, sentence, candidates, query):
         idf, avg = self._corpus(candidates)
         return [(self.score(sentence, e["sentence"], idf, avg), e) for e in candidates]
-
-
-def _synonym_phrases():
-    pairs = [(w.lower(), g["term"]) for g in glossary.GLOSSARY.get("synonyms", []) for w in g["words"]]
-    # Longest first, so "go to production" is replaced before "production".
-    return [
-        (re.compile(rf"(?<![\w']){re.escape(w)}(?![\w'])"), f" {t} ")
-        for w, t in sorted(pairs, key=lambda p: -len(p[0]))
-    ]
-
-
-class GlossaryOverlap(Ranking):
-    """Word overlap after mapping each glossary synonym to one term ('sign-off' -> 'approval')."""
-
-    name = "glossary"
-
-    def __init__(self):
-        super().__init__()
-        self.phrases = _synonym_phrases()
-
-    def normalize(self, text):
-        text = text.lower()
-        for regex, term in self.phrases:
-            text = regex.sub(term, text)
-        return text
-
-    def overlap(self, a, b):
-        ours, theirs = examples.words(self.normalize(a)), examples.words(self.normalize(b))
-        shared = ours & theirs
-        return len(shared) / len(ours | theirs) if shared else 0.0
-
-    def example_scores(self, sentence, candidates):
-        scored = [(self.overlap(sentence, e["sentence"]), e) for e in candidates]
-        return [(s, e) for s, e in scored if s > 0]
-
-    def evidence_scores(self, sentence, candidates, query):
-        return [(self.overlap(sentence, e["sentence"]), e) for e in candidates]
 
 
 def query_profile(query):
@@ -406,7 +369,7 @@ class Oracle(Ranking):
         return [(1.0, e) for e in candidates]
 
 
-CANDIDATES = [Jaccard, JaccardAction, BM25, GlossaryOverlap, Structural, Hybrid, Embeddings, Behavioral]
+CANDIDATES = [Jaccard, JaccardAction, BM25, Structural, Hybrid, Embeddings, Behavioral]
 REFERENCES = [Oracle, RandomRanking, NoExamples]
 BY_NAME = {r.name: r for r in CANDIDATES + REFERENCES}
 

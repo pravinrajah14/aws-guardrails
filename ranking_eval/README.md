@@ -36,7 +36,6 @@ The tool searches the library twice. Since this branch, each search has its own 
 | `jaccard` (baseline) | word overlap (today) | word overlap | same rule type (today) |
 | `jaccard-action` | *(same as jaccard, so not run)* | word overlap | same action and prior action |
 | `bm25` | Okapi BM25 over the library: rare shared words count more | BM25 | same action and prior action |
-| `glossary` | word overlap after mapping synonyms to one term (`synonyms` in `glossary.json`) | same | same action and prior action |
 | `structural` | profile match: action, prior action, form kind, matching fields, values set | profile match | same action and prior action |
 | `hybrid` | structure filter, then BM25 | BM25 | same action and prior action |
 | `embeddings` | cosine similarity of `nomic-embed-text` vectors | same | same action and prior action |
@@ -83,4 +82,3 @@ The report also gives:
 |---|---|---|
 | `cases.json` | 59 answer keys: 9 masked, 20 paraphrases, 15 near misses, 15 should-ask. 20 are hidden (seeded, a third of each kind). | **Draft:** `checked_by` is null until a second person checks each one. Cases marked `JUDGEMENT` in their notes need the team's call. |
 | `profiles.json` | Structure profiles for the 18 library policies | Hand-written; check each against its Dogwood |
-| `app/core/data/glossary.json` | The new `synonyms` list | Groups citing `ranking_eval/cases.json` are guesses |
